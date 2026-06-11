@@ -5,6 +5,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeStorage } from '@/lib/safeStorage';
+import { commissions } from '@/data/commissions';
 import type { Commission, GameLocation, ServiceCard } from '@/data/types';
 import { locations as allLocations } from '@/data/locations';
 import { rollRoutes } from '@/engine/shopEngine';
@@ -176,7 +177,11 @@ export const useShopStore = create<ShopState>()(
       // 即使版本一致，恢复前也校验结构：损坏的存档宁可丢弃，不能让 Shop 渲染崩溃。
       merge: (persisted, current) => {
         if (!isValidShopSnapshot(persisted)) return current;
-        return { ...current, ...(persisted as Partial<ShopState>) };
+        const snapshot = { ...(persisted as Partial<ShopState>) };
+        if (snapshot.commission) {
+          snapshot.commission = commissions.find((c) => c.id === snapshot.commission?.id) ?? null;
+        }
+        return { ...current, ...snapshot };
       },
     }
   )

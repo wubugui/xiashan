@@ -187,6 +187,8 @@ export default function Shop() {
 
   /* ── 初始化 ── */
   const isNew = routes.length === 0 && !gameOver && commission === null && step === 1 && time === 13;
+  const commissionNeed = commission?.need ?? 0;
+  const commissionReady = !!commission && trust >= commissionNeed;
 
   /* ────── 抽卡 ────── */
   const handleDraw = useCallback((pool: PoolId) => {
@@ -481,7 +483,7 @@ export default function Shop() {
                     <button
                       key={l.id}
                       onClick={() => { if (!gameOver) { chooseLocation(l); setHandledThisLocation(false); } }}
-                      disabled={gameOver || trust < commission.need}
+                      disabled={gameOver}
                       className={cn(
                         'w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-left',
                         'hover:border-amber-400/40 active:scale-[0.99] transition-all disabled:opacity-40',
@@ -580,10 +582,10 @@ export default function Shop() {
                     <div className="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-rose-400 to-pink-400 transition-all duration-500"
-                        style={{ width: `${Math.min(100, (trust / commission.need) * 100)}%` }}
+                        style={{ width: `${commissionNeed > 0 ? Math.min(100, (trust / commissionNeed) * 100) : 0}%` }}
                       />
                     </div>
-                    <span className="text-[10px] font-bold text-rose-300">{trust}/{commission.need}</span>
+                    <span className="text-[10px] font-bold text-rose-300">{trust}/{commissionNeed}</span>
                   </div>
                   {/* 目标角色 */}
                   {(() => {
@@ -604,10 +606,10 @@ export default function Shop() {
                   {commission.graph && commission.graph.nodes.length > 0 ? (
                     <button
                       onClick={() => setShowTheater(true)}
-                      disabled={gameOver}
+                      disabled={gameOver || !commissionReady}
                       className="mt-3 w-full rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 py-3 text-sm font-black text-white shadow-[0_0_24px_rgba(244,63,94,0.35)] hover:from-rose-400 disabled:opacity-40 active:scale-[0.99] transition-all"
                     >
-                      {trust >= commission.need ? '▶ 进入委托现场' : `信任达标后进入现场（${trust}/${commission.need}）`}
+                      {commissionReady ? '▶ 进入委托现场' : `信任达标后进入现场（${trust}/${commissionNeed}）`}
                     </button>
                   ) : (
                     <p className="mt-3 text-center text-[10px] text-slate-500">（本委托剧本制作中，敬请期待）</p>
