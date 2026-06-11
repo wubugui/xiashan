@@ -1,8 +1,7 @@
 import { HashRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import NavBar from '@/components/NavBar';
-import VideoPlayer from '@/components/VideoPlayer';
 import Home from '@/pages/Home';
 import Story from '@/pages/Story';
 import Gacha from '@/pages/Gacha';
@@ -12,21 +11,12 @@ import Phone from '@/pages/Phone';
 import VideoGallery from '@/pages/VideoGallery';
 import Minigame from '@/pages/Minigame';
 import Shop from '@/pages/Shop';
-import { assetUrl } from '@/lib/assets';
 
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const unreadCounts = usePlayerStore((s) => s.unreadCounts);
   const totalUnread = unreadCounts.wechat + unreadCounts.sms + unreadCounts.call;
-
-  // 开场 intro 视频：每次启动游戏播放一次（同一会话内不重复播放）
-  const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem('xiashan_intro_played'));
-
-  const handleIntroEnd = () => {
-    sessionStorage.setItem('xiashan_intro_played', '1');
-    setShowIntro(false);
-  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0 });
@@ -83,11 +73,6 @@ function AppContent() {
           onTabChange={handleTabChange}
           unreadCount={totalUnread}
         />
-      )}
-
-      {/* 开场 intro 视频只在首页播放，避免遮住远程营业/测试页面。 */}
-      {showIntro && location.pathname === '/' && (
-        <VideoPlayer src={assetUrl('/video/intro.mp4')!} onEnd={handleIntroEnd} />
       )}
     </div>
   );
