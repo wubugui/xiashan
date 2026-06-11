@@ -176,6 +176,78 @@
       "unlockConditions": [
         { "type": "relationship_stage", "characterId": "murongxue", "minStage": 2 }
       ]
+    },
+    {
+      "id": "linxia_s3",
+      "title": "江夏 · 第一页清单",
+      "description": "她的新清单第一行，写着你的名字。",
+      "src": "/video/lily.mp4",
+      "unlockConditions": [
+        { "type": "relationship_stage", "characterId": "linxia", "minStage": 5 }
+      ]
+    },
+    {
+      "id": "aruo_s3",
+      "title": "云晓蔻 · 停播日",
+      "description": "今天不直播。她说，要把所有镜头都留给你。",
+      "src": "/video/lily.mp4",
+      "unlockConditions": [
+        { "type": "relationship_stage", "characterId": "aruo", "minStage": 5 }
+      ]
+    },
+    {
+      "id": "yunzhiyi_s3",
+      "title": "陈小满 · 终点线",
+      "description": "她跑了那么多路，原来都是朝着你。",
+      "src": "/video/lily.mp4",
+      "unlockConditions": [
+        { "type": "relationship_stage", "characterId": "yunzhiyi", "minStage": 5 }
+      ]
+    },
+    {
+      "id": "sangluo_s3",
+      "title": "顾夜莺 · 打烊之后",
+      "description": "今晚的最后一杯，不收钱，也不收时间。",
+      "src": "/video/lily.mp4",
+      "unlockConditions": [
+        { "type": "relationship_stage", "characterId": "sangluo", "minStage": 5 }
+      ]
+    },
+    {
+      "id": "aman_s3",
+      "title": "许念 · 三个人的家",
+      "description": "它选了你。她说，她也是。",
+      "src": "/video/lily.mp4",
+      "unlockConditions": [
+        { "type": "relationship_stage", "characterId": "aman", "minStage": 5 }
+      ]
+    },
+    {
+      "id": "shenzhaoning_s3",
+      "title": "祁宁 · 流程之外",
+      "description": "这件事没有流程。她决定，即兴一次。",
+      "src": "/video/lily.mp4",
+      "unlockConditions": [
+        { "type": "relationship_stage", "characterId": "shenzhaoning", "minStage": 5 }
+      ]
+    },
+    {
+      "id": "suli_s3",
+      "title": "苏音音 · 第二十五时电台",
+      "description": "今晚的节目没有听众，只有你。",
+      "src": "/video/lily.mp4",
+      "unlockConditions": [
+        { "type": "relationship_stage", "characterId": "suli", "minStage": 5 }
+      ]
+    },
+    {
+      "id": "murongxue_s3",
+      "title": "沈疏桐 · 独家",
+      "description": "这篇报道她写了很久，署名后面，还藏着一个名字。",
+      "src": "/video/lily.mp4",
+      "unlockConditions": [
+        { "type": "relationship_stage", "characterId": "murongxue", "minStage": 5 }
+      ]
     }
   ]
 }

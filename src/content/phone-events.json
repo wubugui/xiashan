@@ -686,6 +686,374 @@
           "nextMessages": ["敢质疑我的归因？好，安排对照组。", "下个案子你缺席试试——不许真缺席。"]
         }
       ]
+    },
+    {
+      "id": "linxia_deeptalk",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "linxia", "minStage": 3 }],
+      "characterId": "linxia",
+      "messages": [
+        { "sender": "character", "content": "睡了吗？今天整理旧文件，翻到了我的第一份简历", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "就是那天卡在闸机里的那份，皱皱巴巴的", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "我一直没舍得扔。你说奇怪不奇怪，明明是最狼狈的一天，现在想起来全是运气", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "因为那天遇到我了？",
+          "effects": [{ "type": "add_affinity", "characterId": "linxia", "value": 3 }],
+          "nextMessages": ["哇，你这个人，怎么好意思说出来的！", "……不过，是哦。就是这个意思。"]
+        },
+        {
+          "text": "留着吧，是个纪念",
+          "effects": [{ "type": "add_affinity", "characterId": "linxia", "value": 1 }],
+          "nextMessages": ["嗯！我把它塑封起来了，像奖状一样", "等我升职那天，要拿给你看！"]
+        }
+      ]
+    },
+    {
+      "id": "linxia_promise",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "linxia", "minStage": 4 }],
+      "characterId": "linxia",
+      "messages": [
+        { "sender": "character", "content": "那个！周六早上有空吗", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "早市！我列了清单，从豆浆摊到五金店，一共十一站", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "本来是替店里采购……但我把路线排成了一个圈，绕一圈刚好一上午", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "十一站全陪你走完",
+          "effects": [{ "type": "add_affinity", "characterId": "linxia", "value": 3 }],
+          "nextMessages": ["成交！不许中途喊累哦", "第十二站是我请客的早茶，不在清单上——是惊喜。啊，说出来了。"]
+        },
+        {
+          "text": "清单发我看看",
+          "effects": [{ "type": "add_affinity", "characterId": "linxia", "value": 1 }],
+          "nextMessages": ["发啦！备注栏都写好了", "你看第七站后面画了星星……那家的糖糕，我想跟你一起吃。"]
+        }
+      ]
+    },
+    {
+      "id": "sangluo_deeptalk",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "sangluo", "minStage": 3 }],
+      "characterId": "sangluo",
+      "messages": [
+        { "sender": "character", "content": "还没睡？", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "店里刚走完最后一桌客人。今晚雨声不错，我把窗开了条缝", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "突然想说，我失眠的毛病好像好一点了。你猜是豆子换了，还是别的什么换了", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "是有人可以说晚安了",
+          "effects": [{ "type": "add_affinity", "characterId": "sangluo", "value": 3 }],
+          "nextMessages": ["……嗯，被你说中了", "那就说吧。晚安。今晚轮到你先睡。"]
+        },
+        {
+          "text": "豆子换了？",
+          "effects": [{ "type": "add_affinity", "characterId": "sangluo", "value": 1 }],
+          "nextMessages": ["哈，装傻的功夫见长", "豆子上周就换回来了。再猜一次，下次见面告诉你答案。"]
+        }
+      ]
+    },
+    {
+      "id": "sangluo_promise",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "sangluo", "minStage": 4 }],
+      "characterId": "sangluo",
+      "messages": [
+        { "sender": "character", "content": "下周一，店休", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "我要去山里见一个种豆子的老头，来回一天", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "路远，车慢，风景好。一个人去有点浪费——你懂我意思吧", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "几点出发？我开车",
+          "effects": [{ "type": "add_affinity", "characterId": "sangluo", "value": 3 }],
+          "nextMessages": ["六点。别迟到，迟到的人要请晚饭", "……其实迟到也没关系。反正我等得起。"]
+        },
+        {
+          "text": "给我带一包豆子？",
+          "effects": [{ "type": "add_affinity", "characterId": "sangluo", "value": 1 }],
+          "nextMessages": ["可以啊，手冲还是意式？", "不过亲自来挑的话，能换我现磨一壶。考虑一下。"]
+        }
+      ]
+    },
+    {
+      "id": "aman_deeptalk",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "aman", "minStage": 3 }],
+      "characterId": "aman",
+      "messages": [
+        { "sender": "character", "content": "你睡了吗？诊所今晚留了一只术后的小猫，我值夜", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "它一直发抖，我把它揣在怀里才睡着", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "守着一个小生命的时候，总会想到一些平时不敢想的事。比如，要是我也有撑不住的时候，可以找谁呢", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "找我，几点都行",
+          "effects": [{ "type": "add_affinity", "characterId": "aman", "value": 3 }],
+          "nextMessages": ["……嗯，我存下来了，『几点都行』", "奇怪，刚说完，好像就已经没那么累了。"]
+        },
+        {
+          "text": "你也要照顾好自己呀",
+          "effects": [{ "type": "add_affinity", "characterId": "aman", "value": 1 }],
+          "nextMessages": ["好啦，我会的~", "小猫睡熟了。我把它的呼噜声录给你，一起晚安。"]
+        }
+      ]
+    },
+    {
+      "id": "aman_promise",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "aman", "minStage": 4 }],
+      "characterId": "aman",
+      "messages": [
+        { "sender": "character", "content": "周日领养日，你来吗？", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "上次救回来的那窝小猫，要找新家了", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "有一只三花，谁都不让碰，只让你抱过……我偷偷给它留了名额", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "我来，把它接回便利屋",
+          "effects": [{ "type": "add_affinity", "characterId": "aman", "value": 3 }],
+          "nextMessages": ["真的吗！它一定开心坏了", "那以后我去看它，顺便看你……要准备两份探望礼才行了~"]
+        },
+        {
+          "text": "我可能不太会养猫",
+          "effects": [{ "type": "add_affinity", "characterId": "aman", "value": 1 }],
+          "nextMessages": ["没关系呀，有我呢", "养猫教学，一对一，终身售后~先从周日开始！"]
+        }
+      ]
+    },
+    {
+      "id": "yunzhiyi_deeptalk",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "yunzhiyi", "minStage": 3 }],
+      "characterId": "yunzhiyi",
+      "messages": [
+        { "sender": "character", "content": "你还醒着吧！太好了", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "我刚送完今天最后一单，现在坐在江边台阶上", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "今天被客户骂了一顿，不是我的错，但我还是说了对不起。跑了一天，就这一下有点跑不动了", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "别动，我去接你",
+          "effects": [{ "type": "add_affinity", "characterId": "yunzhiyi", "value": 3 }],
+          "nextMessages": ["诶？！不用不用，好远的！", "……你真的来呀？那、那我等着！我在第三个路灯下面！"]
+        },
+        {
+          "text": "你已经做得很好了",
+          "effects": [{ "type": "add_affinity", "characterId": "yunzhiyi", "value": 1 }],
+          "nextMessages": ["嘿嘿，有这句话就够了！", "休息完毕！满电复活！最后两公里，冲刺回家！"]
+        }
+      ]
+    },
+    {
+      "id": "yunzhiyi_promise",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "yunzhiyi", "minStage": 4 }],
+      "characterId": "yunzhiyi",
+      "messages": [
+        { "sender": "character", "content": "重大宣布！！", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "下个月的城市迷你马拉松，我报名了！五公里！", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "终点的补给摊，站点说可以让我挑一个人一起摆……我第一个就想到你！", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "我陪你跑全程",
+          "effects": [{ "type": "add_affinity", "characterId": "yunzhiyi", "value": 3 }],
+          "nextMessages": ["？！你要跑？！那我们并排！", "说好了，谁先到终点谁请大餐！不对——一起到！"]
+        },
+        {
+          "text": "我在终点等你",
+          "effects": [{ "type": "add_affinity", "characterId": "yunzhiyi", "value": 1 }],
+          "nextMessages": ["好！那你举个牌子！", "牌子上写什么都行，反正看到你，我就能加速！"]
+        }
+      ]
+    },
+    {
+      "id": "shenzhaoning_deeptalk",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "shenzhaoning", "minStage": 3 }],
+      "characterId": "shenzhaoning",
+      "messages": [
+        { "sender": "character", "content": "占用你十分钟。", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "今天例会上，我替一个新人扛了责任。流程上，这不该是我做的。", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "我在复盘自己为什么这么做。目前唯一的结论：大概是受了某人影响。这不是表扬。", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "听起来就是表扬",
+          "effects": [{ "type": "add_affinity", "characterId": "shenzhaoning", "value": 3 }],
+          "nextMessages": ["……重新定义：这是事实陈述。", "十分钟到了。但今天，延长十分钟也在流程内。"]
+        },
+        {
+          "text": "那个新人运气不错",
+          "effects": [{ "type": "add_affinity", "characterId": "shenzhaoning", "value": 1 }],
+          "nextMessages": ["运气不是可复用的方案。", "但，嗯。偶尔当一次别人的运气，体验尚可。"]
+        }
+      ]
+    },
+    {
+      "id": "shenzhaoning_promise",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "shenzhaoning", "minStage": 4 }],
+      "characterId": "shenzhaoning",
+      "messages": [
+        { "sender": "character", "content": "通知：我调整了周三晚的固定日程。", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "原日程：健身房。新日程：待定事项，优先级最高，每周保留。", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "待定事项需要另一名参与者确认。确认截止时间：现在。", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "确认参与，每周三不见不散",
+          "effects": [{ "type": "add_affinity", "characterId": "shenzhaoning", "value": 3 }],
+          "nextMessages": ["确认收到。日程已锁定。", "备注栏我填了四个字：不许取消。——这一条，对我自己也生效。"]
+        },
+        {
+          "text": "待定事项是什么？",
+          "effects": [{ "type": "add_affinity", "characterId": "shenzhaoning", "value": 1 }],
+          "nextMessages": ["内容待定，人选已定。", "流程上这叫『先定框架，后填内容』。下周三，现场公布第一项。"]
+        }
+      ]
+    },
+    {
+      "id": "suli_deeptalk",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "suli", "minStage": 3 }],
+      "characterId": "suli",
+      "messages": [
+        { "sender": "character", "content": "零点了。", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "今晚的来信栏目，有一封信我读到一半，停了七秒。导播以为出了事故。", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "信里问：陪伴和喜欢的边界在哪里。我没有读完。因为我突然不想把答案说给所有人听。", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "答案可以只说给我听",
+          "effects": [{ "type": "add_affinity", "characterId": "suli", "value": 3 }],
+          "nextMessages": ["……频道切换成功。", "边界在，想到一个人的时候，整座城市的声音都变成背景音。比如，现在。"]
+        },
+        {
+          "text": "后来播了什么？",
+          "effects": [{ "type": "add_affinity", "characterId": "suli", "value": 1 }],
+          "nextMessages": ["放了一首很长的纯音乐。", "曲名你自己去节目单查。查到了，就当我说过了。"]
+        }
+      ]
+    },
+    {
+      "id": "suli_promise",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "suli", "minStage": 4 }],
+      "characterId": "suli",
+      "messages": [
+        { "sender": "character", "content": "下周四，节目改版。", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "新栏目第一期，我想去外面录：凌晨的便利屋，真实的环境音。", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "需要店长出镜。不，出声。说什么都行，哪怕只是煮面的声音。", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "二十五时全程开放，随你录",
+          "effects": [{ "type": "add_affinity", "characterId": "suli", "value": 3 }],
+          "nextMessages": ["好。带两副耳机去。", "节目名我定了：《第二十五时》。简介只有一句——『有个地方，打烊之后才开始』。"]
+        },
+        {
+          "text": "我说话不好听，煮面可以",
+          "effects": [{ "type": "add_affinity", "characterId": "suli", "value": 1 }],
+          "nextMessages": ["煮面的声音，很好。", "还有……你的声音不难听。是适合深夜的那种。"]
+        }
+      ]
+    },
+    {
+      "id": "murongxue_deeptalk",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "murongxue", "minStage": 3 }],
+      "characterId": "murongxue",
+      "messages": [
+        { "sender": "character", "content": "打扰。有一个核实请求。", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "我整理这三个月的观察笔记，发现一个数据异常：关于你的页数，是其他条目的四倍。", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "作为严谨的记录者，我需要排除一个变量：这是职业习惯，还是别的什么。请配合调查。", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "是别的什么",
+          "effects": [{ "type": "add_affinity", "characterId": "murongxue", "value": 3 }],
+          "nextMessages": ["……记录：受访者回答干脆，记录者心率异常。", "本次调查结论保密。但调查会长期持续。"]
+        },
+        {
+          "text": "你的职业习惯一向很好",
+          "effects": [{ "type": "add_affinity", "characterId": "murongxue", "value": 1 }],
+          "nextMessages": ["谢谢。但这个回答无法解释异常。", "我会继续收集证据。下次见面请保持自然——虽然上次你也没做到。"]
+        }
+      ]
+    },
+    {
+      "id": "murongxue_promise",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "murongxue", "minStage": 4 }],
+      "characterId": "murongxue",
+      "messages": [
+        { "sender": "character", "content": "正式邀约。", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "毕业作品开题通过了。题目：《第二十五小时：一家便利屋与它接住的人》。", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "跟拍周期一年。第一次素材采集定在本周六，地点你选。要求只有一个：那天的你不接委托，只做自己。", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "周六，带你去我最常去的地方",
+          "effects": [{ "type": "add_affinity", "characterId": "murongxue", "value": 3 }],
+          "nextMessages": ["好。我会带相机。但那天的镜头盖……可能懒得打开。", "有些素材，比起镜头，我更想用眼睛存档。"]
+        },
+        {
+          "text": "拍一年会不会太久",
+          "effects": [{ "type": "add_affinity", "characterId": "murongxue", "value": 1 }],
+          "nextMessages": ["不会。完整记录需要一个周期。", "而且『一年』只是开题的写法。结题时间，我打算一直延期。"]
+        }
+      ]
+    },
+    {
+      "id": "aruo_deeptalk",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "aruo", "minStage": 3 }],
+      "characterId": "aruo",
+      "messages": [
+        { "sender": "character", "content": "在吗在吗在吗", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "今天直播炸了，设备崩了二十分钟，弹幕全在刷退款", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "我笑着撑完了全场，救回来了。但下播之后一个人坐在补光灯前，突然不知道刚才一直在笑的那个是谁", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "现在不用笑，我在",
+          "effects": [{ "type": "add_affinity", "characterId": "aruo", "value": 3 }],
+          "nextMessages": ["……呜，早说嘛，憋了一晚上", "好了，充电完毕！果然我的应援榜一是你——虽然你一毛钱没刷过！"]
+        },
+        {
+          "text": "你救场的样子很帅",
+          "effects": [{ "type": "add_affinity", "characterId": "aruo", "value": 1 }],
+          "nextMessages": ["那是！专业的！", "不过……帅是给观众的，累是给你的。这算不算 VIP 待遇？"]
+        }
+      ]
+    },
+    {
+      "id": "aruo_promise",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "relationship_stage", "characterId": "aruo", "minStage": 4 }],
+      "characterId": "aruo",
+      "messages": [
+        { "sender": "character", "content": "公告！本主播周六停播！", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "运营问我理由，我说『私人行程，顶级优先级』", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "行程内容：和某店长过一天没有镜头的日子。地点待定，反正——你去哪我去哪", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "那就从早到晚都给你",
+          "effects": [{ "type": "add_affinity", "characterId": "aruo", "value": 3 }],
+          "nextMessages": ["哇，这句话播出去能上热搜！", "可惜全网只有我一个人听到了~独家！永久独家！"]
+        },
+        {
+          "text": "粉丝会伤心的",
+          "effects": [{ "type": "add_affinity", "characterId": "aruo", "value": 1 }],
+          "nextMessages": ["一天而已，他们会原谅我的", "再说了……让全世界等我一天就为了见你，这件事本身就很浪漫，懂？"]
+        }
+      ]
     }
   ]
 }
