@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import NavBar from '@/components/NavBar';
@@ -93,7 +93,7 @@ function AppContent() {
 
 export default function App() {
   return (
-    <Router basename={import.meta.env.BASE_URL}>
+    <Router>
       <AppContent />
     </Router>
   );
