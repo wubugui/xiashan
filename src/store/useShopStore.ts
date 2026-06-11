@@ -4,7 +4,7 @@
  */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Commission, GameLocation, ServiceCard, Spot } from '@/data/types';
+import type { Commission, GameLocation, ServiceCard } from '@/data/types';
 import { locations as allLocations } from '@/data/locations';
 import { rollRoutes } from '@/engine/shopEngine';
 

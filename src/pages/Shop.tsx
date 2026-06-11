@@ -7,19 +7,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, RefreshCw, MapPin, ClipboardList, Package, ScrollText,
-  Zap, Users, Wrench, ShoppingBag, Radio, Star,
+  Zap, Users, ShoppingBag, Radio,
 } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useShopStore, checkFail } from '@/store/useShopStore';
-import { characters, getCharacterById } from '@/data/characters';
+import { getCharacterById } from '@/data/characters';
 import { commissions } from '@/data/commissions';
 import { allSkills, allTools, allInfos } from '@/data/serviceCards';
 import { pullSingle } from '@/engine/gachaEngine';
-import { isMatch, scoreCard, resolveSpot, pick, rollRoutes, applyCommissionRewards } from '@/engine/shopEngine';
-import { locations as allLocations } from '@/data/locations';
+import { isMatch, scoreCard, resolveSpot, pick, applyCommissionRewards } from '@/engine/shopEngine';
+import { checkPhoneEvents } from '@/engine/phoneScheduler';
 import GachaAnimation from '@/components/GachaAnimation';
 import CommissionTheater from '@/components/CommissionTheater';
-import type { GameLocation, Spot, ServiceCard } from '@/data/types';
+import type { Spot } from '@/data/types';
 
 /** GachaAnimation 内部格式（与 engine 的 GachaResult 不同） */
 interface AnimGachaResult {
@@ -55,6 +55,53 @@ function rarityColor(rarity: string) {
   if (rarity === 'SSR') return 'text-yellow-300';
   if (rarity === 'SR') return 'text-purple-300';
   return 'text-slate-300';
+}
+
+function dispatchAvailablePhoneEvents(addLog?: (text: string, cls?: 'good' | 'bad' | 'draw' | 'play' | '') => void) {
+  const store = usePlayerStore.getState();
+  const events = checkPhoneEvents({
+    spiritStones: store.spiritStones,
+    reputation: store.reputation,
+    ownedCharacters: store.ownedCharacters,
+    completedNodes: store.completedNodes,
+    flags: store.flags,
+    triggeredEventIds: store.triggeredEventIds,
+  });
+
+  for (const event of events) {
+    if (!event.characterId) continue;
+    const timestamp = Date.now();
+    const messageType = event.type === 'sms' ? 'sms' : 'wechat';
+
+    store.addTriggeredEvent(event.id);
+    if (event.type === 'call') {
+      store.addCallLog({
+        characterId: event.characterId,
+        type: 'incoming',
+        duration: 0,
+        timestamp,
+      });
+    }
+
+    event.messages.forEach((message, index) => {
+      store.addPhoneMessage({
+        id: `${event.id}_${index}_${timestamp}`,
+        characterId: event.characterId!,
+        type: messageType,
+        content: message.content,
+        timestamp: timestamp + index,
+        read: false,
+      });
+    });
+
+    if (event.effects?.length) {
+      applyCommissionRewards(event.effects);
+    }
+  }
+
+  if (events.length > 0) {
+    addLog?.(`手机收到 ${events.length} 条新事件。`, 'good');
+  }
 }
 
 /* ────── 子组件：状态条 ────── */
@@ -134,6 +181,7 @@ export default function Shop() {
   const [showGacha, setShowGacha] = useState(false);
   const [endDayResult, setEndDayResult] = useState<'success' | 'fail' | null>(null);
   const [showTheater, setShowTheater] = useState(false);
+  const [handledThisLocation, setHandledThisLocation] = useState(false);
 
   /* ── 初始化 ── */
   const isNew = routes.length === 0 && !gameOver && commission === null && step === 1 && time === 13;
@@ -143,6 +191,7 @@ export default function Shop() {
     if (gameOver) return toast('今日已结束。');
 
     if (pool === 'commission') {
+      if (commission) return toast('今天已有委托，先把当前委托处理完。');
       if (!spendCommissionTicket()) return toast('委托券不足。');
       const c = pick(commissions);
       setCommission(c);
@@ -183,7 +232,7 @@ export default function Shop() {
       addHandCard(card);
       addLog(`情报网络：抽到【${card.name}】（${card.type}）`, 'draw');
     }
-  }, [gameOver, spendCommissionTicket, spendPersonTicket, spendNormalTickets, commissions, ownedCharacters, pityCounter, totalGachaCount, setPityCounter, setTotalGachaCount, addCharacter, addGachaResult, addHandCard, setCommission, addLog]);
+  }, [gameOver, commission, spendCommissionTicket, spendPersonTicket, spendNormalTickets, ownedCharacters, pityCounter, totalGachaCount, setPityCounter, setTotalGachaCount, addCharacter, addGachaResult, addHandCard, setCommission, addLog]);
 
   /* ────── 热点点击 ────── */
   const handleSpotClick = useCallback((spot: Spot, spotIndex: number) => {
@@ -213,6 +262,7 @@ export default function Shop() {
 
     applyDelta(delta);
     markSpotDone(locId, spotIndex);
+    setHandledThisLocation(true);
     addLog(text, cls);
 
     const newTrust = Math.max(0, trust + (delta.trust ?? 0));
@@ -236,18 +286,11 @@ export default function Shop() {
   }, [currentEvent, loc, trust, commission, time, energy, rep,
     consumeHandCard, applyDelta, markSpotDone, addLog, refreshRoutes, setGameOver]);
 
-  /* ────── 完成地点 ────── */
-  const handleFinishLocation = useCallback(() => {
-    if (gameOver) return;
-    if (!loc) return toast('先选择地点。');
-    const result = finishLocation();
-    if (result === 'end_day') handleEndDay();
-  }, [gameOver, loc, finishLocation]);
-
   /* ────── 结束当天 ────── */
   const handleEndDay = useCallback(() => {
     const success = !!commission && trust >= commission.need;
     if (success && commission) {
+      addCharacter(commission.target);
       // 执行奖励 Effects
       applyCommissionRewards(commission.rewardEffects);
       // 发额外票
@@ -256,6 +299,7 @@ export default function Shop() {
       addNormalTickets(2);
       addSpiritStones(0); // already in rewardEffects
       addReputation(1);
+      dispatchAvailablePhoneEvents(addLog);
       addLog(`今日完成：【${commission.name}】。奖励：委托券+1，人物券+1，普通券+2，口碑+1。`, 'good');
       setEndDayResult('success');
     } else {
@@ -264,7 +308,17 @@ export default function Shop() {
       setEndDayResult('fail');
     }
     setGameOver(true);
-  }, [commission, trust, addCommissionTickets, addPersonTickets, addNormalTickets, addSpiritStones, addReputation, addLog, setGameOver]);
+  }, [commission, trust, addCharacter, addCommissionTickets, addPersonTickets, addNormalTickets, addSpiritStones, addReputation, addLog, setGameOver]);
+
+  /* ────── 完成地点 ────── */
+  const handleFinishLocation = useCallback(() => {
+    if (gameOver) return;
+    if (!loc) return toast('先选择地点。');
+    if (!handledThisLocation) return toast('至少处理一个热点后才能完成当前地点。');
+    const result = finishLocation();
+    setHandledThisLocation(false);
+    if (result === 'end_day') handleEndDay();
+  }, [gameOver, loc, handledThisLocation, finishLocation, handleEndDay]);
 
   /* ────── 委托剧场结算 ────── */
   const handleTheaterComplete = useCallback((ok: boolean) => {
@@ -278,6 +332,7 @@ export default function Shop() {
       addPersonTickets(1);
       addNormalTickets(2);
       addReputation(1);
+      dispatchAvailablePhoneEvents(addLog);
       addLog(`委托完成：【${commission.name}】。奖励已发放，相关影像已解锁。`, 'good');
       setEndDayResult('success');
     } else {
@@ -286,7 +341,7 @@ export default function Shop() {
       setEndDayResult('fail');
     }
     setGameOver(true);
-  }, [commission, addCommissionTickets, addPersonTickets, addNormalTickets, addReputation, addLog, setGameOver]);
+  }, [commission, addCharacter, addCommissionTickets, addPersonTickets, addNormalTickets, addReputation, addLog, setGameOver]);
 
   /* ────── Toast ────── */
   const [toastMsg, setToastMsg] = useState('');
@@ -315,7 +370,7 @@ export default function Shop() {
           <p className="text-slate-400 text-sm">开在一天的第二十五小时 · 专收时间表漏掉的麻烦</p>
         </div>
         <button
-          onClick={() => { startDay(); setActiveTab('map'); }}
+          onClick={() => { startDay(); setHandledThisLocation(false); setActiveTab('map'); }}
           className="rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 px-10 py-4 text-lg font-black text-amber-950 shadow-[0_0_30px_rgba(251,191,36,0.4)] hover:from-amber-400"
         >
           开始营业
@@ -342,7 +397,7 @@ export default function Shop() {
           <h1 className="flex-1 font-black text-white text-base">二十五时便利屋</h1>
           {gameOver && (
             <button
-              onClick={() => { resetDay(); setEndDayResult(null); setActiveTab('map'); }}
+              onClick={() => { resetDay(); setEndDayResult(null); setHandledThisLocation(false); setActiveTab('map'); }}
               className="flex items-center gap-1 rounded-full bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-300 hover:bg-amber-500/30"
             >
               <RefreshCw size={12} /> 新一天
@@ -421,8 +476,8 @@ export default function Shop() {
                   {routes.map(l => (
                     <button
                       key={l.id}
-                      onClick={() => { if (!gameOver) chooseLocation(l); }}
-                      disabled={gameOver}
+                      onClick={() => { if (!gameOver) { chooseLocation(l); setHandledThisLocation(false); } }}
+                      disabled={gameOver || trust < commission.need}
                       className={cn(
                         'w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-left',
                         'hover:border-amber-400/40 active:scale-[0.99] transition-all disabled:opacity-40',
@@ -548,13 +603,13 @@ export default function Shop() {
                       disabled={gameOver}
                       className="mt-3 w-full rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 py-3 text-sm font-black text-white shadow-[0_0_24px_rgba(244,63,94,0.35)] hover:from-rose-400 disabled:opacity-40 active:scale-[0.99] transition-all"
                     >
-                      ▶ 进入委托现场
+                      {trust >= commission.need ? '▶ 进入委托现场' : `信任达标后进入现场（${trust}/${commission.need}）`}
                     </button>
                   ) : (
                     <p className="mt-3 text-center text-[10px] text-slate-500">（本委托剧本制作中，敬请期待）</p>
                   )}
                   <p className="mt-2 text-center text-[10px] text-slate-500">
-                    提示：先去抽几张人物 / 技能卡，进委托时更有把握。
+                    提示：先在城市热点里攒够信任，再进入委托现场收尾。
                   </p>
                 </div>
               )}
@@ -844,7 +899,7 @@ export default function Shop() {
                 <p className="text-sm text-slate-400 mb-4">委托未完成，明天再努力吧。</p>
               )}
               <button
-                onClick={() => { setEndDayResult(null); resetDay(); setActiveTab('map'); }}
+                onClick={() => { setEndDayResult(null); resetDay(); setHandledThisLocation(false); setActiveTab('map'); }}
                 className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-3 font-black text-amber-950"
               >
                 开始新的一天

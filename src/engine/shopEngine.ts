@@ -2,7 +2,7 @@
  * 便利屋纯逻辑引擎（无 DOM/React 依赖）
  * 所有函数都是纯函数，可单独测试。
  */
-import type { ServiceTag, GameLocation, Spot, ServiceCard, SpotDelta, Commission } from '@/data/types';
+import type { ServiceTag, GameLocation, Spot, ServiceCard, SpotDelta } from '@/data/types';
 import type { Effect } from '@/engine/types';
 import { usePlayerStore } from '@/store/usePlayerStore';
 
