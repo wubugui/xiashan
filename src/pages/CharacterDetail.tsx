@@ -5,6 +5,7 @@ import { ChevronLeft, Hand, MessageCircle, Gift, TrendingUp } from 'lucide-react
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
 import { cn } from '@/lib/utils';
+import { assetUrl } from '@/lib/assets';
 
 type TabType = 'info' | 'interact' | 'upgrade';
 
@@ -142,7 +143,7 @@ export default function CharacterDetail() {
       >
         {character.portraitUrl ? (
           <img
-            src={character.portraitUrl}
+            src={assetUrl(character.portraitUrl)}
             alt={character.name}
             className="h-full w-full object-cover"
           />
@@ -246,7 +247,7 @@ export default function CharacterDetail() {
                     return (
                       <div key={key} className="overflow-hidden rounded-md border border-slate-700/50 bg-slate-900/60">
                         <div className="aspect-[1.18] overflow-hidden bg-slate-800">
-                          <img src={src} alt={`${character.name}${label}`} className="h-full w-full object-cover object-top" loading="lazy" />
+                          <img src={assetUrl(src)} alt={`${character.name}${label}`} className="h-full w-full object-cover object-top" loading="lazy" />
                         </div>
                         <p className="px-2 py-1 text-center text-[11px] text-slate-400">{label}</p>
                       </div>

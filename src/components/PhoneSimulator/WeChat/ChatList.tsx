@@ -2,6 +2,7 @@ import { ChevronLeft } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
 import { useMemo } from 'react';
+import { assetUrl } from '@/lib/assets';
 
 interface ChatListProps {
   onOpenChat: (characterId: string) => void;
@@ -110,7 +111,7 @@ export default function ChatList({ onOpenChat, onBack }: ChatListProps) {
               >
                 {character.avatarUrl ? (
                   <img
-                    src={character.avatarUrl}
+                    src={assetUrl(character.avatarUrl)}
                     alt={character.name}
                     className="h-12 w-12 flex-shrink-0 rounded-lg object-cover"
                     loading="lazy"

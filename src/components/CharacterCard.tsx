@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { getCharacterById } from '@/data/characters';
 import { cn } from '@/lib/utils';
+import { assetUrl } from '@/lib/assets';
 
 interface CharacterCardProps {
   characterId: string;
@@ -81,7 +82,7 @@ export default function CharacterCard({
 
       {character?.portraitUrl ? (
         <img
-          src={character.portraitUrl}
+          src={assetUrl(character.portraitUrl)}
           alt={name}
           className="absolute inset-x-0 top-0 h-[72%] w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
           loading="lazy"

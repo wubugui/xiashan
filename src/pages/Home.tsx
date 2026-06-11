@@ -157,7 +157,7 @@ export default function Home() {
               'drop-shadow-[0_0_30px_rgba(251,191,36,0.4)]',
             )}
           >
-            废物下山
+            二十五时便利屋
           </h1>
           <motion.p
             initial={{ opacity: 0 }}
@@ -165,7 +165,7 @@ export default function Home() {
             transition={{ delay: 0.8 }}
             className="mt-2 text-sm tracking-widest text-slate-400"
           >
-            活着，就是最大的修行
+            开在第二十五小时的都市便利屋
           </motion.p>
         </motion.div>
 

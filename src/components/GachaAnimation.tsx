@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getCharacterById } from '@/data/characters';
 import type { Character } from '@/data/types';
 import { cn } from '@/lib/utils';
+import { assetUrl } from '@/lib/assets';
 
 interface GachaResult {
   characterId: string;
@@ -189,7 +190,7 @@ function GachaCard({
               />
               <div className={cn('relative flex-1 bg-gradient-to-b', rarityGradient[result.rarity])}>
                 {portraitUrl ? (
-                  <img src={portraitUrl} alt={result.name} className="h-full w-full object-cover object-top opacity-80" />
+                  <img src={assetUrl(portraitUrl)} alt={result.name} className="h-full w-full object-cover object-top opacity-80" />
                 ) : (
                   <div className="flex h-full items-center justify-center">
                     <span className="text-3xl text-white/20">人</span>
@@ -273,7 +274,7 @@ function GachaShowcase({
     >
       <div
         className="absolute inset-0 bg-cover bg-center opacity-70"
-        style={backgroundUrl ? { backgroundImage: `url(${backgroundUrl})` } : undefined}
+        style={backgroundUrl ? { backgroundImage: `url(${assetUrl(backgroundUrl)})` } : undefined}
       />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_58%_42%,rgba(148,163,184,0.24),transparent_34%),linear-gradient(90deg,rgba(7,17,38,0.96)_0%,rgba(15,23,42,0.74)_42%,rgba(15,23,42,0.24)_72%,rgba(49,46,129,0.42)_100%)]" />
       <div className="absolute -left-16 top-0 h-44 w-[48vw] -skew-x-[24deg] bg-indigo-300/40" />
@@ -294,7 +295,7 @@ function GachaShowcase({
       {portraitUrl ? (
         <motion.img
           key={portraitUrl}
-          src={portraitUrl}
+          src={assetUrl(portraitUrl)}
           alt={result.name}
           initial={{ x: 90, opacity: 0, scale: 0.92 }}
           animate={{ x: 0, opacity: 1, scale: 1 }}

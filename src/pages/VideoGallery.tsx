@@ -7,6 +7,7 @@ import VideoPlayer from '@/components/VideoPlayer';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { evaluateAll } from '@/engine/conditionEngine';
 import { cn } from '@/lib/utils';
+import { assetUrl } from '@/lib/assets';
 
 export default function VideoGallery() {
   const navigate = useNavigate();
@@ -118,7 +119,7 @@ export default function VideoGallery() {
       {playingVideo && (
         <VideoPlayer
           key={playingVideo.id}
-          src={playingVideo.src}
+          src={assetUrl(playingVideo.src)!}
           onEnd={() => setPlayingId(null)}
         />
       )}

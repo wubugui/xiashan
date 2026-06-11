@@ -16,6 +16,7 @@ import ChoicePanel from '@/components/ChoicePanel';
 import FaceSlapEffect from '@/components/FaceSlapEffect';
 import GachaAnimation from '@/components/GachaAnimation';
 import type { Effect } from '@/engine/types';
+import { assetUrl } from '@/lib/assets';
 
 export default function Story() {
   const navigate = useNavigate();
@@ -309,7 +310,7 @@ export default function Story() {
   // 背景样式
   const bgStyle = useMemo(() => {
     if (currentNode?.backgroundUrl) {
-      return { backgroundImage: `url(${currentNode.backgroundUrl})` };
+      return { backgroundImage: `url(${assetUrl(currentNode.backgroundUrl)})` };
     }
     return {};
   }, [currentNode?.backgroundUrl]);

@@ -16,6 +16,7 @@ import { useShopStore } from '@/store/useShopStore';
 import type { Commission, CommissionNode, Line, Mood, ServiceTag } from '@/data/types';
 import type { HandCard } from '@/store/useShopStore';
 import { cn } from '@/lib/utils';
+import { assetUrl } from '@/lib/assets';
 
 type Tier = 'perfect' | 'ok' | 'poor';
 
@@ -224,7 +225,7 @@ export default function CommissionTheater({ commission, onComplete, onExit }: Pr
         <div className="absolute inset-0 flex items-end justify-center pointer-events-none">
           <motion.img
             key={clientSpeaking ? 'active' : 'idle'}
-            src={client.portraitUrl}
+            src={assetUrl(client.portraitUrl)}
             alt={client.name}
             animate={{
               opacity: clientSpeaking || inChallenge ? 1 : 0.6,
@@ -346,7 +347,7 @@ function CardTray({
                     matched ? 'border-amber-400/60 bg-amber-500/10' : 'border-white/10 bg-slate-800',
                   )}
                 >
-                  {c && <img src={c.avatarUrl} alt={c.name} className="h-8 w-8 rounded-full object-cover shrink-0" />}
+                  {c && <img src={assetUrl(c.avatarUrl)} alt={c.name} className="h-8 w-8 rounded-full object-cover shrink-0" />}
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-white truncate">{matched ? '✨' : ''}{p.name}</p>
                     <p className="text-[10px] text-slate-400">Lv.{p.level} · {p.serviceType}</p>

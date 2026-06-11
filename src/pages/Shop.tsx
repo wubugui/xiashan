@@ -32,6 +32,7 @@ interface AnimGachaResult {
 import type { HandCard } from '@/store/useShopStore';
 import type { PersonCard } from '@/engine/shopEngine';
 import { cn } from '@/lib/utils';
+import { assetUrl } from '@/lib/assets';
 
 /* ────── 常量 ────── */
 const POOL_CONFIG = [
@@ -530,7 +531,7 @@ export default function Shop() {
                     const targetChar = getCharacterById(commission.target);
                     return targetChar ? (
                       <div className="mt-2 flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
-                        <img src={targetChar.avatarUrl} alt={targetChar.name} className="h-8 w-8 rounded-full object-cover" />
+                        <img src={assetUrl(targetChar.avatarUrl)} alt={targetChar.name} className="h-8 w-8 rounded-full object-cover" />
                         <div>
                           <p className="text-xs font-bold text-white">{targetChar.name}</p>
                           <p className="text-[10px] text-slate-400">{targetChar.title}</p>
@@ -575,7 +576,7 @@ export default function Shop() {
                         <div className="flex items-center gap-2 mb-1">
                           {(() => {
                             const c = getCharacterById(p.id);
-                            return c ? <img src={c.avatarUrl} alt={c.name} className="h-7 w-7 rounded-full object-cover" /> : null;
+                            return c ? <img src={assetUrl(c.avatarUrl)} alt={c.name} className="h-7 w-7 rounded-full object-cover" /> : null;
                           })()}
                           <div className="min-w-0">
                             <p className="text-xs font-bold text-white truncate">Lv.{p.level} {p.name}</p>

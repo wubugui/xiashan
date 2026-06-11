@@ -12,6 +12,7 @@ import Phone from '@/pages/Phone';
 import VideoGallery from '@/pages/VideoGallery';
 import Minigame from '@/pages/Minigame';
 import Shop from '@/pages/Shop';
+import { assetUrl } from '@/lib/assets';
 
 function AppContent() {
   const location = useLocation();
@@ -85,14 +86,14 @@ function AppContent() {
       )}
 
       {/* 开场 intro 视频 */}
-      {showIntro && <VideoPlayer src="/video/intro.mp4" onEnd={handleIntroEnd} />}
+      {showIntro && <VideoPlayer src={assetUrl('/video/intro.mp4')!} onEnd={handleIntroEnd} />}
     </div>
   );
 }
 
 export default function App() {
   return (
-    <Router>
+    <Router basename={import.meta.env.BASE_URL}>
       <AppContent />
     </Router>
   );

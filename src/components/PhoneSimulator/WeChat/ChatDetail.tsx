@@ -4,6 +4,7 @@ import { getCharacterById } from '@/data/characters';
 import MessageBubble from './MessageBubble';
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { assetUrl } from '@/lib/assets';
 
 interface ChatDetailProps {
   characterId: string;
@@ -148,7 +149,7 @@ export default function ChatDetail({ characterId, onBack }: ChatDetailProps) {
             >
               {character?.avatarUrl ? (
                 <img
-                  src={character.avatarUrl}
+                  src={assetUrl(character.avatarUrl)}
                   alt={character.name}
                   className="h-9 w-9 flex-shrink-0 rounded-lg object-cover"
                 />

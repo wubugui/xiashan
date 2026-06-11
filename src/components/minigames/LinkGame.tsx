@@ -4,6 +4,7 @@ import { ChevronLeft, RotateCcw, Timer } from 'lucide-react';
 import { characters } from '@/data/characters';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { cn } from '@/lib/utils';
+import { assetUrl } from '@/lib/assets';
 
 /**
  * 仙缘消消乐 — 拖动交换相邻图块，三消或以上播放消除动画并获得灵石。
@@ -334,7 +335,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
                       )}
                     >
                       <img
-                        src={tile.kind}
+                        src={assetUrl(tile.kind)}
                         alt=""
                         className="pointer-events-none h-full w-full rounded-lg object-cover"
                         draggable={false}
