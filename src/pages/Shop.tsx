@@ -19,6 +19,7 @@ import { isMatch, scoreCard, resolveSpot, pick, applyCommissionRewards } from '@
 import { checkPhoneEvents } from '@/engine/phoneScheduler';
 import GachaAnimation from '@/components/GachaAnimation';
 import CommissionTheater from '@/components/CommissionTheater';
+import ResetSaveButton from '@/components/ResetSaveButton';
 import type { Spot } from '@/data/types';
 
 /** GachaAnimation 内部格式（与 engine 的 GachaResult 不同） */
@@ -401,6 +402,7 @@ export default function Shop() {
             <ChevronLeft size={18} />
           </button>
           <h1 className="flex-1 font-black text-white text-base">二十五时便利屋</h1>
+          <ResetSaveButton compact />
           {gameOver && (
             <button
               onClick={() => { resetDay(); setEndDayResult(null); setHandledThisLocation(false); setActiveTab('map'); }}

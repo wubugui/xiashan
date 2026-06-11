@@ -1,5 +1,5 @@
 import { Component, type ReactNode } from 'react';
-import { safeStorage } from '@/lib/safeStorage';
+import { clearLocalSaveAndReload } from '@/lib/saveReset';
 
 interface Props {
   children: ReactNode;
@@ -26,9 +26,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   };
 
   handleReset = () => {
-    safeStorage.removeItem('xiashan-player-store');
-    safeStorage.removeItem('xiashan-shop-store');
-    this.handleReload();
+    clearLocalSaveAndReload();
   };
 
   render() {

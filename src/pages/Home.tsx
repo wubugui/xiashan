@@ -7,6 +7,7 @@ import { characters } from '@/data/characters';
 import { REWARDS } from '@/data/rewards';
 import { cn } from '@/lib/utils';
 import { safeStorage } from '@/lib/safeStorage';
+import ResetSaveButton from '@/components/ResetSaveButton';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -139,6 +140,11 @@ export default function Home() {
           {/* 城市灯光 */}
           <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10" />
         </div>
+      </div>
+
+      {/* 测试清档 */}
+      <div className="absolute right-4 top-4 z-20">
+        <ResetSaveButton compact />
       </div>
 
       {/* 主内容 */}
