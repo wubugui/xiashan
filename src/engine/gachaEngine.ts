@@ -1,5 +1,7 @@
 import { GACHA_CONFIG } from '../data/gachaConfig';
 import { characters, Character } from '../data/characters';
+import { allSkills, allTools, allInfos } from '../data/serviceCards';
+import type { ServiceCard } from '../data/types';
 
 export interface GachaResult {
   character: Character;
@@ -77,4 +79,53 @@ export function pullTen(ownedIds: string[], affinityMap: Record<string, number>,
     ownedIds = [...ownedIds, pull.result.character.id]; // update for next pull
   }
   return { results, newPity: currentPity, newTotal: currentTotal };
+}
+
+/* ─────────────── 便利屋统一补给池 ───────────────
+ * 人物(低概率+硬保底) + 技能/便利/情报(常规产出)合并为一个池。
+ * 人物出货时沿用稀有度概率与心动UP权重；保底计数只被人物重置。
+ */
+export type SupplyPullResult =
+  | { kind: 'person'; character: Character; isNew: boolean }
+  | { kind: 'card'; card: ServiceCard };
+
+function rollCharacterRarity(): 'SSR' | 'SR' | 'R' | 'N' {
+  const roll = Math.random();
+  let cumulative = 0;
+  for (const [rarity, rate] of Object.entries(GACHA_CONFIG.rates)) {
+    cumulative += rate;
+    if (roll < cumulative) return rarity as 'SSR' | 'SR' | 'R' | 'N';
+  }
+  return 'R';
+}
+
+export function pullSupply(
+  ownedIds: string[],
+  affinityMap: Record<string, number>,
+  pityCounter: number,
+): { result: SupplyPullResult; newPity: number } {
+  const cfg = GACHA_CONFIG.supplyPool;
+  const hitCharacter = pityCounter >= cfg.characterPity - 1 || Math.random() < cfg.characterRate;
+  if (hitCharacter) {
+    const rarity = rollCharacterRarity();
+    const character = pickCharacter(rarity, ownedIds, affinityMap);
+    return {
+      result: { kind: 'person', character, isNew: !ownedIds.includes(character.id) },
+      newPity: 0,
+    };
+  }
+  const pools: [number, ServiceCard[]][] = [
+    [cfg.cardWeights.skill, allSkills],
+    [cfg.cardWeights.tool, allTools],
+    [cfg.cardWeights.info, allInfos],
+  ];
+  const total = pools.reduce((a, [w]) => a + w, 0);
+  let roll = Math.random() * total;
+  let chosen = pools[pools.length - 1][1];
+  for (const [w, pool] of pools) {
+    roll -= w;
+    if (roll < 0) { chosen = pool; break; }
+  }
+  const card = chosen[Math.floor(Math.random() * chosen.length)];
+  return { result: { kind: 'card', card }, newPity: pityCounter + 1 };
 }

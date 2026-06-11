@@ -86,6 +86,13 @@ export interface GachaConfig {
   tenCost: number;
   rates: Record<'SSR' | 'SR' | 'R' | 'N', number>;
   pity: Record<'SSR' | 'SR', number>;
+  /** 便利屋统一补给池（人物+技能+便利+情报） */
+  supplyPool: {
+    cost: number;
+    characterRate: number;
+    characterPity: number;
+    cardWeights: { skill: number; tool: number; info: number };
+  };
 }
 
 export interface RewardsConfig {

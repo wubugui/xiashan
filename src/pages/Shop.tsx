@@ -7,14 +7,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, RefreshCw, MapPin, ClipboardList, Package, ScrollText,
-  Zap, Users, ShoppingBag, Radio,
+  Users,
 } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useShopStore, checkFail } from '@/store/useShopStore';
 import { getCharacterById } from '@/data/characters';
 import { commissions } from '@/data/commissions';
-import { allSkills, allTools, allInfos } from '@/data/serviceCards';
-import { pullSingle } from '@/engine/gachaEngine';
+import { GACHA_CONFIG } from '@/data/gachaConfig';
+import { pullSupply } from '@/engine/gachaEngine';
 import { isMatch, scoreCard, resolveSpot, pick, applyCommissionRewards } from '@/engine/shopEngine';
 import { checkPhoneEvents } from '@/engine/phoneScheduler';
 import GachaAnimation from '@/components/GachaAnimation';
@@ -38,10 +38,7 @@ import { assetUrl } from '@/lib/assets';
 /* ────── 常量 ────── */
 const POOL_CONFIG = [
   { id: 'commission', label: '委托频道', sub: '抽"我要帮谁"', cost: '消耗 1 委托券', color: 'from-rose-500 to-pink-700', icon: ClipboardList },
-  { id: 'person',     label: '人物频道', sub: '抽"谁来帮我"', cost: '消耗 1 人物券', color: 'from-violet-500 to-purple-700', icon: Users },
-  { id: 'skill',      label: '技能补给', sub: '抽"怎么解决"', cost: '消耗 1 普通券', color: 'from-amber-500 to-yellow-700', icon: Zap },
-  { id: 'tool',       label: '便利服务', sub: '抽"快速改局"', cost: '消耗 2 普通券', color: 'from-cyan-500 to-sky-700', icon: ShoppingBag },
-  { id: 'info',       label: '情报网络', sub: '抽"提前知道"', cost: '消耗 1 普通券', color: 'from-emerald-500 to-teal-700', icon: Radio },
+  { id: 'supply',     label: '便利屋补给', sub: '人物·技能·便利·情报', cost: '消耗 1 普通券', color: 'from-violet-500 to-purple-700', icon: Users },
 ] as const;
 
 type PoolId = (typeof POOL_CONFIG)[number]['id'];
@@ -110,11 +107,11 @@ function dispatchAvailablePhoneEvents(addLog?: (text: string, cls?: 'good' | 'ba
 /* ────── 子组件：状态条 ────── */
 function StatusBar({
   time, energy, rep, money, trust, step, commissionNeed,
-  commissionTickets, personTickets, normalTickets,
+  commissionTickets, normalTickets,
 }: {
   time: number; energy: number; rep: number; money: number;
   trust: number; step: number; commissionNeed: number;
-  commissionTickets: number; personTickets: number; normalTickets: number;
+  commissionTickets: number; normalTickets: number;
 }) {
   const pct = commissionNeed > 0 ? Math.min(100, (trust / commissionNeed) * 100) : 0;
   return (
@@ -127,7 +124,6 @@ function StatusBar({
           { label: '📣', val: rep, warn: rep <= 1 },
           { label: '💴', val: money },
           { label: '🎫委', val: commissionTickets },
-          { label: '🎫人', val: personTickets },
           { label: '🎫普', val: normalTickets },
         ].map(({ label, val, warn }) => (
           <span key={label} className={cn('rounded-full border border-white/10 bg-white/5 px-2 py-0.5 font-bold', warn ? 'text-red-400' : 'text-slate-200')}>
@@ -169,11 +165,11 @@ export default function Shop() {
   } = shopStore;
 
   const {
-    ownedCharacters, affinityMap, pityCounter, totalGachaCount,
-    commissionTickets, personTickets, normalTickets,
-    spendCommissionTicket, spendPersonTicket, spendNormalTickets,
-    addCommissionTickets, addPersonTickets, addNormalTickets,
-    addGachaResult, setPityCounter, setTotalGachaCount, addCharacter,
+    ownedCharacters, affinityMap, supplyPityCounter,
+    commissionTickets, normalTickets,
+    spendCommissionTicket, spendNormalTickets, setSupplyPityCounter,
+    addCommissionTickets, addNormalTickets,
+    addGachaResult, addCharacter,
     addSpiritStones, addReputation,
   } = playerStore;
 
@@ -202,46 +198,35 @@ export default function Shop() {
       setCommission(c);
       addLog(`委托频道：抽到【${c.name}】。${c.desc}`, 'draw');
       setActiveTab('commission');
-    } else if (pool === 'person') {
-      if (!spendPersonTicket()) return toast('人物券不足。');
+    } else if (pool === 'supply') {
+      if (!spendNormalTickets(1)) return toast('普通券不足。');
       const ownedIds = ownedCharacters.map(o => o.characterId);
-      const { result, newPity, newTotal } = pullSingle(ownedIds, affinityMap, pityCounter, totalGachaCount);
-      setPityCounter(newPity);
-      setTotalGachaCount(newTotal);
-      addCharacter(result.character.id);
-      addGachaResult(result.character.id, result.character.rarity);
-      // 入伙演出：抽到邂逅期已攒好感的角色，出货时承认此前积累（设计文档 6.3）
-      if (result.isNew && (affinityMap[result.character.id] ?? 0) > 0) {
-        addLog(`【${result.character.name}】握住你的手："那几次委托……我都记得。"她正式加入二十五时便利屋。`, 'good');
+      const { result, newPity } = pullSupply(ownedIds, affinityMap, supplyPityCounter);
+      setSupplyPityCounter(newPity);
+      if (result.kind === 'person') {
+        addCharacter(result.character.id);
+        addGachaResult(result.character.id, result.character.rarity);
+        // 入伙演出：抽到邂逅期已攒好感的角色，出货时承认此前积累（设计文档 6.3）
+        if (result.isNew && (affinityMap[result.character.id] ?? 0) > 0) {
+          addLog(`【${result.character.name}】握住你的手："那几次委托……我都记得。"她正式加入二十五时便利屋。`, 'good');
+        }
+        const animResult: AnimGachaResult = {
+          characterId: result.character.id,
+          name: result.character.name,
+          rarity: result.character.rarity,
+          title: result.character.title,
+          isNew: result.isNew,
+        };
+        setGachaResults([animResult]);
+        setShowGacha(true);
+        addLog(`便利屋补给：✨ ${result.isNew ? '人物出货' : '重复人物'}【${result.character.name}】！`, 'good');
+      } else {
+        addHandCard(result.card);
+        const remain = GACHA_CONFIG.supplyPool.characterPity - newPity;
+        addLog(`便利屋补给：抽到【${result.card.name}】（${result.card.type}）。距人物保底还剩 ${remain} 抽。`, 'draw');
       }
-      // 转换为 GachaAnimation 所需格式
-      const animResult: AnimGachaResult = {
-        characterId: result.character.id,
-        name: result.character.name,
-        rarity: result.character.rarity,
-        title: result.character.title,
-        isNew: result.isNew,
-      };
-      setGachaResults([animResult]);
-      setShowGacha(true);
-      addLog(`人物频道：${result.isNew ? '获得' : '重复'}【${result.character.name}】`, 'draw');
-    } else if (pool === 'skill') {
-      if (!spendNormalTickets(1)) return toast('普通券不足。');
-      const card = pick(allSkills);
-      addHandCard(card);
-      addLog(`技能补给：抽到【${card.name}】（${card.type}）`, 'draw');
-    } else if (pool === 'tool') {
-      if (!spendNormalTickets(2)) return toast('普通券不足（需 2 张）。');
-      const card = pick(allTools);
-      addHandCard(card);
-      addLog(`便利服务：抽到【${card.name}】（${card.type}）`, 'draw');
-    } else if (pool === 'info') {
-      if (!spendNormalTickets(1)) return toast('普通券不足。');
-      const card = pick(allInfos);
-      addHandCard(card);
-      addLog(`情报网络：抽到【${card.name}】（${card.type}）`, 'draw');
     }
-  }, [gameOver, commission, spendCommissionTicket, spendPersonTicket, spendNormalTickets, ownedCharacters, affinityMap, pityCounter, totalGachaCount, setPityCounter, setTotalGachaCount, addCharacter, addGachaResult, addHandCard, setCommission, addLog]);
+  }, [gameOver, commission, spendCommissionTicket, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, setSupplyPityCounter, addCharacter, addGachaResult, addHandCard, setCommission, addLog]);
 
   /* ────── 热点点击 ────── */
   const handleSpotClick = useCallback((spot: Spot, spotIndex: number) => {
@@ -303,12 +288,11 @@ export default function Shop() {
       applyCommissionRewards(commission.rewardEffects);
       // 发额外票
       addCommissionTickets(1);
-      addPersonTickets(1);
-      addNormalTickets(2);
+      addNormalTickets(3);
       addSpiritStones(0); // already in rewardEffects
       addReputation(1);
       dispatchAvailablePhoneEvents(addLog);
-      addLog(`今日完成：【${commission.name}】。奖励：委托券+1，人物券+1，普通券+2，口碑+1。`, 'good');
+      addLog(`今日完成：【${commission.name}】。奖励：委托券+1，普通券+3，口碑+1。`, 'good');
       setEndDayResult('success');
     } else {
       addNormalTickets(1);
@@ -316,7 +300,7 @@ export default function Shop() {
       setEndDayResult('fail');
     }
     setGameOver(true);
-  }, [commission, trust, addCommissionTickets, addPersonTickets, addNormalTickets, addSpiritStones, addReputation, addLog, setGameOver]);
+  }, [commission, trust, addCommissionTickets, addNormalTickets, addSpiritStones, addReputation, addLog, setGameOver]);
 
   /* ────── 完成地点 ────── */
   const handleFinishLocation = useCallback(() => {
@@ -336,8 +320,7 @@ export default function Shop() {
       // 好感写入独立 affinityMap，无需持有；入伙只走人物频道抽卡（设计文档 6.3）
       applyCommissionRewards(commission.rewardEffects);
       addCommissionTickets(1);
-      addPersonTickets(1);
-      addNormalTickets(2);
+      addNormalTickets(3);
       addReputation(1);
       dispatchAvailablePhoneEvents(addLog);
       addLog(`委托完成：【${commission.name}】。奖励已发放，相关影像已解锁。`, 'good');
@@ -348,7 +331,7 @@ export default function Shop() {
       setEndDayResult('fail');
     }
     setGameOver(true);
-  }, [commission, addCommissionTickets, addPersonTickets, addNormalTickets, addReputation, addLog, setGameOver]);
+  }, [commission, addCommissionTickets, addNormalTickets, addReputation, addLog, setGameOver]);
 
   /* ────── Toast ────── */
   const [toastMsg, setToastMsg] = useState('');
@@ -419,31 +402,39 @@ export default function Shop() {
           trust={trust} step={step}
           commissionNeed={commission?.need ?? 0}
           commissionTickets={commissionTickets}
-          personTickets={personTickets}
           normalTickets={normalTickets}
         />
 
         {/* 抽卡频道 */}
         <div className="px-3 pt-3 pb-2">
           <p className="text-[10px] text-slate-500 mb-1.5 font-medium uppercase tracking-wider">抽卡频道</p>
-          <div className="grid grid-cols-5 gap-1.5">
+          <div className="grid grid-cols-2 gap-2">
             {POOL_CONFIG.map(pool => {
               const Icon = pool.icon;
+              const pityRemain = GACHA_CONFIG.supplyPool.characterPity - supplyPityCounter;
               return (
                 <button
                   key={pool.id}
                   onClick={() => handleDraw(pool.id)}
                   disabled={gameOver}
                   className={cn(
-                    'flex flex-col items-center gap-1 rounded-xl border border-white/10 bg-slate-900/60 py-2 px-1 text-center',
+                    'flex items-center gap-2.5 rounded-xl border border-white/10 bg-slate-900/60 py-2.5 px-3 text-left',
                     'disabled:opacity-40 hover:border-white/20 active:scale-95 transition-all',
                   )}
                 >
-                  <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br shadow', pool.color)}>
-                    <Icon size={14} className="text-white" />
+                  <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br shadow', pool.color)}>
+                    <Icon size={17} className="text-white" />
                   </div>
-                  <span className="text-[9px] font-bold text-white leading-tight">{pool.label}</span>
-                  <span className="text-[8px] text-slate-500 leading-none">{pool.cost.replace('消耗 ', '')}</span>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold text-white leading-tight">{pool.label}</p>
+                    <p className="text-[9px] text-slate-500 leading-tight">{pool.sub}</p>
+                    <p className="text-[9px] text-slate-400 leading-tight">
+                      {pool.cost.replace('消耗 ', '')}
+                      {pool.id === 'supply' && (
+                        <span className="text-pink-300"> · 保底 {pityRemain} 抽</span>
+                      )}
+                    </p>
+                  </div>
                 </button>
               );
             })}
