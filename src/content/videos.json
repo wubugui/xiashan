@@ -1,0 +1,181 @@
+{
+  "videos": [
+    {
+      "id": "intro",
+      "title": "开场动画",
+      "description": "废物下山，活着就是最大的修行",
+      "src": "/video/intro.mp4"
+    },
+    {
+      "id": "lily",
+      "title": "Lily",
+      "description": "角色短片",
+      "src": "/video/lily.mp4",
+      "unlockConditions": [
+        { "type": "chapter_complete", "chapterId": 1 }
+      ]
+    },
+    {
+      "id": "linxia_s1",
+      "title": "江夏 · 加班的夜晚",
+      "description": "她终于等到了那次面试，也等到了你。",
+      "src": "/video/linxia_s1.mp4",
+      "unlockConditions": [
+        { "type": "flag_set", "flag": "commission_interview_done" }
+      ]
+    },
+    {
+      "id": "linxia_s2",
+      "title": "江夏 · 下班路上",
+      "description": "她说，谢谢你那天帮了我。",
+      "src": "/video/linxia_s2.mp4",
+      "unlockConditions": [
+        { "type": "affinity", "characterId": "linxia", "minValue": 50 }
+      ]
+    },
+    {
+      "id": "aruo_s1",
+      "title": "云晓蔻 · 直播前的十秒钟",
+      "description": "倒计时开始，她却只看了你一眼。",
+      "src": "/video/aruo_s1.mp4",
+      "unlockConditions": [
+        { "type": "flag_set", "flag": "commission_live_done" }
+      ]
+    },
+    {
+      "id": "aruo_s2",
+      "title": "云晓蔻 · 下播后",
+      "description": "只有在你面前，她才不用扮演任何人。",
+      "src": "/video/aruo_s2.mp4",
+      "unlockConditions": [
+        { "type": "affinity", "characterId": "aruo", "minValue": 50 }
+      ]
+    },
+    {
+      "id": "xiaogui_s1",
+      "title": "小鬼 · 走失的猫",
+      "description": "它找到了，连同某个小家伙的心。",
+      "src": "/video/xiaogui_s1.mp4",
+      "unlockConditions": [
+        { "type": "flag_set", "flag": "commission_cat_done" }
+      ]
+    },
+    {
+      "id": "xiaogui_s2",
+      "title": "小鬼 · 深夜的约定",
+      "description": "下次别告诉苏锦黎，但可以告诉你。",
+      "src": "/video/xiaogui_s2.mp4",
+      "unlockConditions": [
+        { "type": "affinity", "characterId": "xiaogui", "minValue": 40 }
+      ]
+    },
+    {
+      "id": "yunzhiyi_s1",
+      "title": "陈小满 · 夜班的守护",
+      "description": "搬货、清场、然后笑着说：我保护了你们！",
+      "src": "/video/yunzhiyi_s1.mp4",
+      "unlockConditions": [
+        { "type": "flag_set", "flag": "commission_nightstore_done" }
+      ]
+    },
+    {
+      "id": "yunzhiyi_s2",
+      "title": "陈小满 · 力所能及",
+      "description": "她不聪明，但她全力以赴。",
+      "src": "/video/yunzhiyi_s2.mp4",
+      "unlockConditions": [
+        { "type": "affinity", "characterId": "yunzhiyi", "minValue": 40 }
+      ]
+    },
+    {
+      "id": "sangluo_s1",
+      "title": "顾夜莺 · 失眠夜的终点",
+      "description": "七十二小时后的第一觉，是你守来的。",
+      "src": "/video/sangluo_s1.mp4",
+      "unlockConditions": [
+        { "type": "flag_set", "flag": "commission_insomnia_done" }
+      ]
+    },
+    {
+      "id": "sangluo_s2",
+      "title": "顾夜莺 · 午后小睡",
+      "description": "毯子是谁披的，她其实知道。",
+      "src": "/video/sangluo_s2.mp4",
+      "unlockConditions": [
+        { "type": "affinity", "characterId": "sangluo", "minValue": 50 }
+      ]
+    },
+    {
+      "id": "aman_s1",
+      "title": "许念 · 搬家日",
+      "description": "旧的日子，也要好好搬进新家。",
+      "src": "/video/aman_s1.mp4",
+      "unlockConditions": [
+        { "type": "flag_set", "flag": "commission_moving_done" }
+      ]
+    },
+    {
+      "id": "aman_s2",
+      "title": "许念 · 雨后的猫",
+      "description": "小声点——它刚刚原谅了这个世界。",
+      "src": "/video/aman_s2.mp4",
+      "unlockConditions": [
+        { "type": "affinity", "characterId": "aman", "minValue": 50 }
+      ]
+    },
+    {
+      "id": "shenzhaoning_s1",
+      "title": "祁宁 · 晨会七点半",
+      "description": "效率、应变、靠谱，三项全优。",
+      "src": "/video/shenzhaoning_s1.mp4",
+      "unlockConditions": [
+        { "type": "flag_set", "flag": "commission_boardroom_done" }
+      ]
+    },
+    {
+      "id": "shenzhaoning_s2",
+      "title": "祁宁 · 加班后的天台",
+      "description": "她解开马尾的样子，只有你见过。",
+      "src": "/video/shenzhaoning_s2.mp4",
+      "unlockConditions": [
+        { "type": "affinity", "characterId": "shenzhaoning", "minValue": 50 }
+      ]
+    },
+    {
+      "id": "suli_s1",
+      "title": "苏音音 · 末班车",
+      "description": "怀表还走着。她也还在。",
+      "src": "/video/suli_s1.mp4",
+      "unlockConditions": [
+        { "type": "flag_set", "flag": "commission_lasttrain_done" }
+      ]
+    },
+    {
+      "id": "suli_s2",
+      "title": "苏音音 · 星空下",
+      "description": "她指给你看的那颗星，没有名字。",
+      "src": "/video/suli_s2.mp4",
+      "unlockConditions": [
+        { "type": "affinity", "characterId": "suli", "minValue": 50 }
+      ]
+    },
+    {
+      "id": "murongxue_s1",
+      "title": "沈疏桐 · 蹲守结束",
+      "description": "笔记本最后一页，写着给搭档的评语。",
+      "src": "/video/murongxue_s1.mp4",
+      "unlockConditions": [
+        { "type": "flag_set", "flag": "commission_stakeout_done" }
+      ]
+    },
+    {
+      "id": "murongxue_s2",
+      "title": "沈疏桐 · 图书馆的午后",
+      "description": "嘘——这本书里夹着一张便签。",
+      "src": "/video/murongxue_s2.mp4",
+      "unlockConditions": [
+        { "type": "affinity", "characterId": "murongxue", "minValue": 50 }
+      ]
+    }
+  ]
+}

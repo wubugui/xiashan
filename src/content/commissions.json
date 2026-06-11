@@ -1,0 +1,1678 @@
+{
+  "commissions": [
+    {
+      "id": "interview",
+      "name": "面试前的最后十分钟",
+      "rarity": "SR",
+      "target": "linxia",
+      "client": "linxia",
+      "need": 7,
+      "tags": ["职场", "文件", "焦虑"],
+      "desc": "她要在十分钟内找回简历、工牌和信心。",
+      "initialMood": "焦虑",
+      "graph": {
+        "start": "intro",
+        "nodes": [
+          {
+            "id": "intro",
+            "type": "dialogue",
+            "location": "subway",
+            "lines": [
+              { "text": "下午三点。地铁口的热风裹着汗味，一个攥着文件袋的女生在闸机前急得直跺脚。" },
+              { "speaker": "linxia", "text": "不会吧……交通卡怎么被吞了？我工牌、简历全在卡包里，面试就剩十分钟了……" },
+              { "speaker": "linxia", "text": "（她猛地抬头看见你胸前的工牌）你、你是便利屋的人？求你了——帮帮我！" }
+            ],
+            "next": "b1"
+          },
+          {
+            "id": "b1",
+            "type": "challenge",
+            "location": "subway",
+            "prompt": "十分钟倒计时。怎么让她最快进站？",
+            "need": ["流程", "路线"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你三两下指了条路——走访客通道补登记，直接绕开排队的人潮。" },
+                  { "speaker": "linxia", "text": "原来还能这样！我怎么没想到……谢谢你，真是太谢谢你了！" }
+                ],
+                "trust": 3, "mood": "平静", "next": "b2"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你帮她想了个折中的法子，虽然慢了点，但好歹能进站。" },
+                  { "speaker": "linxia", "text": "……也行，总比干等着强。" }
+                ],
+                "trust": 1, "mood": "焦虑", "next": "b2"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你一时也没了主意，只能陪她一起排队。时间一分一秒地溜走。" },
+                  { "speaker": "linxia", "text": "（咬着嘴唇看表）来不及了……来不及了……" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b1_recover"
+              }
+            }
+          },
+          {
+            "id": "b1_recover",
+            "type": "dialogue",
+            "location": "subway",
+            "lines": [
+              { "speaker": "linxia", "text": "（声音发颤）对不起……我是不是太没用了，连个进站都搞不定……" },
+              { "text": "你按住她的肩，让她先别慌——一件一件来，天还没塌。她勉强点了点头。" }
+            ],
+            "next": "b2"
+          },
+          {
+            "id": "b2",
+            "type": "challenge",
+            "location": "office",
+            "prompt": "前台不肯放行。替她交涉？",
+            "need": ["表达", "流程"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你接过话头，把会议编号、迟到责任、HR对接一条条讲得清清楚楚。" },
+                  { "text": "前台沉默了三秒，乖乖给她办了访客登记。" },
+                  { "speaker": "linxia", "text": "（在旁边看呆了）你……你好厉害。换我肯定又要结巴了。" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "b3"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你帮她递了句话，前台半信半疑地又查了一遍。" },
+                  { "speaker": "linxia", "text": "总算……能上楼了。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b3"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你没敢出声，江夏只能自己结结巴巴地解释。" },
+                  { "text": "前台皱着眉，气氛一度僵到能掐出水来。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b3"
+              }
+            }
+          },
+          {
+            "id": "b3",
+            "type": "challenge",
+            "location": "office",
+            "prompt": "一份皱巴巴的简历。怎么救？",
+            "need": ["技术", "观察"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你三下两下取出卡纸，顺手重排了版、重打了一份，平平整整。" },
+                  { "speaker": "linxia", "text": "（接过崭新的简历，眼睛亮了）这……这比我原来那份还好看！" }
+                ],
+                "trust": 3, "mood": "感动", "next": "b4"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你帮她把褶子抚平，勉强能看。" },
+                  { "speaker": "linxia", "text": "嗯……应该没问题吧。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b4"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你也没辙，她只能拿着那份皱纸硬着头皮往里走。" },
+                  { "text": "她低着头，肩膀垮了下去。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b4"
+              }
+            }
+          },
+          {
+            "id": "b4",
+            "type": "challenge",
+            "location": "office",
+            "prompt": "门后就是面试。她快撑不住了。",
+            "need": ["安抚"],
+            "danger": true,
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "面试室就在门后。江夏站在门口，攥着简历的手在发抖。" },
+                  { "text": "你没讲大道理，只是稳稳按住她发抖的手，让她跟着你深呼吸三次。" },
+                  { "speaker": "linxia", "text": "（闭眼，吐气，再睁眼时眼神定了）……嗯。我可以的。谢谢你，真的。" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "gate"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你说了几句鼓励的话，她点点头，可手还是抖。" },
+                  { "speaker": "linxia", "text": "我、我试试……" }
+                ],
+                "trust": 1, "mood": "平静", "next": "gate"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你一时不知道说什么，只能干站着。" },
+                  { "text": "她越想越慌，几乎是冲进去的——这状态实在让人捏把汗。" }
+                ],
+                "trust": 0, "mood": "焦虑", "repPenalty": 1, "next": "gate"
+              }
+            }
+          },
+          {
+            "id": "gate",
+            "type": "branch",
+            "trustGte": 7,
+            "ifTrue": "end_success",
+            "ifFalse": "end_fail"
+          },
+          {
+            "id": "end_success",
+            "type": "ending",
+            "location": "office",
+            "success": true,
+            "lines": [
+              { "text": "四十分钟后，那扇门重新打开。" },
+              { "speaker": "linxia", "text": "（小跑出来，眼眶红红的，却笑得灿烂）我过了！他们说下周就能入职！" },
+              { "speaker": "linxia", "text": "要不是你……我可能在闸机口就崩溃了。这份恩情我记下了——以后你就是我江夏最铁的朋友！" },
+              { "text": "【委托完成】江夏的好感度大幅提升，一段属于她的影像已经解锁。" }
+            ]
+          },
+          {
+            "id": "end_fail",
+            "type": "ending",
+            "location": "office",
+            "success": false,
+            "lines": [
+              { "text": "门开了，江夏走出来，勉强笑了笑。" },
+              { "speaker": "linxia", "text": "……我尽力了。谢谢你陪我跑这一趟。" },
+              { "text": "【委托未达成】她的信任还差了那么一点。或许下一次，能做得更好。" }
+            ]
+          }
+        ]
+      },
+      "rewardEffects": [
+        { "type": "set_flag", "flag": "commission_interview_done" },
+        { "type": "add_affinity", "characterId": "linxia", "value": 30 },
+        { "type": "add_spirit_stones", "value": 300 }
+      ]
+    },
+    {
+      "id": "live",
+      "name": "直播事故救场",
+      "rarity": "SR",
+      "target": "aruo",
+      "client": "aruo",
+      "need": 8,
+      "tags": ["直播", "设备", "表达"],
+      "desc": "设备故障、弹幕起哄、流程临时变更。",
+      "initialMood": "焦虑",
+      "graph": {
+        "start": "intro",
+        "nodes": [
+          {
+            "id": "intro",
+            "type": "dialogue",
+            "location": "studio",
+            "lines": [
+              { "text": "晚上七点半。直播间的门虚掩着，里面传来设备的电流杂音和一声懊恼的轻呼。" },
+              { "speaker": "aruo", "text": "灯也闪、声卡也炸……偏偏是今晚！周年直播啊，几万人等着看呢……" },
+              { "speaker": "aruo", "text": "（她回头看见你，眼睛一下亮了）便利屋！太好了——今晚这场，拜托你了！" }
+            ],
+            "next": "b1"
+          },
+          {
+            "id": "b1",
+            "type": "challenge",
+            "location": "studio",
+            "prompt": "补光灯忽明忽暗，画面像恐怖片。",
+            "need": ["维修", "技术"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你检查了接口，把松动的电源线重新固定，又顺手缠了圈绝缘胶带。灯光稳稳亮起。" },
+                  { "speaker": "aruo", "text": "哇——灯神归位！你这双手是装了维修外挂吗？" }
+                ],
+                "trust": 3, "mood": "平静", "next": "b2"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你把灯拍了两下，闪烁勉强缓解了。" },
+                  { "speaker": "aruo", "text": "……物理疗法是吧？行，能用就行！" }
+                ],
+                "trust": 1, "mood": "焦虑", "next": "b2"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "灯还是一闪一闪。云晓蔻只好把机位挪到窗边借自然光。" },
+                  { "speaker": "aruo", "text": "凑合吧……希望粉丝以为这是氛围感。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b2"
+              }
+            }
+          },
+          {
+            "id": "b2",
+            "type": "challenge",
+            "location": "studio",
+            "prompt": "开播了，弹幕开始起哄刷屏。",
+            "need": ["表达", "安抚"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你在提词板上飞快写下三个接梗方向。云晓蔻扫了一眼，嘴角一勾。" },
+                  { "speaker": "aruo", "text": "（对着镜头）你们刷得还不够快哦？来，跟上我的节奏——" },
+                  { "text": "弹幕风向瞬间被她带了回来，满屏变成了应援色。" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "b3"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你比了个稳住的手势，她深吸一口气硬聊了过去。" },
+                  { "speaker": "aruo", "text": "（小声）刚才好险……" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b3"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "弹幕越刷越离谱，云晓蔻的笑容渐渐挂不住了。" },
+                  { "speaker": "aruo", "text": "（休息间隙关掉麦）……他们今天好凶。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b3"
+              }
+            }
+          },
+          {
+            "id": "b3",
+            "type": "challenge",
+            "location": "studio",
+            "prompt": "存储卡报警：录制快满了。",
+            "need": ["技术", "观察"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你早注意到了角落的备用卡，在进度条爆红前无缝切换，顺手把码率也调稳了。" },
+                  { "speaker": "aruo", "text": "（瞄到屏幕角落）刚才是不是出事了？……完全没察觉，你也太靠谱了吧！" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "b4"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你手忙脚乱地换了卡，画面黑了两秒。" },
+                  { "speaker": "aruo", "text": "（立刻圆场）刚刚是……特别效果！对，特别效果！" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b4"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "录制中断了半分钟，弹幕齐刷刷地问怎么了。" },
+                  { "speaker": "aruo", "text": "（鞠躬）抱歉抱歉，设备闹脾气啦……" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b4"
+              }
+            }
+          },
+          {
+            "id": "b4",
+            "type": "challenge",
+            "location": "studio",
+            "prompt": "压轴环节前，她在后台手心全是汗。",
+            "need": ["安抚"],
+            "danger": true,
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "中场休息，她抱着水杯坐在镜头外，指尖发凉。" },
+                  { "text": "你递过热毛巾，告诉她：前面的事故都翻篇了，最后一段只管做你自己。" },
+                  { "speaker": "aruo", "text": "（把脸埋进毛巾里闷了三秒，抬头时眼睛亮晶晶）……嗯！看我的！" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "gate"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你说了句加油，她点点头走回镜头前。" },
+                  { "speaker": "aruo", "text": "最后一段了……稳住。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "gate"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你没顾上她的状态。压轴环节她两次忘词，弹幕又开始刷问号。" },
+                  { "text": "这场周年直播的口碑，多少受了影响。" }
+                ],
+                "trust": 0, "mood": "焦虑", "repPenalty": 1, "next": "gate"
+              }
+            }
+          },
+          {
+            "id": "gate",
+            "type": "branch",
+            "trustGte": 8,
+            "ifTrue": "end_success",
+            "ifFalse": "end_fail"
+          },
+          {
+            "id": "end_success",
+            "type": "ending",
+            "location": "studio",
+            "success": true,
+            "lines": [
+              { "text": "下播键按下，满屏的感谢弹幕还在滚动。云晓蔻瘫在椅子上，长长呼出一口气。" },
+              { "speaker": "aruo", "text": "周年直播，人气新高——但只有我知道，今晚真正的MVP在镜头外面。" },
+              { "speaker": "aruo", "text": "（朝你伸出手，比了个击掌的姿势）今晚的高光，分你一半！" },
+              { "text": "【委托完成】云晓蔻的好感度大幅提升，一段属于她的影像已经解锁。" }
+            ]
+          },
+          {
+            "id": "end_fail",
+            "type": "ending",
+            "location": "studio",
+            "success": false,
+            "lines": [
+              { "text": "直播磕磕绊绊地撑到了最后。云晓蔻关掉设备，揉了揉脸。" },
+              { "speaker": "aruo", "text": "……今天就当攒经验啦。下次周年，再请你来——到时候可不许再翻车了哦。" },
+              { "text": "【委托未达成】她笑着说没关系，但你知道可以做得更好。" }
+            ]
+          }
+        ]
+      },
+      "rewardEffects": [
+        { "type": "set_flag", "flag": "commission_live_done" },
+        { "type": "add_affinity", "characterId": "aruo", "value": 30 },
+        { "type": "add_spirit_stones", "value": 300 }
+      ]
+    },
+    {
+      "id": "cat",
+      "name": "公寓楼的走失猫",
+      "rarity": "R",
+      "target": "xiaogui",
+      "client": "xiaogui",
+      "need": 6,
+      "tags": ["宠物", "邻里", "钥匙"],
+      "desc": "猫跑丢、邻居投诉、备用钥匙错送。",
+      "initialMood": "焦虑",
+      "graph": {
+        "start": "intro",
+        "nodes": [
+          {
+            "id": "intro",
+            "type": "dialogue",
+            "location": "apartment",
+            "lines": [
+              { "text": "傍晚的公寓楼道，声控灯忽明忽暗。一个小小的身影蹲在楼梯口，怀里抱着空猫窝。" },
+              { "speaker": "xiaogui", "text": "团子跑丢了……都怪我开门的时候没看住。它从来没自己出去过……" },
+              { "speaker": "xiaogui", "text": "（吸了吸鼻子，把猫窝抱得更紧）便利屋的大人……能帮我找找它吗？" }
+            ],
+            "next": "b1"
+          },
+          {
+            "id": "b1",
+            "type": "challenge",
+            "location": "apartment",
+            "prompt": "楼道深处传来猫叫。怎么把它引出来？",
+            "need": ["宠物", "安抚"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你蹲下身，撕开猫条放在杂物间门口，又往后退了三步留出安全距离。" },
+                  { "text": "一团白影试探着探出头——团子小心翼翼地走了出来。" },
+                  { "speaker": "xiaogui", "text": "团子！（一把抱住）呜……你真厉害，它平时谁都不理的！" }
+                ],
+                "trust": 3, "mood": "感动", "next": "b2"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你学着猫叫了两声。团子在杂物堆后面探头看了你一眼，又缩了回去——至少确认位置了。" },
+                  { "speaker": "xiaogui", "text": "它在那儿！别吓到它……" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b2"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你伸手去够，团子炸着毛蹿进了更深的管道间。" },
+                  { "speaker": "xiaogui", "text": "啊——别追别追！它害怕了！" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b2"
+              }
+            }
+          },
+          {
+            "id": "b2",
+            "type": "challenge",
+            "location": "apartment",
+            "prompt": "杂物间锁着。备用钥匙好像被快递错送了。",
+            "need": ["观察", "流程"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你扫了一眼快递架：面单上的门牌号 302 被写成了 203。钥匙在隔壁单元。" },
+                  { "text": "五分钟后，钥匙到手，门开了。" },
+                  { "speaker": "xiaogui", "text": "（眼睛瞪圆）你看一眼就知道送错哪儿了？大人的眼睛是放大镜做的吗！" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "b3"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你挨家挨户问了一圈，总算把错送的钥匙找了回来。" },
+                  { "speaker": "xiaogui", "text": "拿到啦拿到啦！快开门！" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b3"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "钥匙没找到，你们只能等物业来开门，干耗了半个钟头。" },
+                  { "speaker": "xiaogui", "text": "（趴在门缝上）团子，再等等，再等等哦……" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b3"
+              }
+            }
+          },
+          {
+            "id": "b3",
+            "type": "challenge",
+            "location": "apartment",
+            "prompt": "闻声而来的邻居开始抱怨猫半夜扰民。",
+            "need": ["表达", "安抚"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你先替猫道了歉，再把今晚装隔音条、加封阳台网的方案一条条讲清楚。" },
+                  { "text": "邻居的脸色缓和下来，临走还说了句：找到就好。" },
+                  { "speaker": "xiaogui", "text": "（躲在你身后小声说）大人连凶凶的阿姨都能搞定……" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "b4"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你连连赔不是，邻居哼了一声回屋了。" },
+                  { "speaker": "xiaogui", "text": "呼……总算走了。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b4"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "话没接住，邻居越说越气，扬言要去物业投诉。" },
+                  { "speaker": "xiaogui", "text": "（拽住你的衣角，声音发抖）要是不让养团子了怎么办……" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b4"
+              }
+            }
+          },
+          {
+            "id": "b4",
+            "type": "challenge",
+            "location": "apartment",
+            "prompt": "楼梯间的灯彻底灭了。黑暗里，小家伙不敢往前走。",
+            "need": ["安抚"],
+            "danger": true,
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你打开手机手电递给他，让他牵着你的衣角：数十级台阶，数完就到家了。" },
+                  { "speaker": "xiaogui", "text": "一、二、三……（走完最后一级，长出一口气）我、我才没有怕呢！" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "gate"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你牵着他慢慢摸黑上楼，磕磕绊绊总算到了。" },
+                  { "speaker": "xiaogui", "text": "呜……下次一定要让物业修灯！" }
+                ],
+                "trust": 1, "mood": "平静", "next": "gate"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "黑暗里他踩空了一级台阶，膝盖磕红了，瘪着嘴忍哭。" },
+                  { "text": "怀里的团子也吓得炸了毛。这一下，看得人心疼。" }
+                ],
+                "trust": 0, "mood": "焦虑", "repPenalty": 1, "next": "gate"
+              }
+            }
+          },
+          {
+            "id": "gate",
+            "type": "branch",
+            "trustGte": 6,
+            "ifTrue": "end_success",
+            "ifFalse": "end_fail"
+          },
+          {
+            "id": "end_success",
+            "type": "ending",
+            "location": "apartment",
+            "success": true,
+            "lines": [
+              { "text": "门关上前，团子已经在猫窝里蜷成了一团。小家伙站在门口，用力朝你挥手。" },
+              { "speaker": "xiaogui", "text": "今天的事……是我们俩的秘密哦！下次我请你吃小卖部最贵的冰棍！" },
+              { "text": "【委托完成】小鬼的好感度提升，一段属于他和团子的影像已经解锁。" }
+            ]
+          },
+          {
+            "id": "end_fail",
+            "type": "ending",
+            "location": "apartment",
+            "success": false,
+            "lines": [
+              { "text": "团子最后还是自己溜回来的，蹲在门口舔爪子，一脸事不关己。" },
+              { "speaker": "xiaogui", "text": "（抱起猫，闷闷地）……谢谢你陪我找。虽然，是团子自己回来的。" },
+              { "text": "【委托未达成】下次，要让小家伙真正安心才行。" }
+            ]
+          }
+        ]
+      },
+      "rewardEffects": [
+        { "type": "set_flag", "flag": "commission_cat_done" },
+        { "type": "add_affinity", "characterId": "xiaogui", "value": 20 },
+        { "type": "add_spirit_stones", "value": 200 }
+      ]
+    },
+    {
+      "id": "nightstore",
+      "name": "夜班便利店风波",
+      "rarity": "R",
+      "target": "yunzhiyi",
+      "client": "yunzhiyi",
+      "need": 6,
+      "tags": ["便利店", "补给", "表达"],
+      "desc": "难缠顾客、丢失货箱、监控盲区。",
+      "initialMood": "焦虑",
+      "graph": {
+        "start": "intro",
+        "nodes": [
+          {
+            "id": "intro",
+            "type": "dialogue",
+            "location": "store",
+            "lines": [
+              { "text": "凌晨十二点的便利店，灯光亮得晃眼。高马尾的店员一个人守着柜台，手边压着三张待处理的单子。" },
+              { "speaker": "yunzhiyi", "text": "盘点差一箱货、有顾客投诉、店长还联系不上……啊啊啊，我一个人只有两只手啊！" },
+              { "speaker": "yunzhiyi", "text": "（看到你进门，眼睛唰地亮了）便利屋！你简直是从天而降的外援！" }
+            ],
+            "next": "b1"
+          },
+          {
+            "id": "b1",
+            "type": "challenge",
+            "location": "store",
+            "prompt": "收银台前，难缠顾客举着过期优惠券不肯走。",
+            "need": ["表达", "安抚"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你不争对错，先递上一杯热水，再指给他看小程序里今晚刚发的新券——面额还大一块钱。" },
+                  { "text": "顾客嘟囔着扫码领券，买完单还顺手拿了包纸巾。" },
+                  { "speaker": "yunzhiyi", "text": "（目瞪口呆）他刚才还拍桌子来着！你是怎么做到的？！" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "b2"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你陪着笑解释了半天，顾客总算骂骂咧咧地走了。" },
+                  { "speaker": "yunzhiyi", "text": "呼……辛苦了，这种客人一晚上能来仨。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b2"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你插不上话，顾客越吵越凶，惊动了隔壁桌吃关东煮的客人。" },
+                  { "speaker": "yunzhiyi", "text": "（小声）完了，他说要给总部打投诉电话……" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b2"
+              }
+            }
+          },
+          {
+            "id": "b2",
+            "type": "challenge",
+            "location": "store",
+            "prompt": "盘点差了一整箱酸奶。去哪儿了？",
+            "need": ["观察", "补给"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你对着进货单扫了一圈库房：冷柜底层被前班塞进去一箱，标签朝里——就是它。" },
+                  { "speaker": "yunzhiyi", "text": "找到了找到了！亏我刚才把整个库房翻了三遍！（用力拍你肩膀）大恩人！" }
+                ],
+                "trust": 3, "mood": "感动", "next": "b3"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你陪她把库房又理了一遍，总算在角落翻出了那箱货。" },
+                  { "speaker": "yunzhiyi", "text": "胳膊都酸了……但是找到就好！" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b3"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "翻了半天一无所获，只能先在系统里报损。" },
+                  { "speaker": "yunzhiyi", "text": "（蔫蔫地）这个月奖金又要扣了……" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b3"
+              }
+            }
+          },
+          {
+            "id": "b3",
+            "type": "challenge",
+            "location": "store",
+            "prompt": "监控有个盲区，总有商品从那片货架消失。",
+            "need": ["技术", "观察"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你把闲置的旧摄像头挪了个位、调好角度，又在死角贴了面广角镜，盲区清零。" },
+                  { "speaker": "yunzhiyi", "text": "原来还能这样布置！店长搞了俩月都没搞定，你十分钟就……我要给你发锦旗！" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "b4"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你把容易丢的商品挪到了收银台正对面，治标不治本，但有用。" },
+                  { "speaker": "yunzhiyi", "text": "嗯！先这样顶着！" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b4"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你研究了半天监控后台，没琢磨出门道。" },
+                  { "speaker": "yunzhiyi", "text": "没事没事，本来就难搞……" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b4"
+              }
+            }
+          },
+          {
+            "id": "b4",
+            "type": "challenge",
+            "location": "store",
+            "prompt": "一个醉汉撞进店里，开始拍打冷柜。",
+            "need": ["安抚", "表达"],
+            "danger": true,
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你不动声色地挡在陈小满身前，给醉汉泡了杯热茶，顺着他的醉话聊了两句，再把人稳稳送上了代驾的车。" },
+                  { "speaker": "yunzhiyi", "text": "（攥着拳头从柜台后出来）刚才我都做好物理解决的准备了……还好有你在，不然店里非得碎几个柜子。" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "gate"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你们俩好说歹说，总算把人劝出了门。" },
+                  { "speaker": "yunzhiyi", "text": "呼——心脏还在咚咚跳。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "gate"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "醉汉掀翻了一排货架才被赶来的保安带走，一地狼藉。" },
+                  { "text": "这事第二天就传遍了周边商铺，便利屋的名声多少受了点牵连。" }
+                ],
+                "trust": 0, "mood": "焦虑", "repPenalty": 1, "next": "gate"
+              }
+            }
+          },
+          {
+            "id": "gate",
+            "type": "branch",
+            "trustGte": 6,
+            "ifTrue": "end_success",
+            "ifFalse": "end_fail"
+          },
+          {
+            "id": "end_success",
+            "type": "ending",
+            "location": "store",
+            "success": true,
+            "lines": [
+              { "text": "凌晨四点，风波平息。陈小满把两只热饮咚地放在柜台上，推给你一只。" },
+              { "speaker": "yunzhiyi", "text": "今晚我保护了便利店，你保护了我——这瓶算我请的，不许拒绝！" },
+              { "speaker": "yunzhiyi", "text": "（咧嘴一笑）下次夜班，我还点名要你这个外援！" },
+              { "text": "【委托完成】陈小满的好感度提升，一段属于她的影像已经解锁。" }
+            ]
+          },
+          {
+            "id": "end_fail",
+            "type": "ending",
+            "location": "store",
+            "success": false,
+            "lines": [
+              { "text": "天亮交班，陈小满对着乱糟糟的报表抓了抓头发，又给自己打了打气。" },
+              { "speaker": "yunzhiyi", "text": "没事！明天的我会更强！……不过，还是谢谢你陪我撑过这一晚。" },
+              { "text": "【委托未达成】夜班的麻烦没能全部摆平，她嘴上不说，眼里还是有点失落。" }
+            ]
+          }
+        ]
+      },
+      "rewardEffects": [
+        { "type": "set_flag", "flag": "commission_nightstore_done" },
+        { "type": "add_affinity", "characterId": "yunzhiyi", "value": 20 },
+        { "type": "add_spirit_stones", "value": 200 }
+      ]
+    },
+    {
+      "id": "insomnia",
+      "name": "今晚必须睡着",
+      "rarity": "SSR",
+      "target": "sangluo",
+      "client": "sangluo",
+      "need": 9,
+      "tags": ["失眠", "邻里", "安抚"],
+      "desc": "连续三天没合眼的她，把最后的希望交给了便利屋。",
+      "initialMood": "焦虑",
+      "graph": {
+        "start": "intro",
+        "nodes": [
+          {
+            "id": "intro",
+            "type": "dialogue",
+            "location": "apartment",
+            "lines": [
+              { "text": "晚上十点，公寓门开了一条缝。裹着黑色毛绒外套的女人靠在门框上，眼下挂着浓重的青黑。" },
+              { "speaker": "sangluo", "text": "七十二小时……我已经七十二小时没睡着了。稿子赶完了，觉却找不回来。" },
+              { "speaker": "sangluo", "text": "（打了个绵长的哈欠）便利屋是吧。委托内容只有一条——今晚，让我睡着。" }
+            ],
+            "next": "b1"
+          },
+          {
+            "id": "b1",
+            "type": "challenge",
+            "location": "apartment",
+            "prompt": "先找到让她睡不着的元凶。房间里有什么不对劲？",
+            "need": ["观察", "情报"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你绕着房间走了一圈：楼上空调外机共振、充电器指示灯直射床头、还有半杯没喝完的冰美式。三个元凶，全部记下。" },
+                  { "speaker": "sangluo", "text": "（撑着下巴看你）哦？一圈就看出来了。有点意思……比数羊靠谱多了。" }
+                ],
+                "trust": 3, "mood": "平静", "next": "b2"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你注意到了床头刺眼的指示灯，先拿胶布把它贴上了。" },
+                  { "speaker": "sangluo", "text": "嗯……是亮得烦人。算你找对了一半。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b2"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你转了两圈没看出名堂。她在沙发上换了个姿势，眼神更困了。" },
+                  { "speaker": "sangluo", "text": "……要不，你先回去睡？至少咱俩有一个能睡着。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b2"
+              }
+            }
+          },
+          {
+            "id": "b2",
+            "type": "challenge",
+            "location": "apartment",
+            "prompt": "楼上的装修电钻声又响了。上去交涉？",
+            "need": ["表达", "流程"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你带着一盒水果上楼，先道辛苦，再把物业规定的施工时段打印件递过去，顺口约定：晚八点后不动电钻，周末错开午休。" },
+                  { "text": "对方爽快答应了，临关门还说了句不好意思。" },
+                  { "speaker": "sangluo", "text": "（在楼梯口听完全程）软硬兼施，滴水不漏……你这张嘴，比白噪音还让人安心。" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "b3"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你上楼说明了情况，对方答应今晚先停工，明天再说。" },
+                  { "speaker": "sangluo", "text": "今晚安静就行……明天的事，明天再失眠。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b3"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "话不投机，对方把门一摔：我装我的修，碍你什么事？电钻声变本加厉。" },
+                  { "speaker": "sangluo", "text": "（把抱枕捂在头上）……完了，更精神了。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b3"
+              }
+            }
+          },
+          {
+            "id": "b3",
+            "type": "challenge",
+            "location": "apartment",
+            "prompt": "老空调嗡嗡作响，像有一只蜜蜂住在墙里。",
+            "need": ["维修", "技术"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你拆开面板，给松动的风扇轴卡上减震垫，再把滤网冲洗干净。空调安静得像换了一台。" },
+                  { "speaker": "sangluo", "text": "（侧耳听了十秒）……世界清净了。你知道吗，这声音我忍了两年。" }
+                ],
+                "trust": 3, "mood": "感动", "next": "b4"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你往外机垫了块橡胶垫，共振小了大半。" },
+                  { "speaker": "sangluo", "text": "凑合能听。比之前好。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b4"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你捣鼓了半天，嗡嗡声没小，反倒多了咔哒声。" },
+                  { "speaker": "sangluo", "text": "……行了行了，别拆了，再拆今晚直接睡大街。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b4"
+              }
+            }
+          },
+          {
+            "id": "b4",
+            "type": "challenge",
+            "location": "apartment",
+            "prompt": "万事俱备。可她越想睡着，眼睛瞪得越大。",
+            "need": ["安抚"],
+            "danger": true,
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你把灯调到最暗，泡了杯热牛奶，用最平的语调慢慢讲今天跑过的五条街——讲到第三条，呼吸声变得绵长。" },
+                  { "speaker": "sangluo", "text": "（半梦半醒地嘟囔）……再讲一条……就一条……" },
+                  { "text": "第四条街讲完，她睡着了。七十二小时以来的第一觉。" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "gate"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你留下热牛奶轻手轻脚退到门口。过了很久，里面终于没了翻身的声音。" },
+                  { "speaker": "sangluo", "text": "（含糊的气音）……还行……" }
+                ],
+                "trust": 1, "mood": "平静", "next": "gate"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你提醒她明天还有截稿日，她瞬间瞪圆了眼睛从床上坐起来。" },
+                  { "speaker": "sangluo", "text": "你提它干嘛？！……完了，彻底清醒了。" },
+                  { "text": "这一晚她又没睡成。第二天，插画圈都知道便利屋把人越帮越失眠。" }
+                ],
+                "trust": 0, "mood": "焦虑", "repPenalty": 1, "next": "gate"
+              }
+            }
+          },
+          {
+            "id": "gate",
+            "type": "branch",
+            "trustGte": 9,
+            "ifTrue": "end_success",
+            "ifFalse": "end_fail"
+          },
+          {
+            "id": "end_success",
+            "type": "ending",
+            "location": "apartment",
+            "success": true,
+            "lines": [
+              { "text": "第二天中午，你收到一条语音，背景音是被窝里的窸窣声。" },
+              { "speaker": "sangluo", "text": "睡了十四个小时，梦里都在给你画感谢稿……委托费照付，另外，以后我的觉，归你管了。" },
+              { "text": "【委托完成】顾夜莺的好感度大幅提升，一段属于她的影像已经解锁。" }
+            ]
+          },
+          {
+            "id": "end_fail",
+            "type": "ending",
+            "location": "apartment",
+            "success": false,
+            "lines": [
+              { "speaker": "sangluo", "text": "（顶着黑眼圈摆摆手）算了……失眠这种事，本来就不能全指望别人。" },
+              { "speaker": "sangluo", "text": "今晚的努力，记你一半功劳。下次……换个方法再试试。" },
+              { "text": "【委托未达成】她的觉，还得再欠一晚。" }
+            ]
+          }
+        ]
+      },
+      "rewardEffects": [
+        { "type": "set_flag", "flag": "commission_insomnia_done" },
+        { "type": "add_affinity", "characterId": "sangluo", "value": 30 },
+        { "type": "add_spirit_stones", "value": 350 }
+      ]
+    },
+    {
+      "id": "moving",
+      "name": "搬家日的兵荒马乱",
+      "rarity": "SSR",
+      "target": "aman",
+      "client": "aman",
+      "need": 8,
+      "tags": ["搬家", "旧物", "邻里"],
+      "desc": "纸箱、旧物、占着电梯的邻居，和一段不愿翻起的回忆。",
+      "initialMood": "焦虑",
+      "graph": {
+        "start": "intro",
+        "nodes": [
+          {
+            "id": "intro",
+            "type": "dialogue",
+            "location": "apartment",
+            "lines": [
+              { "text": "周六早晨，公寓楼下堆着小山一样的纸箱。穿白色雪纺衫的女人正踮着脚够最上面那只箱子。" },
+              { "speaker": "aman", "text": "啊，你来了，太好了。搬家公司临时放了鸽子，花店下午还要开门……" },
+              { "speaker": "aman", "text": "（不好意思地笑笑）一个人实在是，手忙脚乱的。今天就拜托你了。" }
+            ],
+            "next": "b1"
+          },
+          {
+            "id": "b1",
+            "type": "challenge",
+            "location": "apartment",
+            "prompt": "几十只纸箱没有任何标记。先从哪里下手？",
+            "need": ["流程", "观察"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你按房间给纸箱编号贴标，易碎的画红圈，当天要用的单独一摞——十分钟，箱山变成了清单。" },
+                  { "speaker": "aman", "text": "（拿着你写的清单看了又看）天哪，你是搬过一百次家吗？连猫粮放哪箱都标出来了。" }
+                ],
+                "trust": 3, "mood": "平静", "next": "b2"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你大致把箱子按轻重分了两堆，先搬要紧的。" },
+                  { "speaker": "aman", "text": "嗯嗯，比刚才有头绪多了。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b2"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你随手搬起一箱就走，半路箱底脱胶，杯碗叮叮当当滚了一地。" },
+                  { "speaker": "aman", "text": "（蹲下去捡碎片，声音轻轻的）没关系……旧杯子，本来也该换了。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b2"
+              }
+            }
+          },
+          {
+            "id": "b2",
+            "type": "challenge",
+            "location": "apartment",
+            "prompt": "电梯被装修队长期占用，纸箱上不去。",
+            "need": ["表达", "流程"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你找到装修队领班，提议错峰：你们用整点，我们用半点，电梯里再垫层纸板谁都不蹭灰。" },
+                  { "text": "领班抽了口烟：行，敞亮人。" },
+                  { "speaker": "aman", "text": "（小声）我刚才跟他们说了半天都没用……你一开口就成了，好神奇。" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "b3"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你跟装修队商量着插空用了几趟电梯，效率一般但能走。" },
+                  { "speaker": "aman", "text": "慢慢来，不急的。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b3"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "交涉无果，你们只能走楼梯。六层楼，几十趟，胳膊都在抖。" },
+                  { "speaker": "aman", "text": "（扶着栏杆喘气）休、休息一下再搬吧……" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b3"
+              }
+            }
+          },
+          {
+            "id": "b3",
+            "type": "challenge",
+            "location": "apartment",
+            "prompt": "一只纸箱里传出窸窸窣窣的声音——邻居的猫钻进去了。",
+            "need": ["宠物", "安抚"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你没去掏，而是把箱子侧放、敞开口，撒了几粒猫粮在外面，退开两步。橘猫自己慢悠悠踱了出来。" },
+                  { "speaker": "aman", "text": "（捂着嘴笑）它还叼走了一粒……你对小动物，真的很有一套。" }
+                ],
+                "trust": 3, "mood": "感动", "next": "b4"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你小心翼翼把猫抱了出来，挨了一爪子，不深。" },
+                  { "speaker": "aman", "text": "呀，抓疼了吧？等下我给你找创可贴。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b4"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你伸手就掏，猫炸毛蹿出，撞翻了旁边一摞箱子才夺路而逃。" },
+                  { "speaker": "aman", "text": "（扶住倒下的箱子）哎呀……希望它没吓坏。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b4"
+              }
+            }
+          },
+          {
+            "id": "b4",
+            "type": "challenge",
+            "location": "apartment",
+            "prompt": "最后一只箱子里翻出一个旧相框。她拿着它，忽然不说话了。",
+            "need": ["安抚"],
+            "danger": true,
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你没有追问，只是默默把新书架的第一层擦干净，朝她伸出手。" },
+                  { "text": "她看了你一会儿，把相框递过来。你把它端端正正摆在了新家最好的位置。" },
+                  { "speaker": "aman", "text": "（眼眶有点红，却笑了）……嗯。旧的日子，也要好好搬进新家才行。谢谢你。" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "gate"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你递了张纸巾，安静地等她缓过来。" },
+                  { "speaker": "aman", "text": "（深呼吸）抱歉，走神了。继续吧，最后一箱了。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "gate"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你随口问了句：照片上是谁啊？她的笑容僵在了脸上。" },
+                  { "speaker": "aman", "text": "（把相框轻轻扣过去）……这个，不用搬了。" },
+                  { "text": "之后的半小时，她一句话也没说。" }
+                ],
+                "trust": 0, "mood": "焦虑", "repPenalty": 1, "next": "gate"
+              }
+            }
+          },
+          {
+            "id": "gate",
+            "type": "branch",
+            "trustGte": 8,
+            "ifTrue": "end_success",
+            "ifFalse": "end_fail"
+          },
+          {
+            "id": "end_success",
+            "type": "ending",
+            "location": "apartment",
+            "success": true,
+            "lines": [
+              { "text": "傍晚，新家亮起第一盏灯。她从花店带回一小束尤加利，插在了相框旁边。" },
+              { "speaker": "aman", "text": "新家的第一束花，本来想送给新家……现在决定了，送给你。" },
+              { "speaker": "aman", "text": "（笑容温柔）以后路过花店，记得进来坐坐。我泡的茶，比咖啡养人。" },
+              { "text": "【委托完成】许念的好感度大幅提升，一段属于她的影像已经解锁。" }
+            ]
+          },
+          {
+            "id": "end_fail",
+            "type": "ending",
+            "location": "apartment",
+            "success": false,
+            "lines": [
+              { "text": "天黑透了，纸箱还剩小半没拆。她揉了揉手腕，朝你欠了欠身。" },
+              { "speaker": "aman", "text": "今天辛苦你了。剩下的……我自己慢慢来就好。" },
+              { "text": "【委托未达成】有些箱子搬进了门，有些心事还留在原地。" }
+            ]
+          }
+        ]
+      },
+      "rewardEffects": [
+        { "type": "set_flag", "flag": "commission_moving_done" },
+        { "type": "add_affinity", "characterId": "aman", "value": 30 },
+        { "type": "add_spirit_stones", "value": 350 }
+      ]
+    },
+    {
+      "id": "boardroom",
+      "name": "晨会前九十分钟",
+      "rarity": "SR",
+      "target": "shenzhaoning",
+      "client": "shenzhaoning",
+      "need": 8,
+      "tags": ["职场", "文件", "时间压力"],
+      "desc": "资料版本混乱、打印机罢工、投屏故障——而客户九点整准时到。",
+      "initialMood": "焦虑",
+      "graph": {
+        "start": "intro",
+        "nodes": [
+          {
+            "id": "intro",
+            "type": "dialogue",
+            "location": "office",
+            "lines": [
+              { "text": "早晨七点半，写字楼大厅空空荡荡。高马尾的女人抱着电脑快步迎上来，语速快得像机关枪。" },
+              { "speaker": "shenzhaoning", "text": "九点，对方董事会全员到场。我的提案资料在三个U盘里有五个版本，打印机半小时前罢工了。" },
+              { "speaker": "shenzhaoning", "text": "（看表）九十分钟。便利屋的效率，我听人推荐过——现在，证明给我看。" }
+            ],
+            "next": "b1"
+          },
+          {
+            "id": "b1",
+            "type": "challenge",
+            "location": "office",
+            "prompt": "三个U盘、五个版本，哪份才是终稿？",
+            "need": ["观察", "流程"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你按修改时间排序、对照她邮件里最后一次确认记录，三分钟锁定终稿，顺手把其余版本归档改名，再不会混。" },
+                  { "speaker": "shenzhaoning", "text": "（挑眉）连归档规则都帮我立好了？……不错，是我喜欢的工作方式。" }
+                ],
+                "trust": 3, "mood": "平静", "next": "b2"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你们逐份翻看，十几分钟后总算确认了终稿。" },
+                  { "speaker": "shenzhaoning", "text": "时间紧了点，但结果正确。继续。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b2"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你挑了份看起来最新的——她扫了一眼就皱起眉：这是上周被毙掉的版本。" },
+                  { "speaker": "shenzhaoning", "text": "（揉了揉眉心）重找。这种错误，九点钟会要人命。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b2"
+              }
+            }
+          },
+          {
+            "id": "b2",
+            "type": "challenge",
+            "location": "office",
+            "prompt": "打印机卡死，屏幕闪着看不懂的错误代码。",
+            "need": ["技术", "维修"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你清出卡纸、重置进纸轮，又把驱动重装了一遍。打印机嗡地一声活了过来，二十份资料整整齐齐吐出。" },
+                  { "speaker": "shenzhaoning", "text": "（拿起还带着余温的资料）行政部修了三次没修好的东西……我考虑给便利屋开长期合同了。" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "b3"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "修不好这台，你跑到楼下打印店搞定了二十份，气喘吁吁赶了回来。" },
+                  { "speaker": "shenzhaoning", "text": "笨办法，但有效。我欣赏结果导向。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b3"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "越修越糟，打印机彻底黑屏。资料只能改发电子版。" },
+                  { "speaker": "shenzhaoning", "text": "（按着太阳穴）对方董事长六十二岁，只看纸质资料。……算了，下一项。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b3"
+              }
+            }
+          },
+          {
+            "id": "b3",
+            "type": "challenge",
+            "location": "office",
+            "prompt": "客户提前到了，前台访客系统却查无预约。",
+            "need": ["流程", "表达"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你抢先一步迎到闸机口，亮出会议邀请函编号让前台走应急通道，又把客户一行人引到贵宾电梯，全程没让人等超过一分钟。" },
+                  { "speaker": "shenzhaoning", "text": "（用只有你能听到的音量）漂亮。第一印象，你帮我赢下来了。" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "b4"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你帮着补了访客登记，流程慢了几分钟，客户面色还算平和。" },
+                  { "speaker": "shenzhaoning", "text": "还好。进会议室就是主场了。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b4"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "前台坚持流程，客户在闸机外站了十分钟，脸色越来越沉。" },
+                  { "speaker": "shenzhaoning", "text": "（迎上去连声致歉，回头深吸一口气）……开局不利。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b4"
+              }
+            }
+          },
+          {
+            "id": "b4",
+            "type": "challenge",
+            "location": "office",
+            "prompt": "8:58，会议室投屏突然黑了。所有人都看着她。",
+            "need": ["技术"],
+            "danger": true,
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你十秒判断是接口协议问题，掏出转接头换线，再把她的电脑分辨率调到匹配——9:00:00，画面准时亮起。" },
+                  { "speaker": "shenzhaoning", "text": "（面向全场，从容开口）各位早上好，我们开始。——只有你看到，她在桌下朝你比了个拇指。" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "gate"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你让她先用纸质资料开场，自己埋头排查，五分钟后投屏恢复了。" },
+                  { "speaker": "shenzhaoning", "text": "（切回PPT时不动声色）……接得不错。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "gate"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "投屏黑了整整一刻钟，她只能对着笔记本屏幕讲完了开场。" },
+                  { "text": "会后有客户私下嘀咕：连设备都搞不定的团队，项目能放心吗？这话也传到了便利屋头上。" }
+                ],
+                "trust": 0, "mood": "焦虑", "repPenalty": 1, "next": "gate"
+              }
+            }
+          },
+          {
+            "id": "gate",
+            "type": "branch",
+            "trustGte": 8,
+            "ifTrue": "end_success",
+            "ifFalse": "end_fail"
+          },
+          {
+            "id": "end_success",
+            "type": "ending",
+            "location": "office",
+            "success": true,
+            "lines": [
+              { "text": "十一点整，会议室的门打开，客户主动伸出了手。合作，谈成了。" },
+              { "speaker": "shenzhaoning", "text": "（送走客户，转身走向你，递来一张名片）效率、应变、靠谱。三项全优。" },
+              { "speaker": "shenzhaoning", "text": "以后我的项目，优先找你。——这是承诺，不是客气。" },
+              { "text": "【委托完成】祁宁的好感度大幅提升，一段属于她的影像已经解锁。" }
+            ]
+          },
+          {
+            "id": "end_fail",
+            "type": "ending",
+            "location": "office",
+            "success": false,
+            "lines": [
+              { "text": "会议结束，客户的答复是：回去再议。她靠在走廊的墙上，难得露出一点疲惫。" },
+              { "speaker": "shenzhaoning", "text": "谋事在人。今天的几个环节，你尽力了——下次，我们都再快一步。" },
+              { "text": "【委托未达成】九十分钟的战役，差了最后一口气。" }
+            ]
+          }
+        ]
+      },
+      "rewardEffects": [
+        { "type": "set_flag", "flag": "commission_boardroom_done" },
+        { "type": "add_affinity", "characterId": "shenzhaoning", "value": 30 },
+        { "type": "add_spirit_stones", "value": 300 }
+      ]
+    },
+    {
+      "id": "lasttrain",
+      "name": "末班车的遗失物",
+      "rarity": "SSR",
+      "target": "suli",
+      "client": "suli",
+      "need": 9,
+      "tags": ["地铁", "遗失", "深夜"],
+      "desc": "她在末班车上丢了一样东西。她说，那比时间更重要。",
+      "initialMood": "平静",
+      "graph": {
+        "start": "intro",
+        "nodes": [
+          {
+            "id": "intro",
+            "type": "dialogue",
+            "location": "subway",
+            "lines": [
+              { "text": "深夜十一点四十，末班车刚过。站厅里只剩灯光和回声，蓝白裙摆的少女静静站在闸机外。" },
+              { "speaker": "suli", "text": "一枚怀表。银色，链子断过一次，表盘背面刻着字。落在了刚才那班车上。" },
+              { "speaker": "suli", "text": "（抬眼看你，声音很轻）电台零点开播，播完我就来不及了。能帮我找回它吗。" }
+            ],
+            "next": "b1"
+          },
+          {
+            "id": "b1",
+            "type": "challenge",
+            "location": "subway",
+            "prompt": "末班车开走了。怀表现在会在哪？",
+            "need": ["观察", "情报"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你查了她的乘车记录：第三节车厢、靠门座位。末班车终到站清扫，遗失物会统一送回本线遗失物中心——也就是这一站的地下二层。" },
+                  { "speaker": "suli", "text": "（看着你调出的线路图，轻轻点头）思路很清晰。比我想象的，更可靠一些。" }
+                ],
+                "trust": 3, "mood": "平静", "next": "b2"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你拨通了地铁服务热线，对方答应帮忙留意，让你们去遗失物处等消息。" },
+                  { "speaker": "suli", "text": "……嗯。等待也是办法的一种。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b2"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你沿着站台来回找了两遍，一无所获。时间在一分一秒过去。" },
+                  { "speaker": "suli", "text": "（望着隧道深处，声音低下去）它不在这里。它跟着车走了。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b2"
+              }
+            }
+          },
+          {
+            "id": "b2",
+            "type": "challenge",
+            "location": "subway",
+            "prompt": "遗失物中心下班了，值班站务说要走流程，明天再来。",
+            "need": ["流程", "表达"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你没有硬磨，而是请站务按夜间应急流程登记：贵重物品、失主在场、证件齐全——三个条件齐了，按规定可以当场开柜核对。" },
+                  { "text": "站务核对了条款，点点头取来了钥匙。" },
+                  { "speaker": "suli", "text": "（在你身后轻声）原来规则不是用来挡人的……是用来走通的。今天学到了。" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "b3"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你好说歹说，站务答应帮忙打个电话问问终点站。" },
+                  { "speaker": "suli", "text": "麻烦您了。（朝站务深深鞠躬）" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b3"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "言语没接上，站务摆摆手回了值班室：明天上午九点，请走正常流程。" },
+                  { "speaker": "suli", "text": "（沉默几秒）……九点。电台的零点，等不到九点。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b3"
+              }
+            }
+          },
+          {
+            "id": "b3",
+            "type": "challenge",
+            "location": "subway",
+            "prompt": "遗失物柜里没有怀表。最后的线索在监控里。",
+            "need": ["技术", "观察"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你请站务调出第三节车厢的监控，逐帧拖动：23:31，一位老人捡起怀表，交给了巡站的保洁员——保洁员的清洁车，此刻就停在站厅东侧。" },
+                  { "text": "怀表静静躺在清洁车的置物篮里，银链垂在外面。" },
+                  { "speaker": "suli", "text": "（接过怀表的瞬间，一直平静的肩膀几不可察地松了下来）……找到了。" }
+                ],
+                "trust": 3, "mood": "感动", "next": "b4"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "监控画质模糊，你们顺着保洁路线挨个问，最后在工具间找到了它。" },
+                  { "speaker": "suli", "text": "（双手捧住怀表）幸好……幸好没人把它当垃圾。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b4"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "监控权限申请被卡住了，线索断在最后一步。" },
+                  { "speaker": "suli", "text": "（盯着黑下去的屏幕，很久没说话）" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b4"
+              }
+            }
+          },
+          {
+            "id": "b4",
+            "type": "challenge",
+            "location": "subway",
+            "prompt": "她握着怀表站在空荡的站台，忽然说：今天，是它主人的忌日。",
+            "need": ["安抚"],
+            "danger": true,
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你没有说节哀，也没有问是谁。你只是说：它今晚差点走丢，但它认得回家的路——因为有人一直在找它。" },
+                  { "speaker": "suli", "text": "（怔了很久，把怀表贴在耳边听了听走针声）……嗯。它还走着。她也还在。" },
+                  { "speaker": "suli", "text": "（抬头时，眼神是这一晚第一次有了温度）谢谢你。今晚的电台，我想讲讲这个故事。" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "gate"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你安静地陪她站了一会儿，直到末班清扫的广播响起。" },
+                  { "speaker": "suli", "text": "……该走了。谢谢你听我说这些。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "gate"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "你想活跃气氛，讲了个不合时宜的笑话。站台安静得能听见怀表的走针声。" },
+                  { "speaker": "suli", "text": "（把怀表收进口袋，声音恢复了最初的疏离）时间不早了。委托费我会照付。" },
+                  { "text": "后来你听说，她在电台里提到：有些安慰，不开口才是温柔。" }
+                ],
+                "trust": 0, "mood": "焦虑", "repPenalty": 1, "next": "gate"
+              }
+            }
+          },
+          {
+            "id": "gate",
+            "type": "branch",
+            "trustGte": 9,
+            "ifTrue": "end_success",
+            "ifFalse": "end_fail"
+          },
+          {
+            "id": "end_success",
+            "type": "ending",
+            "location": "subway",
+            "success": true,
+            "lines": [
+              { "text": "零点，你打开电台。她的声音穿过整座入睡的城市，比平时柔软。" },
+              { "speaker": "suli", "text": "今晚的第一首歌，送给一位深夜还在帮人找回时间的先生。……晚安，便利屋。" },
+              { "text": "【委托完成】苏音音的好感度大幅提升，一段属于她的影像已经解锁。" }
+            ]
+          },
+          {
+            "id": "end_fail",
+            "type": "ending",
+            "location": "subway",
+            "success": false,
+            "lines": [
+              { "text": "零点的电台准时开播，她的声音听不出任何波澜。" },
+              { "speaker": "suli", "text": "（下播后发来一条简短的消息）怀表找回来了，谢谢。只是今晚……我想一个人静一静。" },
+              { "text": "【委托未达成】有些距离，今晚没能跨过去。" }
+            ]
+          }
+        ]
+      },
+      "rewardEffects": [
+        { "type": "set_flag", "flag": "commission_lasttrain_done" },
+        { "type": "add_affinity", "characterId": "suli", "value": 30 },
+        { "type": "add_spirit_stones", "value": 350 }
+      ]
+    },
+    {
+      "id": "stakeout",
+      "name": "便利店蹲守笔记",
+      "rarity": "SR",
+      "target": "murongxue",
+      "client": "murongxue",
+      "need": 7,
+      "tags": ["调查", "蹲守", "夜班"],
+      "desc": "连续三晚，同一个人，在同一排货架前消失三分钟。她要一个真相。",
+      "initialMood": "平静",
+      "graph": {
+        "start": "intro",
+        "nodes": [
+          {
+            "id": "intro",
+            "type": "dialogue",
+            "location": "store",
+            "lines": [
+              { "text": "晚上十点，便利店靠窗的座位。白衬衫紫格裙的少女面前摊着笔记本，上面贴满了时间标签。" },
+              { "speaker": "murongxue", "text": "连续三晚，同一个男人，在同一排货架前消失整整三分钟——监控盲区。" },
+              { "speaker": "murongxue", "text": "（合上笔记本，看你）店家以为是小偷，我觉得没那么简单。今晚，做我的搭档。" }
+            ],
+            "next": "b1"
+          },
+          {
+            "id": "b1",
+            "type": "challenge",
+            "location": "store",
+            "prompt": "先把三晚的监控记录捋一遍，找出规律。",
+            "need": ["观察", "情报"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你把三晚的录像并排播放：同一时刻进店、同一货架停留、出店时购物袋的形状却每天不同。你在第三晚的画面里按下暂停——他袖口露出半截褪色的工牌带。" },
+                  { "speaker": "murongxue", "text": "（凑近屏幕，眼睛亮了）工牌带……附近工地的配色。好眼力，搭档。" }
+                ],
+                "trust": 3, "mood": "平静", "next": "b2"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你确认了他每晚 22:47 准时出现，误差不超过一分钟。" },
+                  { "speaker": "murongxue", "text": "守时的人。那今晚，我们也准时。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b2"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "三晚录像看得你眼花，规律没找出来，时间倒是耗掉不少。" },
+                  { "speaker": "murongxue", "text": "（接过遥控器）……还是我来吧。你盯着门口就行。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b2"
+              }
+            }
+          },
+          {
+            "id": "b2",
+            "type": "challenge",
+            "location": "store",
+            "prompt": "蹲守开始。怎么在店里待两个小时不引人怀疑？",
+            "need": ["补给", "流程"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你买了关东煮和两杯热饮占住靠窗座，又跟店员打了招呼说在等朋友——顺手帮忙签收了一箱到货的牛奶。从店员到顾客，没人多看你们一眼。" },
+                  { "speaker": "murongxue", "text": "（用吸管搅着热饮，嘴角微翘）伪装成日常的一部分……教科书级别的蹲点。" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "b3"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你们轮流假装挑选商品，勉强混过了店员的视线。" },
+                  { "speaker": "murongxue", "text": "（小声）你刚才拿着同一瓶酱油看了十分钟。下次自然一点。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b3"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "在货架间来回晃悠太久，店员警惕地走过来：两位，需要帮忙吗？" },
+                  { "speaker": "murongxue", "text": "（迅速抓起一包薯片去结账，耳根有点红）……暴露了一半。" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b3"
+              }
+            }
+          },
+          {
+            "id": "b3",
+            "type": "challenge",
+            "location": "store",
+            "prompt": "店员起了疑心，过来盘问你们到底在做什么。",
+            "need": ["表达", "安抚"],
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "你出示了便利屋的工牌，说明受托调查货架失窃，请店员配合保持原样——并承诺无论结果如何，今晚给店里一个交代。" },
+                  { "text": "店员松了口气：原来是帮我们查的，早说嘛！" },
+                  { "speaker": "murongxue", "text": "（在笔记本上写了一行字推给你看：合法身份真好用。）" }
+                ],
+                "trust": 3, "mood": "信赖", "next": "b4"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你含糊地解释是在做市场调研，店员半信半疑地回了柜台。" },
+                  { "speaker": "murongxue", "text": "（低声）他还会再来看的。抓紧时间。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "b4"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "解释越描越黑，店员干脆站在你们旁边不走了。" },
+                  { "speaker": "murongxue", "text": "（扶额）蹲守最忌讳的，就是被人盯着蹲守……" }
+                ],
+                "trust": 0, "mood": "焦虑", "next": "b4"
+              }
+            }
+          },
+          {
+            "id": "b4",
+            "type": "challenge",
+            "location": "store",
+            "prompt": "22:47，他来了。三分钟盲区，只有一次定格真相的机会。",
+            "need": ["观察"],
+            "danger": true,
+            "outcomes": {
+              "perfect": {
+                "lines": [
+                  { "text": "男人走向货架的瞬间，你已经站在补货口的反光镜角度——看得清清楚楚：他没有偷东西，而是把一袋面包和一盒牛奶塞进了货架最底层的纸箱后面。" },
+                  { "text": "纸箱后面，探出一个流浪小孩的脑袋。男人比了个嘘的手势，转身去结账——他买单了，每天都买了双份。" },
+                  { "speaker": "murongxue", "text": "（站在你身侧看完全程，长长呼出一口气）……不是窃案。是一个不想让孩子被赶走的人。" }
+                ],
+                "trust": 3, "mood": "感动", "next": "gate"
+              },
+              "ok": {
+                "lines": [
+                  { "text": "你拍到了他在货架后弯腰的照片，虽然角度不佳，但足以排除偷窃——他手里拿着的是付过款的商品。" },
+                  { "speaker": "murongxue", "text": "证据链不算完美……但方向对了。" }
+                ],
+                "trust": 1, "mood": "平静", "next": "gate"
+              },
+              "poor": {
+                "lines": [
+                  { "text": "关键三分钟，你挪位置时碰倒了陈列架。男人受惊离开，什么都没拍到。" },
+                  { "text": "店家第二天对外抱怨：请的调查员毛手毛脚，案子黄了。" }
+                ],
+                "trust": 0, "mood": "焦虑", "repPenalty": 1, "next": "gate"
+              }
+            }
+          },
+          {
+            "id": "gate",
+            "type": "branch",
+            "trustGte": 7,
+            "ifTrue": "end_success",
+            "ifFalse": "end_fail"
+          },
+          {
+            "id": "end_success",
+            "type": "ending",
+            "location": "store",
+            "success": true,
+            "lines": [
+              { "text": "真相交给店家后，店长沉默了很久，最后在那排货架边上加了一个爱心货架：免费取用，不必躲藏。" },
+              { "speaker": "murongxue", "text": "（合上笔记本，在封面写下结案两个字）这是我做过结局最好的一个案子。" },
+              { "speaker": "murongxue", "text": "（把笔记本递给你）最后一页，给搭档的评语——自己看。别在我面前看。" },
+              { "text": "【委托完成】沈疏桐的好感度大幅提升，一段属于她的影像已经解锁。" }
+            ]
+          },
+          {
+            "id": "end_fail",
+            "type": "ending",
+            "location": "store",
+            "success": false,
+            "lines": [
+              { "text": "线索断了，男人再也没在 22:47 出现过。她把笔记本翻回第一页，重新开始整理。" },
+              { "speaker": "murongxue", "text": "调查就是这样，十次蹲守九次空。……今晚的关东煮，算你的安慰奖。" },
+              { "text": "【委托未达成】真相还藏在监控盲区里，等下一个深夜。" }
+            ]
+          }
+        ]
+      },
+      "rewardEffects": [
+        { "type": "set_flag", "flag": "commission_stakeout_done" },
+        { "type": "add_affinity", "characterId": "murongxue", "value": 30 },
+        { "type": "add_spirit_stones", "value": 300 }
+      ]
+    }
+  ]
+}

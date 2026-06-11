@@ -1,0 +1,144 @@
+{
+  "baseUrl": "/characters/face",
+  "layout": "3 columns x 2 rows",
+  "expressions": [
+    {
+      "key": "smile",
+      "label": "微笑"
+    },
+    {
+      "key": "shy",
+      "label": "害羞"
+    },
+    {
+      "key": "laugh",
+      "label": "大笑"
+    },
+    {
+      "key": "angry",
+      "label": "生气"
+    },
+    {
+      "key": "cry",
+      "label": "哭泣"
+    },
+    {
+      "key": "calm",
+      "label": "平静"
+    }
+  ],
+  "characters": {
+    "linxia": {
+      "name": "江夏",
+      "source": "/characters/face/source/linxia_sheet.png",
+      "assetBase": "r_linxia",
+      "avatar": "/characters/face/linxia/avatar.png",
+      "expressions": {
+        "smile": "/characters/face/linxia/smile.png",
+        "shy": "/characters/face/linxia/shy.png",
+        "laugh": "/characters/face/linxia/laugh.png",
+        "angry": "/characters/face/linxia/angry.png",
+        "cry": "/characters/face/linxia/cry.png",
+        "calm": "/characters/face/linxia/calm.png"
+      }
+    },
+    "sangluo": {
+      "name": "顾夜莺",
+      "source": "/characters/face/source/sangluo_sheet.png",
+      "assetBase": "ssr_sangluo",
+      "avatar": "/characters/face/sangluo/avatar.png",
+      "expressions": {
+        "smile": "/characters/face/sangluo/smile.png",
+        "shy": "/characters/face/sangluo/shy.png",
+        "laugh": "/characters/face/sangluo/laugh.png",
+        "angry": "/characters/face/sangluo/angry.png",
+        "cry": "/characters/face/sangluo/cry.png",
+        "calm": "/characters/face/sangluo/calm.png"
+      }
+    },
+    "aman": {
+      "name": "许念",
+      "source": "/characters/face/source/aman_sheet.png",
+      "assetBase": "ssr_aman",
+      "avatar": "/characters/face/aman/avatar.png",
+      "expressions": {
+        "smile": "/characters/face/aman/smile.png",
+        "shy": "/characters/face/aman/shy.png",
+        "laugh": "/characters/face/aman/laugh.png",
+        "angry": "/characters/face/aman/angry.png",
+        "cry": "/characters/face/aman/cry.png",
+        "calm": "/characters/face/aman/calm.png"
+      }
+    },
+    "yunzhiyi": {
+      "name": "陈小满",
+      "source": "/characters/face/source/yunzhiyi_sheet.png",
+      "assetBase": "sr_yunzhiyi",
+      "avatar": "/characters/face/yunzhiyi/avatar.png",
+      "expressions": {
+        "smile": "/characters/face/yunzhiyi/smile.png",
+        "shy": "/characters/face/yunzhiyi/shy.png",
+        "laugh": "/characters/face/yunzhiyi/laugh.png",
+        "angry": "/characters/face/yunzhiyi/angry.png",
+        "cry": "/characters/face/yunzhiyi/cry.png",
+        "calm": "/characters/face/yunzhiyi/calm.png"
+      }
+    },
+    "shenzhaoning": {
+      "name": "祁宁",
+      "source": "/characters/face/source/shenzhaoning_sheet.png",
+      "assetBase": "sr_shenzhaoning",
+      "avatar": "/characters/face/shenzhaoning/avatar.png",
+      "expressions": {
+        "smile": "/characters/face/shenzhaoning/smile.png",
+        "shy": "/characters/face/shenzhaoning/shy.png",
+        "laugh": "/characters/face/shenzhaoning/laugh.png",
+        "angry": "/characters/face/shenzhaoning/angry.png",
+        "cry": "/characters/face/shenzhaoning/cry.png",
+        "calm": "/characters/face/shenzhaoning/calm.png"
+      }
+    },
+    "suli": {
+      "name": "苏音音",
+      "source": "/characters/face/source/suli_sheet.png",
+      "assetBase": "ssr_suli",
+      "avatar": "/characters/face/suli/avatar.png",
+      "expressions": {
+        "smile": "/characters/face/suli/smile.png",
+        "shy": "/characters/face/suli/shy.png",
+        "laugh": "/characters/face/suli/laugh.png",
+        "angry": "/characters/face/suli/angry.png",
+        "cry": "/characters/face/suli/cry.png",
+        "calm": "/characters/face/suli/calm.png"
+      }
+    },
+    "murongxue": {
+      "name": "沈疏桐",
+      "source": "/characters/face/source/murongxue_sheet.png",
+      "assetBase": "sr_murongxue",
+      "avatar": "/characters/face/murongxue/avatar.png",
+      "expressions": {
+        "smile": "/characters/face/murongxue/smile.png",
+        "shy": "/characters/face/murongxue/shy.png",
+        "laugh": "/characters/face/murongxue/laugh.png",
+        "angry": "/characters/face/murongxue/angry.png",
+        "cry": "/characters/face/murongxue/cry.png",
+        "calm": "/characters/face/murongxue/calm.png"
+      }
+    },
+    "aruo": {
+      "name": "云晓蔻",
+      "source": "/characters/face/source/aruo_sheet.png",
+      "assetBase": "ssr_aruo",
+      "avatar": "/characters/face/aruo/avatar.png",
+      "expressions": {
+        "smile": "/characters/face/aruo/smile.png",
+        "shy": "/characters/face/aruo/shy.png",
+        "laugh": "/characters/face/aruo/laugh.png",
+        "angry": "/characters/face/aruo/angry.png",
+        "cry": "/characters/face/aruo/cry.png",
+        "calm": "/characters/face/aruo/calm.png"
+      }
+    }
+  }
+}

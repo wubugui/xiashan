@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>剧情图编辑器</title>
+    <link rel="stylesheet" href="/vendor/xyflow-style.css" />
+    <script src="/vendor/react.production.min.js"></script>
+    <script src="/vendor/react-dom.production.min.js"></script>
+    <script>
+      function jsxCompat(type, props, key) {
+        if (key !== undefined) return React.createElement(type, { ...props, key });
+        return React.createElement(type, props);
+      }
+      window.jsxRuntime = {
+        Fragment: React.Fragment,
+        jsx: jsxCompat,
+        jsxs: jsxCompat,
+      };
+    </script>
+    <script src="/vendor/xyflow-react.js"></script>
+    <style>
+      :root { color-scheme: dark; font-family: Inter, "Microsoft YaHei", sans-serif; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #07111f; color: #e5e7eb; overflow: hidden; }
+      button, select, textarea, input { font: inherit; }
+      button, select, input { border: 1px solid #475569; border-radius: 6px; background: #1f2937; color: #e5e7eb; padding: 7px 10px; }
+      textarea { width: 100%; resize: vertical; border: 1px solid #334155; border-radius: 8px; background: #020617; color: #e5e7eb; padding: 10px; line-height: 1.45; }
+      button { cursor: pointer; }
+      button.primary { background: #d97706; border-color: #f59e0b; color: #111827; font-weight: 800; }
+      button.danger { background: #7f1d1d; border-color: #ef4444; }
+      #root { height: 100vh; }
+      .app { display: grid; grid-template-rows: 58px minmax(0, 1fr); height: 100vh; }
+      header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #26324a; background: #111827; }
+      main { display: grid; grid-template-columns: minmax(620px, 1fr) 410px; min-height: 0; }
+      .canvas { min-height: 0; background: #07111f; }
+      aside { min-height: 0; overflow: auto; border-left: 1px solid #26324a; background: #0f172a; }
+      .panel { padding: 12px; border-bottom: 1px solid #26324a; }
+      .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      label { display: block; margin: 0 0 6px; color: #94a3b8; font-size: 12px; font-weight: 700; }
+      .muted { color: #94a3b8; font-size: 12px; }
+      .message { white-space: pre-wrap; border-radius: 8px; padding: 10px; font-size: 13px; }
+      .ok { color: #bbf7d0; background: #052e16; border: 1px solid #166534; }
+      .error { color: #fecaca; background: #450a0a; border: 1px solid #991b1b; }
+      .kv { display: grid; grid-template-columns: 92px 1fr; gap: 6px 8px; align-items: center; font-size: 13px; }
+      .kv strong { color: #cbd5e1; }
+      .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .form-field.full { grid-column: 1 / -1; }
+      .form-field input, .form-field select, .form-field textarea { width: 100%; min-width: 0; }
+      .node-text { min-height: 190px; }
+      .hint { color: #fbbf24; font-size: 12px; font-weight: 700; }
+      .edge-list { display: grid; gap: 6px; }
+      .edge-item { border: 1px solid #334155; border-radius: 7px; padding: 8px; background: #111827; }
+      .edge-item button { width: 100%; text-align: left; }
+      .story-node {
+        width: 190px;
+        min-height: 82px;
+        border: 2px solid #64748b;
+        border-radius: 7px;
+        background: #111827;
+        box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+        overflow: hidden;
+      }
+      .story-node.selected { border-color: #fbbf24; box-shadow: 0 0 0 3px rgba(251,191,36,0.22), 0 10px 28px rgba(0,0,0,0.35); }
+      .story-node .top { display: flex; justify-content: space-between; gap: 8px; padding: 8px 10px; background: rgba(15,23,42,0.9); }
+      .story-node .id { font-size: 13px; font-weight: 900; color: #f8fafc; }
+      .story-node .type { font-size: 11px; color: #cbd5e1; }
+      .story-node .text { padding: 8px 10px 10px; font-size: 12px; line-height: 1.35; color: #dbeafe; min-height: 42px; }
+      .type-narration { border-color: #64748b; }
+      .type-dialogue { border-color: #3b82f6; }
+      .type-choice { border-color: #f59e0b; }
+      .type-gacha_trigger { border-color: #a855f7; }
+      .type-face_slap { border-color: #ef4444; }
+      .type-phone_notify { border-color: #10b981; }
+      .react-flow__handle { width: 13px; height: 13px; border: 2px solid #020617; background: #fbbf24; }
+      .react-flow__edge-path { stroke-width: 2.6; }
+      .react-flow__edge.selected .react-flow__edge-path { stroke-width: 4.2; }
+      .react-flow__edge.choice .react-flow__edge-path { stroke-dasharray: 7 5; }
+      .react-flow__controls { background: #111827; border: 1px solid #334155; }
+      .react-flow__controls-button { background: #111827; border-bottom: 1px solid #334155; color: #e5e7eb; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      const h = React.createElement;
+      const RF = window.ReactFlow;
+      const {
+        ReactFlow,
+        ReactFlowProvider,
+        Background,
+        Controls,
+        MiniMap,
+        Handle,
+        Position,
+        MarkerType,
+        applyNodeChanges,
+        applyEdgeChanges,
+        useReactFlow,
+        useUpdateNodeInternals,
+      } = RF;
+
+      const nodeTypes = { story: StoryNodeView };
+      const nodeTypeOptions = ['narration', 'dialogue', 'choice', 'gacha_trigger', 'face_slap', 'phone_notify'];
+
+      function StoryNodeView({ data, selected }) {
+        return h('div', { className: `story-node type-${data.type} ${selected ? 'selected' : ''}` },
+          h(Handle, { type: 'target', position: Position.Left }),
+          h('div', { className: 'top' },
+            h('div', { className: 'id' }, data.label),
+            h('div', { className: 'type' }, data.type),
+          ),
+          h('div', { className: 'text' }, data.preview || '...'),
+          h(Handle, { type: 'source', position: Position.Right }),
+        );
+      }
+
+      function App() {
+        return h(ReactFlowProvider, null, h(Editor));
+      }
+
+      function Editor() {
+        const rf = useReactFlow();
+        const updateNodeInternals = useUpdateNodeInternals();
+        const [content, setContent] = React.useState(null);
+        const [layout, setLayout] = React.useState({});
+        const [nodes, setNodes] = React.useState([]);
+        const [edges, setEdges] = React.useState([]);
+        const [chapterId, setChapterId] = React.useState(1);
+        const [selectedNodeId, setSelectedNodeId] = React.useState('');
+        const [selectedEdge, setSelectedEdge] = React.useState(null);
+        const [form, setForm] = React.useState({});
+        const [message, setMessage] = React.useState({ text: '加载中...', ok: true });
+        const [showMiniMap, setShowMiniMap] = React.useState(false);
+
+        React.useEffect(() => {
+          Promise.all([
+            fetch('/api/content').then((r) => r.json()),
+            fetch('/api/story-layout').then((r) => r.json()),
+          ]).then(([contentData, layoutData]) => {
+            const start = contentData.story.chapters[0]?.startNodeId || contentData.story.nodes[0]?.id || '';
+            setContent(contentData);
+            setLayout(layoutData || {});
+            setChapterId(contentData.story.nodes.find((node) => node.id === start)?.chapterId || contentData.story.chapters[0]?.id || 1);
+            setSelectedNodeId(start);
+            setMessage({ text: '已加载剧情图。', ok: true });
+          }).catch((error) => setMessage({ text: String(error.message || error), ok: false }));
+        }, []);
+
+        React.useEffect(() => {
+          if (!content) return;
+          const graph = buildGraph(content.story, chapterId, layout);
+          setNodes(markSelectedNodes(graph.nodes, selectedNodeId));
+          setEdges(markSelectedEdges(graph.edges, selectedEdge?.id));
+          window.__storyGraphDebug = { nodes: graph.nodes.length, edges: graph.edges.length };
+          window.setTimeout(() => updateNodeInternals(graph.nodes.map((node) => node.id)), 40);
+        }, [content, chapterId, layout, selectedNodeId, selectedEdge]);
+
+        React.useEffect(() => {
+          if (!content) return;
+          const node = getNode(content, selectedNodeId);
+          setForm(node ? nodeToForm(node) : {});
+        }, [content, selectedNodeId]);
+
+        React.useEffect(() => {
+          function onKeyDown(event) {
+            const tag = document.activeElement?.tagName?.toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+            if (event.key.toLowerCase() === 'f') {
+              event.preventDefault();
+              focusSelected();
+            }
+          }
+          document.addEventListener('keydown', onKeyDown);
+          return () => document.removeEventListener('keydown', onKeyDown);
+        }, [selectedNodeId, nodes]);
+
+        function updateStory(updater) {
+          setContent((current) => {
+            if (!current) return current;
+            const next = structuredClone(current);
+            updater(next.story);
+            return next;
+          });
+        }
+
+        function onNodesChange(changes) {
+          setNodes((current) => applyNodeChanges(changes, current));
+        }
+
+        function onEdgesChange(changes) {
+          const removed = changes.filter((change) => change.type === 'remove').map((change) => change.id);
+          if (removed.length) {
+            updateStory((story) => {
+              for (const edgeId of removed) removeStoryEdgeById(story, edgeId);
+            });
+          }
+          setEdges((current) => applyEdgeChanges(changes, current));
+        }
+
+        function onNodeDragStop(_event, node) {
+          setLayout((current) => ({ ...current, [node.id]: node.position }));
+        }
+
+        function onConnect(conn) {
+          if (!conn.source || !conn.target || conn.source === conn.target) return;
+          updateStory((story) => addStoryEdge(story, conn.source, conn.target));
+          setSelectedNodeId(conn.source);
+          setSelectedEdge(null);
+          setMessage({ text: `已连接 ${conn.source} -> ${conn.target}，记得保存。`, ok: true });
+        }
+
+        function onNodeClick(_event, node) {
+          setSelectedNodeId(node.id);
+          setSelectedEdge(null);
+        }
+
+        function onEdgeClick(_event, edge) {
+          setSelectedEdge(edge);
+          setSelectedNodeId(edge.source);
+        }
+
+        function applyNodeForm() {
+          if (!selectedNodeId) return;
+          try {
+            updateStory((story) => {
+              const index = story.nodes.findIndex((node) => node.id === selectedNodeId);
+              if (index < 0) throw new Error('当前节点不存在。');
+              const original = story.nodes[index];
+              const nextId = String(form.id || '').trim();
+              if (!nextId) throw new Error('节点 ID 不能为空。');
+              const next = {
+                ...original,
+                id: nextId,
+                type: form.type || 'narration',
+                text: form.text || '',
+                chapterId,
+              };
+              setOptional(next, 'speaker', form.speaker);
+              setOptional(next, 'speakerColor', form.speakerColor);
+              setOptional(next, 'backgroundUrl', form.backgroundUrl);
+              applySpecialForm(next, form);
+              story.nodes[index] = next;
+              if (nextId !== selectedNodeId) {
+                renameNodeRefs(story, selectedNodeId, nextId);
+                setLayout((current) => renameLayoutRef(current, selectedNodeId, nextId));
+                setSelectedNodeId(nextId);
+              }
+            });
+            setSelectedEdge(null);
+            setMessage({ text: '节点修改已应用，记得保存。', ok: true });
+          } catch (error) {
+            setMessage({ text: String(error.message || error), ok: false });
+          }
+        }
+
+        function deleteNode() {
+          if (!selectedNodeId || !confirm(`删除节点 ${selectedNodeId}？引用这个节点的流向也会被移除。`)) return;
+          updateStory((story) => {
+            story.nodes = story.nodes.filter((node) => node.id !== selectedNodeId);
+            for (const node of story.nodes) {
+              if (node.nextNodeId === selectedNodeId) delete node.nextNodeId;
+              if (node.choices) {
+                node.choices = node.choices.filter((choice) => choice.nextNodeId !== selectedNodeId);
+                if (!node.choices.length) delete node.choices;
+              }
+            }
+          });
+          setLayout((current) => {
+            const next = { ...current };
+            delete next[selectedNodeId];
+            return next;
+          });
+          const fallback = content?.story.nodes.find((node) => node.chapterId === chapterId && node.id !== selectedNodeId)?.id || '';
+          setSelectedNodeId(fallback);
+          setSelectedEdge(null);
+          setMessage({ text: '节点已删除，记得保存。', ok: true });
+        }
+
+        function addNode() {
+          const id = prompt('新节点 ID，例如 ch1_26');
+          if (!id) return;
+          if (getNode(content, id)) {
+            setMessage({ text: `节点 ${id} 已存在。`, ok: false });
+            return;
+          }
+          updateStory((story) => {
+            story.nodes.push({ id, chapterId, type: 'narration', text: '新剧情节点' });
+          });
+          const center = rf.screenToFlowPosition ? rf.screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 }) : { x: 120, y: 120 };
+          setLayout((current) => ({ ...current, [id]: center }));
+          setSelectedNodeId(id);
+          setSelectedEdge(null);
+          setMessage({ text: '已新增节点，记得保存。', ok: true });
+        }
+
+        function applyEdgeEdit() {
+          if (!selectedEdge) return;
+          const target = document.querySelector('#edgeTarget')?.value;
+          const choiceText = document.querySelector('#choiceText')?.value || '新选项';
+          updateStory((story) => updateStoryEdge(story, selectedEdge, target, choiceText));
+          setSelectedEdge(null);
+          setMessage({ text: '连线已更新，记得保存。', ok: true });
+        }
+
+        function deleteSelectedEdge() {
+          if (!selectedEdge) return;
+          updateStory((story) => removeStoryEdgeById(story, selectedEdge.id));
+          setSelectedEdge(null);
+          setMessage({ text: '连线已删除，记得保存。', ok: true });
+        }
+
+        function autoLayout() {
+          if (!content) return;
+          const nextLayout = {};
+          const chapterNodes = content.story.nodes.filter((node) => node.chapterId === chapterId);
+          const order = storyOrder(chapterNodes);
+          order.forEach((id, index) => {
+            nextLayout[id] = { x: (index % 4) * 280, y: Math.floor(index / 4) * 170 };
+          });
+          setLayout((current) => ({ ...current, ...nextLayout }));
+          window.setTimeout(() => rf.fitView({ padding: 0.22, duration: 180 }), 60);
+        }
+
+        function focusSelected() {
+          if (!selectedNodeId) return;
+          rf.fitView({ nodes: [{ id: selectedNodeId }], padding: 0.45, duration: 180, maxZoom: 1.25 });
+        }
+
+        async function validate() {
+          applyNodeForm();
+          const response = await fetch('/api/validate').then((r) => r.json());
+          setMessage({ text: response.ok ? '校验通过。' : response.issues.join('\n'), ok: response.ok });
+        }
+
+        async function saveAll() {
+          applyNodeForm();
+          const storyResponse = await fetch('/api/story', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(content.story),
+          }).then((r) => r.json());
+          if (!storyResponse.ok) {
+            setMessage({ text: (storyResponse.issues || [storyResponse.error]).join('\n'), ok: false });
+            return;
+          }
+          await fetch('/api/story-layout', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(layout),
+          });
+          setMessage({ text: '已保存剧情和节点坐标。', ok: true });
+        }
+
+        if (!content) {
+          return h('div', { className: 'app' }, h('header', null, h('strong', null, '剧情图编辑器')), h('main', null, h('div', { className: 'panel' }, message.text)));
+        }
+
+        const chapters = content.story.chapters || [];
+        const selectedNode = getNode(content, selectedNodeId);
+
+        return h('div', { className: 'app' },
+          h('header', null,
+            h('strong', null, '剧情图编辑器'),
+            h('select', { value: chapterId, onChange: (event) => {
+              const id = Number(event.target.value);
+              const first = content.story.nodes.find((node) => node.chapterId === id)?.id || '';
+              setChapterId(id);
+              setSelectedNodeId(first);
+              setSelectedEdge(null);
+            } }, chapters.map((chapter) => h('option', { key: chapter.id, value: chapter.id }, `第${chapter.id}章 ${chapter.title}`))),
+            h('button', { onClick: autoLayout }, '自动布局'),
+            h('button', { onClick: () => rf.fitView({ padding: 0.2, duration: 180 }) }, '适配视图'),
+            h('button', { onClick: focusSelected }, '聚焦选中 F'),
+            h('button', { onClick: addNode }, '新增节点'),
+            h('button', { onClick: validate }, '校验'),
+            h('button', { className: 'primary', onClick: saveAll }, '保存剧情图'),
+            h('label', { className: 'muted', style: { marginLeft: 8, display: 'flex', gap: 6, alignItems: 'center' } },
+              h('input', { type: 'checkbox', checked: showMiniMap, onChange: (event) => setShowMiniMap(event.target.checked) }),
+              '小地图',
+            ),
+            h('a', { href: '/', style: { marginLeft: 'auto', color: '#93c5fd', textDecoration: 'none' } }, '工具中心'),
+            h('span', { className: 'muted' }, `${message.ok ? 'OK' : '需要处理'} · ${nodes.length} 节点 · ${edges.length} 连线`),
+          ),
+          h('main', null,
+            h('section', { className: 'canvas' },
+              h(ReactFlow, {
+                nodes,
+                edges,
+                nodeTypes,
+                onNodesChange,
+                onEdgesChange,
+                onConnect,
+                onNodeClick,
+                onEdgeClick,
+                onNodeDragStop,
+                fitView: true,
+                minZoom: 0.12,
+                maxZoom: 2.3,
+                panOnDrag: [1, 2],
+                selectionOnDrag: true,
+                multiSelectionKeyCode: 'Shift',
+                deleteKeyCode: ['Backspace', 'Delete'],
+                defaultEdgeOptions: { type: 'default', markerEnd: { type: MarkerType.ArrowClosed }, style: { stroke: '#94a3b8', strokeWidth: 2.6 } },
+              },
+                h(Background, { gap: 18, size: 1 }),
+                showMiniMap ? h(MiniMap, { pannable: true, zoomable: true }) : null,
+                h(Controls),
+              ),
+            ),
+            h('aside', null,
+              h('div', { className: 'panel' },
+                h('label', null, '当前选择'),
+                h('div', { className: 'kv' },
+                  h('strong', null, 'ID'), h('span', null, selectedNode?.id || selectedEdge?.id || '未选择'),
+                  h('strong', null, '类型'), h('span', null, selectedNode ? selectedNode.type : selectedEdge ? selectedEdge.data?.kind : '-'),
+                  h('strong', null, '连线'), h('span', null, '从节点右侧圆点拖到目标左侧圆点'),
+                  h('strong', null, '快捷键'), h('span', null, 'F 聚焦，Delete 删除选中连线'),
+                ),
+              ),
+              h('div', { className: 'panel' },
+                h('label', null, '节点属性'),
+                selectedNode ? renderNodeForm(form, setForm) : h('div', { className: 'muted' }, '选择一个节点后编辑属性。'),
+                h('div', { className: 'row', style: { marginTop: 8 } },
+                  h('button', { className: 'primary', onClick: applyNodeForm }, '应用节点修改'),
+                  h('button', { className: 'danger', onClick: deleteNode }, '删除节点'),
+                ),
+              ),
+              h('div', { className: 'panel' },
+                h('label', null, '连线编辑'),
+                renderEdgeEditor(selectedEdge, content, chapterId, applyEdgeEdit, deleteSelectedEdge),
+              ),
+              h('div', { className: 'panel' },
+                h('label', null, '节点流向'),
+                renderEdgeList(selectedNode, setSelectedEdge),
+              ),
+              h('div', { className: 'panel' },
+                h('label', null, '消息'),
+                h('div', { className: `message ${message.ok ? 'ok' : 'error'}` }, message.text),
+              ),
+            ),
+          ),
+        );
+      }
+
+      function buildGraph(story, chapterId, layout) {
+        const storyNodes = story.nodes.filter((node) => node.chapterId === chapterId);
+        const nodeIds = new Set(storyNodes.map((node) => node.id));
+        const nodes = storyNodes.map((node, index) => ({
+          id: node.id,
+          type: 'story',
+          position: layout[node.id] || { x: (index % 4) * 280, y: Math.floor(index / 4) * 170 },
+          initialWidth: 190,
+          initialHeight: 120,
+          measured: { width: 190, height: 120 },
+          data: { label: node.id, type: node.type, preview: String(node.text || '').replace(/\s+/g, ' ').slice(0, 46) },
+        }));
+        const edges = [];
+        for (const node of storyNodes) {
+          if (node.nextNodeId && nodeIds.has(node.nextNodeId)) {
+            edges.push(makeEdge(`${node.id}__next__${node.nextNodeId}`, node.id, node.nextNodeId, 'next', 'next'));
+          }
+          (node.choices || []).forEach((choice, index) => {
+            if (nodeIds.has(choice.nextNodeId)) edges.push(makeEdge(`${node.id}__choice__${index}__${choice.nextNodeId}`, node.id, choice.nextNodeId, 'choice', choice.text.slice(0, 14), index));
+          });
+        }
+        return { nodes, edges };
+      }
+
+      function makeEdge(id, source, target, kind, label, choiceIndex) {
+        return {
+          id, source, target,
+          data: { kind, choiceIndex },
+        };
+      }
+
+      function markSelectedNodes(nodes, selectedNodeId) {
+        return nodes.map((node) => ({ ...node, selected: node.id === selectedNodeId }));
+      }
+
+      function markSelectedEdges(edges, selectedEdgeId) {
+        return edges.map((edge) => ({ ...edge, selected: edge.id === selectedEdgeId }));
+      }
+
+      function renderNodeForm(form, setForm) {
+        const update = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }));
+        return h('div', { className: 'form-grid' },
+          h('div', { className: 'form-field' }, h('label', null, '节点 ID'), h('input', { value: form.id || '', onChange: update('id') })),
+          h('div', { className: 'form-field' }, h('label', null, '节点类型'), h('select', { value: form.type || 'narration', onChange: update('type') }, nodeTypeOptions.map((type) => h('option', { key: type, value: type }, type)))),
+          h('div', { className: 'form-field' }, h('label', null, '说话人'), h('input', { value: form.speaker || '', onChange: update('speaker'), placeholder: '旁白可留空' })),
+          h('div', { className: 'form-field' }, h('label', null, '说话人颜色'), h('input', { value: form.speakerColor || '', onChange: update('speakerColor'), placeholder: '#FFB347' })),
+          h('div', { className: 'form-field full' }, h('label', null, '背景资源'), h('input', { value: form.backgroundUrl || '', onChange: update('backgroundUrl'), placeholder: '/bg/office.svg' })),
+          h('div', { className: 'form-field full' }, h('label', null, '剧情文本'), h('textarea', { className: 'node-text', value: form.text || '', onChange: update('text') })),
+          renderSpecialForm(form, setForm),
+          h('div', { className: 'form-field full' }, h('div', { className: 'hint' }, '条件、效果保留在数据中；剧情流向直接在图上拉线，或在连线编辑里调整。')),
+        );
+      }
+
+      function renderSpecialForm(form, setForm) {
+        const update = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }));
+        if (form.type === 'gacha_trigger') {
+          return h('div', { className: 'form-field full' }, h('div', { className: 'form-grid' },
+            h('div', { className: 'form-field' }, h('label', null, '免费抽数'), h('input', { type: 'number', min: 0, value: form.gachaFreePulls || 1, onChange: update('gachaFreePulls') })),
+            h('div', { className: 'form-field' }, h('label', null, '要求稀有度'), h('input', { value: form.gachaRequiredRarity || '', onChange: update('gachaRequiredRarity'), placeholder: 'SSR / SR，可留空' })),
+          ));
+        }
+        if (form.type === 'face_slap') {
+          return h('div', { className: 'form-field full' }, h('div', { className: 'form-grid' },
+            h('div', { className: 'form-field' }, h('label', null, '出场角色 ID'), h('input', { value: form.faceCharacterId || '', onChange: update('faceCharacterId') })),
+            h('div', { className: 'form-field' }, h('label', null, '反派名'), h('input', { value: form.faceEnemyName || '', onChange: update('faceEnemyName') })),
+            h('div', { className: 'form-field full' }, h('label', null, '反派台词'), h('textarea', { value: form.faceEnemyLine || '', onChange: update('faceEnemyLine') })),
+            h('div', { className: 'form-field full' }, h('label', null, '角色台词'), h('textarea', { value: form.faceCharacterLine || '', onChange: update('faceCharacterLine') })),
+            h('div', { className: 'form-field full' }, h('label', null, '结果文本'), h('textarea', { value: form.faceResultText || '', onChange: update('faceResultText') })),
+          ));
+        }
+        if (form.type === 'phone_notify') {
+          return h('div', { className: 'form-field full' }, h('div', { className: 'form-grid' },
+            h('div', { className: 'form-field' }, h('label', null, '通知类型'), h('select', { value: form.phoneType || 'wechat', onChange: update('phoneType') }, ['wechat', 'call', 'sms'].map((type) => h('option', { key: type, value: type }, type)))),
+            h('div', { className: 'form-field' }, h('label', null, '角色 ID'), h('input', { value: form.phoneCharacterId || '', onChange: update('phoneCharacterId') })),
+            h('div', { className: 'form-field full' }, h('label', null, '手机事件 ID'), h('input', { value: form.phoneEventId || '', onChange: update('phoneEventId') })),
+          ));
+        }
+        return null;
+      }
+
+      function renderEdgeEditor(selectedEdge, content, chapterId, applyEdgeEdit, deleteSelectedEdge) {
+        if (!selectedEdge) return h('div', { className: 'muted' }, '从节点右侧圆点拖到目标节点左侧圆点即可连线；点击已有连线可以修改目标或删除。');
+        const options = content.story.nodes.filter((node) => node.chapterId === chapterId);
+        const source = getNode(content, selectedEdge.source);
+        return h('div', null,
+          h('div', { className: 'kv' },
+            h('strong', null, '来源'), h('span', null, selectedEdge.source),
+            h('strong', null, '类型'), h('span', null, selectedEdge.data?.kind),
+            h('strong', null, '目标'), h('select', { id: 'edgeTarget', defaultValue: selectedEdge.target }, options.map((node) => h('option', { key: node.id, value: node.id }, node.id))),
+          ),
+          selectedEdge.data?.kind === 'choice' ? h('div', { style: { marginTop: 10 } }, h('label', null, '选项文本'), h('input', { id: 'choiceText', defaultValue: source?.choices?.[selectedEdge.data.choiceIndex]?.text || '', style: { width: '100%' } })) : null,
+          h('div', { className: 'row', style: { marginTop: 10 } },
+            h('button', { className: 'primary', onClick: applyEdgeEdit }, '应用连线修改'),
+            h('button', { className: 'danger', onClick: deleteSelectedEdge }, '删除连线'),
+          ),
+        );
+      }
+
+      function renderEdgeList(node, setSelectedEdge) {
+        if (!node) return h('div', { className: 'muted' }, '选择一个节点查看出口。');
+        const items = [];
+        if (node.nextNodeId) items.push({ label: `next -> ${node.nextNodeId}`, edge: makeEdge(`${node.id}__next__${node.nextNodeId}`, node.id, node.nextNodeId, 'next', 'next') });
+        (node.choices || []).forEach((choice, index) => items.push({ label: `choice ${index + 1}: ${choice.text} -> ${choice.nextNodeId}`, edge: makeEdge(`${node.id}__choice__${index}__${choice.nextNodeId}`, node.id, choice.nextNodeId, 'choice', choice.text, index) }));
+        if (!items.length) return h('div', { className: 'muted' }, '这个节点还没有出口。');
+        return h('div', { className: 'edge-list' }, items.map((item, index) => h('div', { key: index, className: 'edge-item' }, h('button', { onClick: () => setSelectedEdge(item.edge) }, item.label))));
+      }
+
+      function nodeToForm(node) {
+        return {
+          id: node.id,
+          type: node.type,
+          speaker: node.speaker || '',
+          speakerColor: node.speakerColor || '',
+          backgroundUrl: node.backgroundUrl || '',
+          text: node.text || '',
+          gachaFreePulls: node.gachaTrigger?.freePulls || 1,
+          gachaRequiredRarity: node.gachaTrigger?.requiredRarity || '',
+          faceCharacterId: node.faceSlap?.characterId || '',
+          faceEnemyName: node.faceSlap?.enemyName || '',
+          faceEnemyLine: node.faceSlap?.enemyLine || '',
+          faceCharacterLine: node.faceSlap?.characterLine || '',
+          faceResultText: node.faceSlap?.resultText || '',
+          phoneType: node.phoneNotify?.type || 'wechat',
+          phoneCharacterId: node.phoneNotify?.characterId || '',
+          phoneEventId: node.phoneNotify?.eventId || '',
+        };
+      }
+
+      function addStoryEdge(story, sourceId, targetId) {
+        const source = story.nodes.find((node) => node.id === sourceId);
+        if (!source || !story.nodes.some((node) => node.id === targetId)) return;
+        if (source.type === 'choice' || source.nextNodeId) {
+          source.choices = source.choices || [];
+          source.choices.push({ text: '新选项', nextNodeId: targetId });
+        } else {
+          source.nextNodeId = targetId;
+        }
+      }
+
+      function removeStoryEdgeById(story, edgeId) {
+        const parsed = parseEdgeId(edgeId);
+        if (!parsed) return;
+        const source = story.nodes.find((node) => node.id === parsed.source);
+        if (!source) return;
+        if (parsed.kind === 'next') delete source.nextNodeId;
+        if (parsed.kind === 'choice' && source.choices) {
+          source.choices.splice(parsed.choiceIndex, 1);
+          if (!source.choices.length) delete source.choices;
+        }
+      }
+
+      function updateStoryEdge(story, edge, targetId, choiceText) {
+        const parsed = parseEdgeId(edge.id);
+        if (!parsed) return;
+        const source = story.nodes.find((node) => node.id === parsed.source);
+        if (!source) return;
+        if (parsed.kind === 'next') source.nextNodeId = targetId;
+        if (parsed.kind === 'choice' && source.choices?.[parsed.choiceIndex]) {
+          source.choices[parsed.choiceIndex].nextNodeId = targetId;
+          source.choices[parsed.choiceIndex].text = choiceText;
+        }
+      }
+
+      function parseEdgeId(edgeId) {
+        const parts = String(edgeId).split('__');
+        if (parts[1] === 'next') return { source: parts[0], kind: 'next' };
+        if (parts[1] === 'choice') return { source: parts[0], kind: 'choice', choiceIndex: Number(parts[2]) };
+        return null;
+      }
+
+      function setOptional(target, key, value) {
+        const text = String(value || '').trim();
+        if (text) target[key] = text;
+        else delete target[key];
+      }
+
+      function applySpecialForm(node, form) {
+        if (node.type === 'gacha_trigger') {
+          node.gachaTrigger = { freePulls: Number(form.gachaFreePulls || 1) };
+          if (form.gachaRequiredRarity) node.gachaTrigger.requiredRarity = form.gachaRequiredRarity;
+        } else delete node.gachaTrigger;
+
+        if (node.type === 'face_slap') {
+          node.faceSlap = {
+            ...(node.faceSlap || {}),
+            characterId: form.faceCharacterId || '',
+            enemyName: form.faceEnemyName || '',
+            enemyLine: form.faceEnemyLine || '',
+            characterLine: form.faceCharacterLine || '',
+            resultText: form.faceResultText || '',
+            effects: node.faceSlap?.effects || [],
+          };
+        } else delete node.faceSlap;
+
+        if (node.type === 'phone_notify') {
+          node.phoneNotify = {
+            type: form.phoneType || 'wechat',
+            characterId: form.phoneCharacterId || '',
+            eventId: form.phoneEventId || '',
+          };
+        } else delete node.phoneNotify;
+      }
+
+      function renameNodeRefs(story, oldId, newId) {
+        for (const node of story.nodes) {
+          if (node.nextNodeId === oldId) node.nextNodeId = newId;
+          for (const choice of node.choices || []) if (choice.nextNodeId === oldId) choice.nextNodeId = newId;
+        }
+        for (const chapter of story.chapters) if (chapter.startNodeId === oldId) chapter.startNodeId = newId;
+      }
+
+      function renameLayoutRef(layout, oldId, newId) {
+        const next = { ...layout };
+        if (next[oldId]) {
+          next[newId] = next[oldId];
+          delete next[oldId];
+        }
+        return next;
+      }
+
+      function storyOrder(chapterNodes) {
+        const ids = new Set(chapterNodes.map((node) => node.id));
+        const out = [];
+        const seen = new Set();
+        function visit(id) {
+          if (!ids.has(id) || seen.has(id)) return;
+          seen.add(id);
+          out.push(id);
+          const node = chapterNodes.find((item) => item.id === id);
+          if (node?.nextNodeId) visit(node.nextNodeId);
+          for (const choice of node?.choices || []) visit(choice.nextNodeId);
+        }
+        for (const node of chapterNodes) visit(node.id);
+        return out;
+      }
+
+      function getNode(content, id) {
+        return content?.story?.nodes?.find((node) => node.id === id);
+      }
+
+      ReactDOM.createRoot(document.querySelector('#root')).render(h(App));
+    </script>
+  </body>
+</html>

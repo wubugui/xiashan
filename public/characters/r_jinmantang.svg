@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1080" role="img" aria-label="R JINMANTANG">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#0f172a"/><stop offset="1" stop-color="#059669"/></linearGradient>
+    <radialGradient id="halo" cx="50%" cy="22%" r="42%"><stop stop-color="#bbf7d0" stop-opacity="0.55"/><stop offset="1" stop-color="#bbf7d0" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="720" height="1080" fill="url(#g)"/>
+  <rect width="720" height="1080" fill="url(#halo)"/>
+  <circle cx="360" cy="250" r="110" fill="#bbf7d0" opacity="0.86"/>
+  <path d="M205 980c20-245 85-408 155-408s135 163 155 408" fill="#020617" opacity="0.62"/>
+  <path d="M160 585c90-72 310-72 400 0 36 190 38 310 20 435H140c-18-125-16-245 20-435Z" fill="#bbf7d0" opacity="0.26"/>
+  <text x="360" y="1018" text-anchor="middle" fill="white" opacity="0.72" font-family="Arial, sans-serif" font-size="34" font-weight="700">R JINMANTANG</text>
+</svg>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>内容工具中心</title>
+    <style>
+      :root { color-scheme: dark; font-family: Inter, "Microsoft YaHei", sans-serif; }
+      body { margin: 0; background: #0b1020; color: #e5e7eb; }
+      header { padding: 18px 22px; border-bottom: 1px solid #26324a; background: #111827; }
+      h1 { margin: 0; font-size: 22px; }
+      p { color: #94a3b8; }
+      main { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; padding: 18px; }
+      .card { border: 1px solid #26324a; border-radius: 8px; background: #111827; padding: 16px; }
+      .tools { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 12px; }
+      a, button { border: 1px solid #475569; border-radius: 7px; background: #1f2937; color: #e5e7eb; padding: 10px 12px; text-decoration: none; cursor: pointer; font: inherit; }
+      a.primary { background: #d97706; border-color: #f59e0b; color: #111827; font-weight: 700; }
+      button { width: 100%; text-align: left; }
+      pre { white-space: pre-wrap; overflow: auto; border: 1px solid #26324a; border-radius: 7px; background: #020617; padding: 12px; max-height: 420px; }
+      .ok { color: #bbf7d0; }
+      .bad { color: #fecaca; }
+      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .metric { border: 1px solid #334155; border-radius: 7px; padding: 10px; background: #0f172a; }
+      .metric strong { display: block; font-size: 24px; color: #fbbf24; }
+      @media (max-width: 900px) { main { grid-template-columns: 1fr; } .tools { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>内容工具中心</h1>
+      <p>统一管理剧情、角色、手机事件、抽卡配置和奖励数据。</p>
+    </header>
+    <main>
+      <section class="card">
+        <h2>工具入口</h2>
+        <div class="tools">
+          <a class="primary" href="/story">内容编辑器</a>
+          <a href="/api/story-graph.mmd" target="_blank">导出 Mermaid</a>
+          <a href="/api/content" target="_blank">查看全部内容 JSON</a>
+          <button id="validate">运行内容校验</button>
+          <button id="statsButton">刷新内容统计</button>
+          <a href="http://127.0.0.1:5173/" target="_blank">打开游戏</a>
+        </div>
+      </section>
+      <section class="card">
+        <h2>内容统计</h2>
+        <div id="metrics" class="grid"></div>
+      </section>
+      <section class="card">
+        <h2>校验结果</h2>
+        <pre id="validation">等待校验...</pre>
+      </section>
+      <section class="card">
+        <h2>数据文件</h2>
+        <pre>src/content/story.json
+src/content/characters.json
+src/content/phone-events.json
+src/content/gacha.json
+src/content/rewards.json
+src/content/videos.json</pre>
+      </section>
+    </main>
+    <script>
+      async function refreshStats() {
+        const stats = await fetch('/api/stats').then((r) => r.json());
+        const metrics = [
+          ['角色', stats.characters],
+          ['章节', stats.chapters],
+          ['剧情节点', stats.storyNodes],
+          ['手机事件', stats.phoneEvents],
+          ['奖励项', stats.rewards],
+          ['视频', stats.videos],
+          ['十连消耗', stats.gacha.tenCost],
+        ];
+        document.querySelector('#metrics').innerHTML = metrics.map(([label, value]) => `<div class="metric"><strong>${value}</strong>${label}</div>`).join('');
+      }
+
+      async function validate() {
+        const result = await fetch('/api/validate').then((r) => r.json());
+        const el = document.querySelector('#validation');
+        el.className = result.ok ? 'ok' : 'bad';
+        el.textContent = result.ok ? '内容校验通过。' : result.issues.map((issue) => `- ${issue}`).join('\n');
+      }
+
+      document.querySelector('#validate').onclick = validate;
+      document.querySelector('#statsButton').onclick = refreshStats;
+      refreshStats();
+      validate();
+    </script>
+  </body>
+</html>

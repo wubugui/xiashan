@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Office">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="0.58" stop-color="#1f2937"/>
+      <stop offset="1" stop-color="#b45309"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="72%" cy="18%" r="42%">
+      <stop offset="0" stop-color="#fde68a" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#fde68a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect width="1600" height="900" fill="url(#glow)"/>
+  <circle cx="1180" cy="150" r="58" fill="#fde68a" opacity="0.78"/>
+  <path d="M0 710 C220 640 380 690 590 620 C780 558 950 628 1160 560 C1350 498 1460 548 1600 500 L1600 900 L0 900 Z" fill="#020617" opacity="0.62"/>
+  <path d="M0 785 C250 735 450 760 700 720 C940 680 1160 720 1600 650 L1600 900 L0 900 Z" fill="#020617" opacity="0.82"/>
+  <g opacity="0.42" fill="#fde68a">
+    <circle cx="170" cy="130" r="3"/><circle cx="320" cy="210" r="2"/><circle cx="530" cy="120" r="2"/><circle cx="760" cy="190" r="3"/><circle cx="1420" cy="230" r="2"/>
+  </g>
+  <text x="80" y="820" fill="white" opacity="0.28" font-family="Arial, sans-serif" font-size="42" font-weight="700">Office</text>
+</svg>

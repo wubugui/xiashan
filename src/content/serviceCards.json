@@ -1,0 +1,20 @@
+{
+  "skills": [
+    { "id": "speech", "kind": "skill", "name": "应急话术", "type": "表达", "rarity": "R", "desc": "一次性。表达类事件信任 +3；不匹配也 +1。" },
+    { "id": "search", "kind": "skill", "name": "快速检索", "type": "观察", "rarity": "R", "desc": "一次性。观察类事件信任 +3；不匹配也 +1。" },
+    { "id": "tape",   "kind": "skill", "name": "万能胶带",  "type": "维修", "rarity": "R", "desc": "一次性。维修类事件信任 +3，并抵消口碑损失。" },
+    { "id": "battery","kind": "skill", "name": "备用充电宝","type": "技术", "rarity": "R", "desc": "一次性。技术类事件信任 +3，并抵消时间损耗。" },
+    { "id": "snack",  "kind": "skill", "name": "猫条",      "type": "宠物", "rarity": "R", "desc": "一次性。宠物类事件信任 +4。" },
+    { "id": "calm",   "kind": "skill", "name": "情绪安抚",  "type": "安抚", "rarity": "R", "desc": "一次性。安抚类事件信任 +3，精力 +1。" }
+  ],
+  "tools": [
+    { "id": "phone",  "kind": "tool", "name": "临时人脉电话", "type": "万能", "rarity": "SR", "desc": "一次性。当前事件直接信任 +5，口碑 +1，并追加爽解文本。" },
+    { "id": "bike",   "kind": "tool", "name": "共享单车",    "type": "路线", "rarity": "R",  "desc": "一次性。时间 +1，信任 +1。" },
+    { "id": "coffee", "kind": "tool", "name": "咖啡券",      "type": "恢复", "rarity": "R",  "desc": "一次性。精力 +3，也可在事件中硬撑。" }
+  ],
+  "infos": [
+    { "id": "map",  "kind": "info", "name": "城市情报", "type": "情报", "rarity": "R", "desc": "一次性。刷新路线，信任 +1。" },
+    { "id": "hint", "kind": "info", "name": "热点提示", "type": "观察", "rarity": "R", "desc": "一次性。观察类事件信任 +2，降低时间成本。" },
+    { "id": "risk", "kind": "info", "name": "风险预警", "type": "安抚", "rarity": "R", "desc": "一次性。风险点匹配时抵消负面。" }
+  ]
+}

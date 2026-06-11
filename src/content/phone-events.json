@@ -1,0 +1,691 @@
+{
+  "phoneEvents": [
+    {
+      "id": "linxia_call_intro",
+      "type": "call",
+      "triggerConditions": [{ "type": "has_character", "characterId": "linxia" }],
+      "characterId": "linxia",
+      "messages": [
+        { "sender": "character", "content": "喂喂？是便利屋吗？我是江夏呀！", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "你的号码是店里墙上贴的~我想着，存一下总没错！", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "以后要是有跑腿帮忙的活儿，记得想到我哦，我超能干的！", "type": "text", "delay": 2200 }
+      ],
+      "effects": [{ "type": "add_affinity", "characterId": "linxia", "value": 2 }]
+    },
+    {
+      "id": "linxia_thanks",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "flag_set", "flag": "commission_interview_done" }],
+      "characterId": "linxia",
+      "messages": [
+        { "sender": "character", "content": "我入职啦！！工位靠窗，还有下午茶！", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "那天要不是你，我现在还在闸机口哭呢…", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "第一份工资的小心意，必须收下！", "type": "red_packet", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "恭喜入职！以后常联系",
+          "effects": [{ "type": "add_affinity", "characterId": "linxia", "value": 3 }],
+          "nextMessages": ["那当然！你可是我的恩人兼朋友！", "等我转正，请你吃公司楼下最好吃的那家！"]
+        },
+        {
+          "text": "红包就不用啦",
+          "effects": [{ "type": "add_affinity", "characterId": "linxia", "value": 1 }],
+          "nextMessages": ["不行不行，不收我会睡不着的！", "就当…交个朋友的见面礼嘛。"]
+        }
+      ],
+      "effects": [{ "type": "add_spirit_stones", "value": 88 }]
+    },
+    {
+      "id": "linxia_chat1",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "linxia" },
+        { "type": "affinity", "characterId": "linxia", "minValue": 25 }
+      ],
+      "characterId": "linxia",
+      "messages": [
+        { "sender": "character", "content": "今天加班到现在…刚出地铁", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "路过那个闸机口，突然就想起你了，哈哈", "type": "text", "delay": 1400 }
+      ],
+      "choices": [
+        {
+          "text": "这么晚？我去接你",
+          "effects": [{ "type": "add_affinity", "characterId": "linxia", "value": 3 }],
+          "nextMessages": ["诶？！不、不用啦！", "…好吧其实有一点点开心。老地方见？"]
+        },
+        {
+          "text": "注意安全，到家说一声",
+          "effects": [{ "type": "add_affinity", "characterId": "linxia", "value": 1 }],
+          "nextMessages": ["好~你也早点休息！", "[图片] 看，今晚的月亮！"]
+        }
+      ]
+    },
+    {
+      "id": "linxia_chat2",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "linxia" },
+        { "type": "affinity", "characterId": "linxia", "minValue": 45 }
+      ],
+      "characterId": "linxia",
+      "messages": [
+        { "sender": "character", "content": "跟你说个秘密，我把那份你帮我重排的简历裱起来了", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "同事都笑我，可那是我人生转弯的地方啊", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "下次…拍段下班路上的视频给你看吧，我练了好久运镜！", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "我也记得那一天的你",
+          "effects": [{ "type": "add_affinity", "characterId": "linxia", "value": 3 }],
+          "nextMessages": ["……突然不知道回什么，脸好烫", "总之！视频一定要看哦！"]
+        },
+        {
+          "text": "期待你的大作",
+          "effects": [{ "type": "add_affinity", "characterId": "linxia", "value": 2 }],
+          "nextMessages": ["包满意的！我可是有美术细胞的人！"]
+        }
+      ]
+    },
+    {
+      "id": "aruo_call_intro",
+      "type": "call",
+      "triggerConditions": [{ "type": "has_character", "characterId": "aruo" }],
+      "characterId": "aruo",
+      "messages": [
+        { "sender": "character", "content": "叮咚~这里是云晓蔻的专属热线，恭喜你成为第一位接通的幸运观众！", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "开玩笑的啦。听圈里人说便利屋很靠谱，先混个脸熟~", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "我直播间的灯啊线啊总闹脾气，到时候可要随叫随到哦！", "type": "text", "delay": 2200 }
+      ],
+      "effects": [{ "type": "add_affinity", "characterId": "aruo", "value": 2 }]
+    },
+    {
+      "id": "aruo_thanks",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "flag_set", "flag": "commission_live_done" }],
+      "characterId": "aruo",
+      "messages": [
+        { "sender": "character", "content": "周年直播数据出来了！！人气新高！！", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "说好的，今晚的高光分你一半 (￣▽￣)~*", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "打赏分成的一半，拿去！", "type": "red_packet", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "你在台上发光的样子很厉害",
+          "effects": [{ "type": "add_affinity", "characterId": "aruo", "value": 3 }],
+          "nextMessages": ["哇，你这句话我要截图设成壁纸", "比一万条彩虹弹幕都管用，哼哼"]
+        },
+        {
+          "text": "下次设备我提前帮你检查",
+          "effects": [{ "type": "add_affinity", "characterId": "aruo", "value": 1 }],
+          "nextMessages": ["靠谱！这就把你备注改成御用救场官！"]
+        }
+      ],
+      "effects": [{ "type": "add_spirit_stones", "value": 88 }]
+    },
+    {
+      "id": "aruo_chat1",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "aruo" },
+        { "type": "affinity", "characterId": "aruo", "minValue": 25 }
+      ],
+      "characterId": "aruo",
+      "messages": [
+        { "sender": "character", "content": "[语音] 喂喂，测试测试~", "type": "voice", "voiceText": "今天下播早，突然不知道干嘛了。陪我语音聊会儿天？不许说在忙！", "delay": 600 }
+      ],
+      "choices": [
+        {
+          "text": "刚好我也闲着，聊吧",
+          "effects": [{ "type": "add_affinity", "characterId": "aruo", "value": 3 }],
+          "nextMessages": ["耶！那我先说，今天直播有个观众说我像仓鼠…", "你说像吗？像吗？？"]
+        },
+        {
+          "text": "十分钟，等我忙完",
+          "effects": [{ "type": "add_affinity", "characterId": "aruo", "value": 1 }],
+          "nextMessages": ["好吧好吧，计时开始", "超时一分钟，罚听我唱一首歌哦"]
+        }
+      ]
+    },
+    {
+      "id": "aruo_chat2",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "aruo" },
+        { "type": "affinity", "characterId": "aruo", "minValue": 45 }
+      ],
+      "characterId": "aruo",
+      "messages": [
+        { "sender": "character", "content": "问你个事，你要老实回答", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "镜头里的云晓蔻，和给你发消息的云晓蔻，你更喜欢哪个？", "type": "text", "delay": 1400 }
+      ],
+      "choices": [
+        {
+          "text": "现在这个，不用表演的这个",
+          "effects": [{ "type": "add_affinity", "characterId": "aruo", "value": 3 }],
+          "nextMessages": ["……笨蛋，这种话不要打字说啦", "下次见面，给你看一段谁都没看过的视频。下播后的我。"]
+        },
+        {
+          "text": "都是你啊，有区别吗",
+          "effects": [{ "type": "add_affinity", "characterId": "aruo", "value": 2 }],
+          "nextMessages": ["哇，满分答案，狡猾！", "那两个云晓蔻都谢谢你~"]
+        }
+      ]
+    },
+    {
+      "id": "yunzhiyi_call_intro",
+      "type": "call",
+      "triggerConditions": [{ "type": "has_character", "characterId": "yunzhiyi" }],
+      "characterId": "yunzhiyi",
+      "messages": [
+        { "sender": "character", "content": "喂！便利屋吗！我陈小满！声音大吗？我在仓库信号不好！", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "店长说以后店里搞不定的事可以找你们！我先存个号！", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "放心，要是有人欺负你们，也可以找我！我力气超大的！", "type": "text", "delay": 2200 }
+      ],
+      "effects": [{ "type": "add_affinity", "characterId": "yunzhiyi", "value": 2 }]
+    },
+    {
+      "id": "yunzhiyi_thanks",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "flag_set", "flag": "commission_nightstore_done" }],
+      "characterId": "yunzhiyi",
+      "messages": [
+        { "sender": "character", "content": "报告！昨晚的报表全平了！店长还表扬我了！", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "庆祝津贴，分你一半！别推辞，这是战友的规矩！", "type": "red_packet", "delay": 1400 }
+      ],
+      "choices": [
+        {
+          "text": "战友！下次夜班我再来",
+          "effects": [{ "type": "add_affinity", "characterId": "yunzhiyi", "value": 3 }],
+          "nextMessages": ["好耶！！拉钩！", "下次给你留最新鲜的关东煮，C位那串！"]
+        },
+        {
+          "text": "你自己留着买蛋白粉吧",
+          "effects": [{ "type": "add_affinity", "characterId": "yunzhiyi", "value": 1 }],
+          "nextMessages": ["蛋白粉我还有三大罐！", "收下！不然我现在扛一箱酸奶去你店里！"]
+        }
+      ],
+      "effects": [{ "type": "add_spirit_stones", "value": 66 }]
+    },
+    {
+      "id": "yunzhiyi_chat1",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "yunzhiyi" },
+        { "type": "affinity", "characterId": "yunzhiyi", "minValue": 25 }
+      ],
+      "characterId": "yunzhiyi",
+      "messages": [
+        { "sender": "character", "content": "[图片] 看！今天教会员做硬拉，全程零失误！", "type": "image", "delay": 600 },
+        { "sender": "character", "content": "话说你平时锻炼吗？跑腿不算啊！", "type": "text", "delay": 1400 }
+      ],
+      "choices": [
+        {
+          "text": "教练，我想学",
+          "effects": [{ "type": "add_affinity", "characterId": "yunzhiyi", "value": 3 }],
+          "nextMessages": ["来！周三晚上我帮你免费开小灶！", "先说好，我的课很严的，掉的汗能拖地！"]
+        },
+        {
+          "text": "搬砖就是我的锻炼",
+          "effects": [{ "type": "add_affinity", "characterId": "yunzhiyi", "value": 1 }],
+          "nextMessages": ["歪理！姿势不对搬砖会伤腰的！", "下次见面我教你正确发力，免费！"]
+        }
+      ]
+    },
+    {
+      "id": "yunzhiyi_chat2",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "yunzhiyi" },
+        { "type": "affinity", "characterId": "yunzhiyi", "minValue": 35 }
+      ],
+      "characterId": "yunzhiyi",
+      "messages": [
+        { "sender": "character", "content": "今天有个会员说，练得再壮也没人觉得女生厉害", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "我嘴笨，当场没反驳出来…有点闷", "type": "text", "delay": 1400 }
+      ],
+      "choices": [
+        {
+          "text": "那晚你护住整家店的样子，就是厉害",
+          "effects": [{ "type": "add_affinity", "characterId": "yunzhiyi", "value": 3 }],
+          "nextMessages": ["！！！", "嘿嘿…嘿嘿嘿。好，明天加练两组，为了下次也能护住！"]
+        },
+        {
+          "text": "嘴笨没关系，拳头会说话",
+          "effects": [{ "type": "add_affinity", "characterId": "yunzhiyi", "value": 2 }],
+          "nextMessages": ["哈哈哈对！道理打不过卧推！", "谢啦，心情回血满格！"]
+        }
+      ]
+    },
+    {
+      "id": "sangluo_call_intro",
+      "type": "call",
+      "triggerConditions": [{ "type": "has_character", "characterId": "sangluo" }],
+      "characterId": "sangluo",
+      "messages": [
+        { "sender": "character", "content": "……喂。便利屋？哦，存上了。", "type": "text", "delay": 800 },
+        { "sender": "character", "content": "没什么事。就是听说你们什么都管……失眠管吗？", "type": "text", "delay": 1800 },
+        { "sender": "character", "content": "开玩笑的。……一半是。先这样，困了。", "type": "text", "delay": 2800 }
+      ],
+      "effects": [{ "type": "add_affinity", "characterId": "sangluo", "value": 2 }]
+    },
+    {
+      "id": "sangluo_thanks",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "flag_set", "flag": "commission_insomnia_done" }],
+      "characterId": "sangluo",
+      "messages": [
+        { "sender": "character", "content": "睡了十四个小时。新纪录。", "type": "text", "delay": 800 },
+        { "sender": "character", "content": "[图片] 给你画的感谢稿，画里那个守在门口的人是谁，自己猜", "type": "image", "delay": 1800 },
+        { "sender": "character", "content": "稿费抵委托费之外的部分。收着。", "type": "red_packet", "delay": 2800 }
+      ],
+      "choices": [
+        {
+          "text": "画里的人猜到了，不说",
+          "effects": [{ "type": "add_affinity", "characterId": "sangluo", "value": 3 }],
+          "nextMessages": ["……识相。", "原图回头给你，记得装裱，我的稿很贵的。"]
+        },
+        {
+          "text": "以后睡不着随时找我",
+          "effects": [{ "type": "add_affinity", "characterId": "sangluo", "value": 1 }],
+          "nextMessages": ["这话我录音了。", "凌晨三点打过去的时候，不许关机。"]
+        }
+      ],
+      "effects": [{ "type": "add_spirit_stones", "value": 88 }]
+    },
+    {
+      "id": "sangluo_chat1",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "sangluo" },
+        { "type": "affinity", "characterId": "sangluo", "minValue": 25 }
+      ],
+      "characterId": "sangluo",
+      "messages": [
+        { "sender": "character", "content": "zzz", "type": "text", "delay": 800 },
+        { "sender": "character", "content": "啊，发错了。本来想发：在赶稿，陪聊。", "type": "text", "delay": 1800 }
+      ],
+      "choices": [
+        {
+          "text": "讲讲你在画什么",
+          "effects": [{ "type": "add_affinity", "characterId": "sangluo", "value": 3 }],
+          "nextMessages": ["一个深夜的便利屋。亮着灯的那种。", "甲方没要求画灯。我自己想画的。"]
+        },
+        {
+          "text": "赶稿别熬太晚",
+          "effects": [{ "type": "add_affinity", "characterId": "sangluo", "value": 1 }],
+          "nextMessages": ["熬夜的人没资格劝熬夜的人。", "……好吧，你除外。你劝有用一点。"]
+        }
+      ]
+    },
+    {
+      "id": "sangluo_chat2",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "sangluo" },
+        { "type": "affinity", "characterId": "sangluo", "minValue": 45 }
+      ],
+      "characterId": "sangluo",
+      "messages": [
+        { "sender": "character", "content": "做了个梦。梦里有人讲今天跑过的五条街，讲到第四条我就睡着了", "type": "text", "delay": 800 },
+        { "sender": "character", "content": "问题来了：第五条街是什么，我一直没听到", "type": "text", "delay": 1800 }
+      ],
+      "choices": [
+        {
+          "text": "第五条街，下次当面讲给你听",
+          "effects": [{ "type": "add_affinity", "characterId": "sangluo", "value": 3 }],
+          "nextMessages": ["成交。带枕头去。", "……开玩笑的。大概。"]
+        },
+        {
+          "text": "是通往你家的那条",
+          "effects": [{ "type": "add_affinity", "characterId": "sangluo", "value": 2 }],
+          "nextMessages": ["油腔滑调。", "……但是今晚应该会很好睡。哼。"]
+        }
+      ]
+    },
+    {
+      "id": "aman_call_intro",
+      "type": "call",
+      "triggerConditions": [{ "type": "has_character", "characterId": "aman" }],
+      "characterId": "aman",
+      "messages": [
+        { "sender": "character", "content": "您好，是便利屋吗？我是巷口花店的许念~", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "之前常听客人提起你们，想着先打个招呼。", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "店里新到了洋甘菊，路过的话，送你一小束呀。", "type": "text", "delay": 2200 }
+      ],
+      "effects": [{ "type": "add_affinity", "characterId": "aman", "value": 2 }]
+    },
+    {
+      "id": "aman_thanks",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "flag_set", "flag": "commission_moving_done" }],
+      "characterId": "aman",
+      "messages": [
+        { "sender": "character", "content": "新家第一晚，睡得很安稳。相框就摆在床头能看见的地方。", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "谢谢你那天什么都没问。", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "一点心意，给辛苦搬了一天的人。", "type": "red_packet", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "等你想说的那天，我再听",
+          "effects": [{ "type": "add_affinity", "characterId": "aman", "value": 3 }],
+          "nextMessages": ["……嗯。会有那天的。", "到时候，配我泡的茶一起。"]
+        },
+        {
+          "text": "新家暖房记得叫我",
+          "effects": [{ "type": "add_affinity", "characterId": "aman", "value": 1 }],
+          "nextMessages": ["好呀，第一个就叫你~", "菜单已经在想了，你有忌口吗？"]
+        }
+      ],
+      "effects": [{ "type": "add_spirit_stones", "value": 88 }]
+    },
+    {
+      "id": "aman_chat1",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "aman" },
+        { "type": "affinity", "characterId": "aman", "minValue": 25 }
+      ],
+      "characterId": "aman",
+      "messages": [
+        { "sender": "character", "content": "[图片] 店里来了位常客~", "type": "image", "delay": 600 },
+        { "sender": "character", "content": "就是上次钻纸箱的那只橘猫，现在每天来打卡，赖着不走啦。", "type": "text", "delay": 1400 }
+      ],
+      "choices": [
+        {
+          "text": "它这是认准你了",
+          "effects": [{ "type": "add_affinity", "characterId": "aman", "value": 3 }],
+          "nextMessages": ["是认准我的猫条了吧，哈哈。", "不过…被小家伙信任的感觉，真好呀。"]
+        },
+        {
+          "text": "给它起名字了吗",
+          "effects": [{ "type": "add_affinity", "characterId": "aman", "value": 1 }],
+          "nextMessages": ["叫纸箱！纪念我们的相遇方式~", "它好像不太满意，叫它十声理一声。"]
+        }
+      ]
+    },
+    {
+      "id": "aman_chat2",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "aman" },
+        { "type": "affinity", "characterId": "aman", "minValue": 45 }
+      ],
+      "characterId": "aman",
+      "messages": [
+        { "sender": "character", "content": "今天整理新家，把相框里的照片换了一面。", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "旧的那张收进了相册——不是忘记，是放好了。", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "新的那张还空着。我想，等一张拍得很开心的。", "type": "text", "delay": 2200 }
+      ],
+      "choices": [
+        {
+          "text": "那张照片，我来帮你拍",
+          "effects": [{ "type": "add_affinity", "characterId": "aman", "value": 3 }],
+          "nextMessages": ["……好呀。", "那要选个好天气。雨后也可以，雨后的光最温柔。"]
+        },
+        {
+          "text": "你已经走得很好了",
+          "effects": [{ "type": "add_affinity", "characterId": "aman", "value": 2 }],
+          "nextMessages": ["谢谢你。真的。", "下次来店里，给你留今天最好看的一束花。"]
+        }
+      ]
+    },
+    {
+      "id": "shenzhaoning_call_intro",
+      "type": "call",
+      "triggerConditions": [{ "type": "has_character", "characterId": "shenzhaoning" }],
+      "characterId": "shenzhaoning",
+      "messages": [
+        { "sender": "character", "content": "祁宁。两分钟，说重点。", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "你们便利屋的口碑我做过背调，通过了。号码我已存档。", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "之后会有合作。保持手机畅通。——就这些，再见。", "type": "text", "delay": 2200 }
+      ],
+      "effects": [{ "type": "add_affinity", "characterId": "shenzhaoning", "value": 2 }]
+    },
+    {
+      "id": "shenzhaoning_thanks",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "flag_set", "flag": "commission_boardroom_done" }],
+      "characterId": "shenzhaoning",
+      "messages": [
+        { "sender": "character", "content": "合同签了。对方点名表扬了会务保障。", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "项目奖金按贡献分配，这是你的部分。公事公办，不必客气。", "type": "red_packet", "delay": 1400 },
+        { "sender": "character", "content": "另外。那杯你顺手放在我桌上的咖啡——温度刚好。这条不是公事。", "type": "text", "delay": 2400 }
+      ],
+      "choices": [
+        {
+          "text": "下次的咖啡也包在我身上",
+          "effects": [{ "type": "add_affinity", "characterId": "shenzhaoning", "value": 3 }],
+          "nextMessages": ["成交。把这条写进长期合作条款里。", "……开玩笑的。我也是会开玩笑的。"]
+        },
+        {
+          "text": "合作愉快，沈经理",
+          "effects": [{ "type": "add_affinity", "characterId": "shenzhaoning", "value": 1 }],
+          "nextMessages": ["合作愉快。", "私下里，可以不用叫职称。"]
+        }
+      ],
+      "effects": [{ "type": "add_spirit_stones", "value": 88 }]
+    },
+    {
+      "id": "shenzhaoning_chat1",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "shenzhaoning" },
+        { "type": "affinity", "characterId": "shenzhaoning", "minValue": 25 }
+      ],
+      "characterId": "shenzhaoning",
+      "messages": [
+        { "sender": "character", "content": "在吗。有个非工作问题需要咨询。", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "团建要选餐厅，我列了评分矩阵，五家打分完全一样。第一次遇到决策失效。", "type": "text", "delay": 1400 }
+      ],
+      "choices": [
+        {
+          "text": "抛硬币，剩下的交给胃",
+          "effects": [{ "type": "add_affinity", "characterId": "shenzhaoning", "value": 3 }],
+          "nextMessages": ["荒谬。但有效。", "硬币选了火锅。复盘结论：偶尔放弃决策权，体验不错。"]
+        },
+        {
+          "text": "把评分维度加一项：你想吃什么",
+          "effects": [{ "type": "add_affinity", "characterId": "shenzhaoning", "value": 1 }],
+          "nextMessages": ["这个维度，我确实没建过。", "……加权之后，答案出来了。谢谢。"]
+        }
+      ]
+    },
+    {
+      "id": "shenzhaoning_chat2",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "shenzhaoning" },
+        { "type": "affinity", "characterId": "shenzhaoning", "minValue": 45 }
+      ],
+      "characterId": "shenzhaoning",
+      "messages": [
+        { "sender": "character", "content": "刚结束一个失败的提案复盘。在天台吹了会儿风。", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "发现一个问题：高效的人生计划表里，我没给失败排过期。也没给休息排过。", "type": "text", "delay": 1400 }
+      ],
+      "choices": [
+        {
+          "text": "现在排，今晚的日程：吹风，不复盘",
+          "effects": [{ "type": "add_affinity", "characterId": "shenzhaoning", "value": 3 }],
+          "nextMessages": ["批准。执行人：我。监督人：你。", "天台风很大。下次……一起来监督现场吧。"]
+        },
+        {
+          "text": "失败也是数据，攒够了就是经验",
+          "effects": [{ "type": "add_affinity", "characterId": "shenzhaoning", "value": 2 }],
+          "nextMessages": ["这个说法，收进我的方法论了。", "署名标你。"]
+        }
+      ]
+    },
+    {
+      "id": "suli_call_intro",
+      "type": "call",
+      "triggerConditions": [{ "type": "has_character", "characterId": "suli" }],
+      "characterId": "suli",
+      "messages": [
+        { "sender": "character", "content": "……晚上好。这里是苏音音。", "type": "text", "delay": 800 },
+        { "sender": "character", "content": "深夜打扰了。白天的电话，我不太会打。", "type": "text", "delay": 1800 },
+        { "sender": "character", "content": "零点有我的电台。睡不着的时候，可以听听。就这样。", "type": "text", "delay": 2800 }
+      ],
+      "effects": [{ "type": "add_affinity", "characterId": "suli", "value": 2 }]
+    },
+    {
+      "id": "suli_thanks",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "flag_set", "flag": "commission_lasttrain_done" }],
+      "characterId": "suli",
+      "messages": [
+        { "sender": "character", "content": "昨晚的节目，听了吗。", "type": "text", "delay": 800 },
+        { "sender": "character", "content": "那首歌之后，后台收到了三百多条留言。很多人说，想起了自己没来得及找回的东西。", "type": "text", "delay": 1800 },
+        { "sender": "character", "content": "这是电台这个月的打赏。它应该属于让故事发生的人。", "type": "red_packet", "delay": 2800 }
+      ],
+      "choices": [
+        {
+          "text": "听了。你的声音比平时温柔",
+          "effects": [{ "type": "add_affinity", "characterId": "suli", "value": 3 }],
+          "nextMessages": ["……听出来了啊。", "那段是没看稿子的。以后这样的段落，可能会变多。"]
+        },
+        {
+          "text": "怀表还好吗",
+          "effects": [{ "type": "add_affinity", "characterId": "suli", "value": 1 }],
+          "nextMessages": ["在我口袋里。走得很准。", "它现在，连着两个人的时间了。"]
+        }
+      ],
+      "effects": [{ "type": "add_spirit_stones", "value": 88 }]
+    },
+    {
+      "id": "suli_chat1",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "suli" },
+        { "type": "affinity", "characterId": "suli", "minValue": 25 }
+      ],
+      "characterId": "suli",
+      "messages": [
+        { "sender": "character", "content": "今晚节目的听众来信，有一个问题我答不上来。", "type": "text", "delay": 800 },
+        { "sender": "character", "content": "问：一个人走夜路的时候，怎么不害怕。你是常走夜路的人，你怎么答。", "type": "text", "delay": 1800 }
+      ],
+      "choices": [
+        {
+          "text": "想着有人在终点亮着灯",
+          "effects": [{ "type": "add_affinity", "characterId": "suli", "value": 3 }],
+          "nextMessages": ["……好答案。", "今晚的结束语，借用了。版权费是一首你点的歌。"]
+        },
+        {
+          "text": "害怕也没关系，走着走着就到了",
+          "effects": [{ "type": "add_affinity", "characterId": "suli", "value": 1 }],
+          "nextMessages": ["诚实的答案。", "比漂亮的答案更适合深夜。"]
+        }
+      ]
+    },
+    {
+      "id": "suli_chat2",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "suli" },
+        { "type": "affinity", "characterId": "suli", "minValue": 45 }
+      ],
+      "characterId": "suli",
+      "messages": [
+        { "sender": "character", "content": "告诉你一件事。我的电台有个传统：每年只留一次连线名额，给最特别的听众。", "type": "text", "delay": 800 },
+        { "sender": "character", "content": "今年的名额，决定了。", "type": "text", "delay": 1800 },
+        { "sender": "character", "content": "零点，别关机。", "type": "text", "delay": 2800 }
+      ],
+      "choices": [
+        {
+          "text": "我会守着电话的",
+          "effects": [{ "type": "add_affinity", "characterId": "suli", "value": 3 }],
+          "nextMessages": ["嗯。", "到时候……想听你讲讲星星。上次你指给我看的那颗。"]
+        },
+        {
+          "text": "连线要聊什么，我先准备",
+          "effects": [{ "type": "add_affinity", "characterId": "suli", "value": 2 }],
+          "nextMessages": ["不用准备。", "深夜电台最好的内容，从来都是没准备的那部分。"]
+        }
+      ]
+    },
+    {
+      "id": "murongxue_call_intro",
+      "type": "call",
+      "triggerConditions": [{ "type": "has_character", "characterId": "murongxue" }],
+      "characterId": "murongxue",
+      "messages": [
+        { "sender": "character", "content": "沈疏桐。不用问我怎么拿到你号码的，这是基本功。", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "我查过你们便利屋经手的案子，完成率不错，手法干净。", "type": "text", "delay": 1400 },
+        { "sender": "character", "content": "以后我的调查需要搭档时，会优先考虑你。荣幸吧？挂了。", "type": "text", "delay": 2200 }
+      ],
+      "effects": [{ "type": "add_affinity", "characterId": "murongxue", "value": 2 }]
+    },
+    {
+      "id": "murongxue_thanks",
+      "type": "wechat",
+      "triggerConditions": [{ "type": "flag_set", "flag": "commission_stakeout_done" }],
+      "characterId": "murongxue",
+      "messages": [
+        { "sender": "character", "content": "后续：爱心货架上线一周，那对父子今天是正大光明走进去的。", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "稿子卖给了专栏，标题《盲区里的善意》。稿费对半，搭档的规矩。", "type": "red_packet", "delay": 1400 }
+      ],
+      "choices": [
+        {
+          "text": "笔记本最后一页我看了",
+          "effects": [{ "type": "add_affinity", "characterId": "murongxue", "value": 3 }],
+          "nextMessages": ["说了别在我面前提！！", "……评语作废。重写了一条更长的，下次给你。"]
+        },
+        {
+          "text": "下个案子什么时候开工",
+          "effects": [{ "type": "add_affinity", "characterId": "murongxue", "value": 1 }],
+          "nextMessages": ["急什么。线索要养，案子要等。", "不过……搭档随时待命的感觉，不坏。"]
+        }
+      ],
+      "effects": [{ "type": "add_spirit_stones", "value": 88 }]
+    },
+    {
+      "id": "murongxue_chat1",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "murongxue" },
+        { "type": "affinity", "characterId": "murongxue", "minValue": 25 }
+      ],
+      "characterId": "murongxue",
+      "messages": [
+        { "sender": "character", "content": "考你个观察题。今天见你的时候，我和平时有一处不同。是什么。", "type": "text", "delay": 600 }
+      ],
+      "choices": [
+        {
+          "text": "蝴蝶结的系法变了",
+          "effects": [{ "type": "add_affinity", "characterId": "murongxue", "value": 3 }],
+          "nextMessages": ["……正确。三秒内答出，有点东西。", "奖励：下次蹲守，关东煮我请。"]
+        },
+        {
+          "text": "心情比平时好",
+          "effects": [{ "type": "add_affinity", "characterId": "murongxue", "value": 1 }],
+          "nextMessages": ["答案错误，但角度刁钻。", "……心情这个变量，今天确实是正的。"]
+        }
+      ]
+    },
+    {
+      "id": "murongxue_chat2",
+      "type": "wechat",
+      "triggerConditions": [
+        { "type": "has_character", "characterId": "murongxue" },
+        { "type": "affinity", "characterId": "murongxue", "minValue": 45 }
+      ],
+      "characterId": "murongxue",
+      "messages": [
+        { "sender": "character", "content": "结案整理时发现一个规律，必须记录：我所有评分最高的案子，现场都有同一个人。", "type": "text", "delay": 600 },
+        { "sender": "character", "content": "样本量还不够。需要更多共同办案数据。这是邀请，听懂了吗。", "type": "text", "delay": 1400 }
+      ],
+      "choices": [
+        {
+          "text": "听懂了，搭档证给我办一张",
+          "effects": [{ "type": "add_affinity", "characterId": "murongxue", "value": 3 }],
+          "nextMessages": ["早办好了。照片用的是你蹲守时拿酱油看十分钟那张。", "想换照片？下次约图书馆，重拍。"]
+        },
+        {
+          "text": "也可能是巧合，需要对照实验",
+          "effects": [{ "type": "add_affinity", "characterId": "murongxue", "value": 2 }],
+          "nextMessages": ["敢质疑我的归因？好，安排对照组。", "下个案子你缺席试试——不许真缺席。"]
+        }
+      ]
+    }
+  ]
+}
