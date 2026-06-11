@@ -165,9 +165,39 @@ export const useShopStore = create<ShopState>()(
         set({ ...INITIAL, routes });
       },
     }),
-    { name: 'xiashan-shop-store' }
+    {
+      name: 'xiashan-shop-store',
+      version: 1,
+      // 局内存档是当天一局的断点，跨版本恢复价值低、风险高（整对象快照随内容结构漂移）。
+      // 旧版本（version < 1）一律作废重开一天。
+      migrate: () => ({ ...INITIAL }),
+      // 即使版本一致，恢复前也校验结构：损坏的存档宁可丢弃，不能让 Shop 渲染崩溃。
+      merge: (persisted, current) => {
+        if (!isValidShopSnapshot(persisted)) return current;
+        return { ...current, ...(persisted as Partial<ShopState>) };
+      },
+    }
   )
 );
+
+function isValidShopSnapshot(p: unknown): boolean {
+  if (!p || typeof p !== 'object') return false;
+  const s = p as Record<string, unknown>;
+  const isLoc = (l: unknown) =>
+    !!l && typeof l === 'object' && Array.isArray((l as { spots?: unknown }).spots);
+  if (s.routes !== undefined && (!Array.isArray(s.routes) || !s.routes.every(isLoc))) return false;
+  if (s.loc !== undefined && s.loc !== null && !isLoc(s.loc)) return false;
+  if (s.hand !== undefined && !Array.isArray(s.hand)) return false;
+  if (s.log !== undefined && !Array.isArray(s.log)) return false;
+  if (s.commission !== undefined && s.commission !== null) {
+    const c = s.commission as Record<string, unknown>;
+    if (typeof c.need !== 'number' || typeof c.id !== 'string') return false;
+  }
+  for (const key of ['time', 'energy', 'rep', 'money', 'trust', 'step'] as const) {
+    if (s[key] !== undefined && typeof s[key] !== 'number') return false;
+  }
+  return true;
+}
 
 /** 检查局内资源耗尽 → 返回是否失败 */
 export function checkFail(s: Pick<ShopState, 'time' | 'energy' | 'rep'>): boolean {

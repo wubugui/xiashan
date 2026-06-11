@@ -208,6 +208,23 @@ export const usePlayerStore = create<PlayerState>()(
     {
       name: 'xiashan-player-store',
       version: 1,
+      // 旧版本存档可能缺字段、字段为 null 或类型不符（项目从 AVG 改版而来），
+      // 合并时丢弃所有与默认值类型不符的项，避免启动即崩、全页空白。
+      merge: (persisted, current) => {
+        if (!persisted || typeof persisted !== 'object') return current;
+        const out: Record<string, unknown> = { ...current };
+        const cur = current as unknown as Record<string, unknown>;
+        for (const [k, v] of Object.entries(persisted as Record<string, unknown>)) {
+          if (v === null || v === undefined) continue;
+          const def = cur[k];
+          if (Array.isArray(def) && !Array.isArray(v)) continue;
+          if (def !== null && typeof def === 'object' && !Array.isArray(def) && (typeof v !== 'object' || v === null || Array.isArray(v))) continue;
+          if (typeof def === 'number' && typeof v !== 'number') continue;
+          if (typeof def === 'string' && typeof v !== 'string') continue;
+          out[k] = v;
+        }
+        return out as unknown as PlayerState;
+      },
       migrate: (persisted, version) => {
         const state = persisted as Omit<Partial<PlayerState>, 'ownedCharacters'> & {
           ownedCharacters?: { characterId: string; level: number; exp: number; affinity?: number }[];

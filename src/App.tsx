@@ -2,6 +2,7 @@ import { HashRouter as Router, Routes, Route, useLocation, useNavigate } from 'r
 import { useEffect } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import NavBar from '@/components/NavBar';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import Home from '@/pages/Home';
 import Story from '@/pages/Story';
 import Gacha from '@/pages/Gacha';
@@ -80,8 +81,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <AppContent />
+      </Router>
+    </ErrorBoundary>
   );
 }
