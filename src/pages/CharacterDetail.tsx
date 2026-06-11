@@ -163,6 +163,8 @@ export default function CharacterDetail() {
     );
   }
 
+  const heroArtUrl = character.gachaBackgroundUrl || character.portraitUrl;
+
   return (
     <div className="relative min-h-screen bg-slate-950 pb-24">
       {/* 返回按钮 */}
@@ -183,9 +185,9 @@ export default function CharacterDetail() {
           rarityGradient[character.rarity],
         )}
       >
-        {character.portraitUrl ? (
+        {heroArtUrl ? (
           <img
-            src={assetUrl(character.portraitUrl)}
+            src={assetUrl(heroArtUrl)}
             alt={character.name}
             className="h-full w-full object-cover"
           />

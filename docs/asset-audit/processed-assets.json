@@ -1,0 +1,426 @@
+{
+  "gacha": {
+    "shenzhaoning": [
+      {
+        "source": "public/bg/角色背景/1111.png",
+        "sourceKey": "1111",
+        "path": "/bg/gacha/shenzhaoning-01.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 190206
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 35.png",
+        "sourceKey": "35",
+        "path": "/bg/gacha/shenzhaoning-02.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 170486
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 35 (1).png",
+        "sourceKey": "35_1",
+        "path": "/bg/gacha/shenzhaoning-03.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 187567
+      }
+    ],
+    "linxia": [
+      {
+        "source": "public/bg/角色背景/图片节点 28.png",
+        "sourceKey": "28",
+        "path": "/bg/gacha/linxia-01.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 225607
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 28 (1).png",
+        "sourceKey": "28_1",
+        "path": "/bg/gacha/linxia-02.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 210378
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 28 (2).png",
+        "sourceKey": "28_2",
+        "path": "/bg/gacha/linxia-03.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 234442
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 31.png",
+        "sourceKey": "31",
+        "path": "/bg/gacha/linxia-04.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 199407
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 31 (1).png",
+        "sourceKey": "31_1",
+        "path": "/bg/gacha/linxia-05.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 242166
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 31 (2).png",
+        "sourceKey": "31_2",
+        "path": "/bg/gacha/linxia-06.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 208035
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 31 (3).png",
+        "sourceKey": "31_3",
+        "path": "/bg/gacha/linxia-07.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 232830
+      }
+    ],
+    "sangluo": [
+      {
+        "source": "public/bg/角色背景/图片节点 32.png",
+        "sourceKey": "32",
+        "path": "/bg/gacha/sangluo-01.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 191150
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 32 (1).png",
+        "sourceKey": "32_1",
+        "path": "/bg/gacha/sangluo-02.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 164385
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 33.png",
+        "sourceKey": "33",
+        "path": "/bg/gacha/sangluo-03.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 162635
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 33 (1).png",
+        "sourceKey": "33_1",
+        "path": "/bg/gacha/sangluo-04.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 152286
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 33 (2).png",
+        "sourceKey": "33_2",
+        "path": "/bg/gacha/sangluo-05.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 154776
+      }
+    ],
+    "aman": [
+      {
+        "source": "public/bg/角色背景/图片节点 34.png",
+        "sourceKey": "34",
+        "path": "/bg/gacha/aman-01.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 203364
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 34 (1).png",
+        "sourceKey": "34_1",
+        "path": "/bg/gacha/aman-02.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 170604
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 34 - 副本.png",
+        "sourceKey": "34c",
+        "path": "/bg/gacha/aman-03.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 242462
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 34 - 副本 (1).png",
+        "sourceKey": "34c_1",
+        "path": "/bg/gacha/aman-04.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 249026
+      }
+    ],
+    "yunzhiyi": [
+      {
+        "source": "public/bg/角色背景/图片节点 34 - 副本 (2).png",
+        "sourceKey": "34c_2",
+        "path": "/bg/gacha/yunzhiyi-01.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 259761
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 34 - 副本 (3).png",
+        "sourceKey": "34c_3",
+        "path": "/bg/gacha/yunzhiyi-02.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 200753
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 34 - 副本 (4).png",
+        "sourceKey": "34c_4",
+        "path": "/bg/gacha/yunzhiyi-03.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 221630
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 34 - 副本 (5).png",
+        "sourceKey": "34c_5",
+        "path": "/bg/gacha/yunzhiyi-04.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 217831
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 34 - 副本 (6).png",
+        "sourceKey": "34c_6",
+        "path": "/bg/gacha/yunzhiyi-05.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 195465
+      }
+    ],
+    "suli": [
+      {
+        "source": "public/bg/角色背景/图片节点 36.png",
+        "sourceKey": "36",
+        "path": "/bg/gacha/suli-01.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 152969
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 36 (1).png",
+        "sourceKey": "36_1",
+        "path": "/bg/gacha/suli-02.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 147615
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 36 - 副本.png",
+        "sourceKey": "36c",
+        "path": "/bg/gacha/suli-03.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 199898
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 36 - 副本 (1).png",
+        "sourceKey": "36c_1",
+        "path": "/bg/gacha/suli-04.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 192870
+      }
+    ],
+    "aruo": [
+      {
+        "source": "public/bg/角色背景/图片节点 36 - 副本 (10).png",
+        "sourceKey": "36c_10",
+        "path": "/bg/gacha/aruo-01.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 156100
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 36 - 副本 (4).png",
+        "sourceKey": "36c_4",
+        "path": "/bg/gacha/aruo-02.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 208664
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 36 - 副本 (5).png",
+        "sourceKey": "36c_5",
+        "path": "/bg/gacha/aruo-03.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 252525
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 36 - 副本 (6).png",
+        "sourceKey": "36c_6",
+        "path": "/bg/gacha/aruo-04.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 159279
+      }
+    ],
+    "murongxue": [
+      {
+        "source": "public/bg/角色背景/图片节点 36 - 副本 (2).png",
+        "sourceKey": "36c_2",
+        "path": "/bg/gacha/murongxue-01.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 199205
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 36 - 副本 (3).png",
+        "sourceKey": "36c_3",
+        "path": "/bg/gacha/murongxue-02.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 242971
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 36 - 副本 (7).png",
+        "sourceKey": "36c_7",
+        "path": "/bg/gacha/murongxue-03.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 182931
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 36 - 副本 (8).png",
+        "sourceKey": "36c_8",
+        "path": "/bg/gacha/murongxue-04.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 169644
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 36 - 副本 (9).png",
+        "sourceKey": "36c_9",
+        "path": "/bg/gacha/murongxue-05.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 158345
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 37.png",
+        "sourceKey": "37",
+        "path": "/bg/gacha/murongxue-06.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 330088
+      },
+      {
+        "source": "public/bg/角色背景/图片节点 37 (1).png",
+        "sourceKey": "37_1",
+        "path": "/bg/gacha/murongxue-07.jpg",
+        "width": 1600,
+        "height": 900,
+        "bytes": 194835
+      }
+    ]
+  },
+  "scene": {
+    "office-lobby": {
+      "source": "public/bg/source/图片节点 20.png",
+      "sourceKey": "20",
+      "path": "/bg/scene/office-lobby.jpg",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 353046
+    },
+    "store-night": {
+      "source": "public/bg/source/图片节点 4 - 副本 (1).png",
+      "sourceKey": "4c_1",
+      "path": "/bg/scene/store-night.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 154104
+    },
+    "studio-room": {
+      "source": "public/bg/source/图片节点 4 - 副本 (2).png",
+      "sourceKey": "4c_2",
+      "path": "/bg/scene/studio-room.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 180018
+    },
+    "apartment-stairs": {
+      "source": "public/bg/source/图片节点 4 - 副本.png",
+      "sourceKey": "4c",
+      "path": "/bg/scene/apartment-stairs.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 122637
+    },
+    "subway-station": {
+      "source": "public/bg/source/图片节点 4.png",
+      "sourceKey": "4",
+      "path": "/bg/scene/subway-station.jpg",
+      "width": 1280,
+      "height": 720,
+      "bytes": 144913
+    },
+    "street-storefront": {
+      "source": "public/bg/source/图片节点 5.png",
+      "sourceKey": "5",
+      "path": "/bg/scene/street-storefront.jpg",
+      "width": 1920,
+      "height": 1072,
+      "bytes": 429738
+    }
+  },
+  "standee": {
+    "suli-pose-01": {
+      "source": "public/characters/立绘/图片节点 24.png",
+      "sourceKey": "24",
+      "path": "/characters/standee/suli-pose-01.png",
+      "width": 1400,
+      "height": 1400,
+      "bytes": 1069641
+    },
+    "suli-pose-02": {
+      "source": "public/characters/立绘/图片节点 25.png",
+      "sourceKey": "25",
+      "path": "/characters/standee/suli-pose-02.png",
+      "width": 1400,
+      "height": 1400,
+      "bytes": 1631287
+    },
+    "suli-pose-03": {
+      "source": "public/characters/立绘/图片节点 26.png",
+      "sourceKey": "26",
+      "path": "/characters/standee/suli-pose-03.png",
+      "width": 1400,
+      "height": 1400,
+      "bytes": 1664125
+    },
+    "suli-pose-04": {
+      "source": "public/characters/立绘/图片节点 27.png",
+      "sourceKey": "27",
+      "path": "/characters/standee/suli-pose-04.png",
+      "width": 1400,
+      "height": 1400,
+      "bytes": 1697694
+    }
+  },
+  "primaryGachaBackground": {
+    "shenzhaoning": "/bg/gacha/shenzhaoning-03.jpg",
+    "linxia": "/bg/gacha/linxia-06.jpg",
+    "sangluo": "/bg/gacha/sangluo-02.jpg",
+    "aman": "/bg/gacha/aman-01.jpg",
+    "yunzhiyi": "/bg/gacha/yunzhiyi-02.jpg",
+    "suli": "/bg/gacha/suli-02.jpg",
+    "aruo": "/bg/gacha/aruo-02.jpg",
+    "murongxue": "/bg/gacha/murongxue-01.jpg"
+  }
+}

@@ -86,7 +86,8 @@
         "angry": "/characters/face/suli/angry.png",
         "cry": "/characters/face/suli/cry.png",
         "calm": "/characters/face/suli/calm.png"
-      }
+      },
+      "gachaBackgroundUrl": "/bg/gacha/suli-02.jpg"
     },
     {
       "id": "chujinghong",
@@ -330,7 +331,8 @@
         "angry": "/characters/face/aruo/angry.png",
         "cry": "/characters/face/aruo/cry.png",
         "calm": "/characters/face/aruo/calm.png"
-      }
+      },
+      "gachaBackgroundUrl": "/bg/gacha/aruo-02.jpg"
     },
     {
       "id": "huapi",
@@ -496,7 +498,8 @@
         "angry": "/characters/face/sangluo/angry.png",
         "cry": "/characters/face/sangluo/cry.png",
         "calm": "/characters/face/sangluo/calm.png"
-      }
+      },
+      "gachaBackgroundUrl": "/bg/gacha/sangluo-02.jpg"
     },
     {
       "id": "aman",
@@ -584,7 +587,8 @@
         "angry": "/characters/face/aman/angry.png",
         "cry": "/characters/face/aman/cry.png",
         "calm": "/characters/face/aman/calm.png"
-      }
+      },
+      "gachaBackgroundUrl": "/bg/gacha/aman-01.jpg"
     },
     {
       "id": "shenzhaoning",
@@ -668,7 +672,8 @@
         "angry": "/characters/face/shenzhaoning/angry.png",
         "cry": "/characters/face/shenzhaoning/cry.png",
         "calm": "/characters/face/shenzhaoning/calm.png"
-      }
+      },
+      "gachaBackgroundUrl": "/bg/gacha/shenzhaoning-03.jpg"
     },
     {
       "id": "peiyanzhi",
@@ -900,7 +905,8 @@
         "angry": "/characters/face/murongxue/angry.png",
         "cry": "/characters/face/murongxue/cry.png",
         "calm": "/characters/face/murongxue/calm.png"
-      }
+      },
+      "gachaBackgroundUrl": "/bg/gacha/murongxue-01.jpg"
     },
     {
       "id": "yunzhiyi",
@@ -984,7 +990,8 @@
         "angry": "/characters/face/yunzhiyi/angry.png",
         "cry": "/characters/face/yunzhiyi/cry.png",
         "calm": "/characters/face/yunzhiyi/calm.png"
-      }
+      },
+      "gachaBackgroundUrl": "/bg/gacha/yunzhiyi-02.jpg"
     },
     {
       "id": "linxia",
@@ -1068,7 +1075,8 @@
         "angry": "/characters/face/linxia/angry.png",
         "cry": "/characters/face/linxia/cry.png",
         "calm": "/characters/face/linxia/calm.png"
-      }
+      },
+      "gachaBackgroundUrl": "/bg/gacha/linxia-06.jpg"
     },
     {
       "id": "jinmantang",

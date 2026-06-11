@@ -34,7 +34,7 @@ interface AnimGachaResult {
 import type { HandCard } from '@/store/useShopStore';
 import type { PersonCard } from '@/engine/shopEngine';
 import { cn } from '@/lib/utils';
-import { assetUrl } from '@/lib/assets';
+import { assetCssBackground, assetUrl } from '@/lib/assets';
 
 /* ────── 常量 ────── */
 const POOL_CONFIG = [
@@ -543,7 +543,7 @@ export default function Shop() {
                   {/* 场景热点区域 */}
                   <div
                     className="relative rounded-2xl overflow-hidden border border-white/10"
-                    style={{ height: 220, background: loc.bg }}
+                    style={{ height: 220, background: assetCssBackground(loc.bg) }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
                     <span className="absolute left-4 top-3 text-lg font-black text-white/90 z-10 drop-shadow">{loc.name}</span>
