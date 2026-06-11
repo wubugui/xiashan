@@ -163,3 +163,19 @@ export function applyCommissionRewards(effects: Effect[]): void {
     }
   }
 }
+
+/* ─────────────── 子目标 / 顺手单命中判定（v1.4） ───────────────
+ * 规则：在「匹配热点」上打出 type 命中要求的卡（万能卡视为命中一切），
+ * 且地点带有要求的标签（未限定则任意地点）。
+ */
+export function hitsRequirement(
+  req: { need: ServiceTag[]; locTag?: string },
+  cardType: ServiceTag,
+  spot: { need: ServiceTag[] },
+  locTags: string[],
+): boolean {
+  if (!isMatch(cardType, spot.need)) return false;
+  if (cardType !== '万能' && !req.need.includes(cardType)) return false;
+  if (req.locTag && !locTags.includes(req.locTag)) return false;
+  return true;
+}

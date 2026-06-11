@@ -12,7 +12,7 @@ import ResetSaveButton from '@/components/ResetSaveButton';
 export default function Home() {
   const navigate = useNavigate();
   const spiritStones = usePlayerStore((s) => s.spiritStones);
-  const commissionTickets = usePlayerStore((s) => s.commissionTickets);
+  const normalTickets = usePlayerStore((s) => s.normalTickets);
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
   const addSpiritStones = usePlayerStore((s) => s.addSpiritStones);
 
@@ -190,9 +190,9 @@ export default function Home() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-500">委托券</p>
+              <p className="text-xs text-slate-500">普通券</p>
               <p className="mt-0.5 text-sm font-medium text-amber-400">
-                🎫 {commissionTickets} 张可用
+                🎫 {normalTickets} 张可用
               </p>
             </div>
             <div className="text-right">

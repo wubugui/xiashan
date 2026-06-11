@@ -6,7 +6,9 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeStorage } from '@/lib/safeStorage';
 import { commissions } from '@/data/commissions';
-import type { Commission, GameLocation, ServiceCard } from '@/data/types';
+import type { Commission, GameLocation, ServiceCard, TheaterScene } from '@/data/types';
+import { sideJobs as allSideJobs } from '@/data/sideJobs';
+import { usePlayerStore } from '@/store/usePlayerStore';
 import { locations as allLocations } from '@/data/locations';
 import { rollRoutes } from '@/engine/shopEngine';
 
@@ -33,6 +35,17 @@ interface ShopState {
   commission: Commission | null;
   loc: GameLocation | null;
   routes: GameLocation[];
+  /* ── 委托板（v1.4）── */
+  /** 今日可接委托 id（含逾期单） */
+  board: string[];
+  /** 逾期委托：失败后次日可重接，最多拖 2 天 */
+  overdue: { id: string; daysLeft: number } | null;
+  /** 已完成子目标 id */
+  objectivesDone: string[];
+  /** 今日顺手单 */
+  sideJobs: { id: string; done: boolean }[];
+  /** 待播放的剧场分幕（接单开场/子目标完成时入队） */
+  pendingScene: TheaterScene | null;
   /** locId → spotIndex → done */
   done: Record<string, Record<number, boolean>>;
   /** 手牌（技能/便利/情报，可消耗） */
@@ -43,6 +56,11 @@ interface ShopState {
   /* ── Actions ── */
   startDay: () => void;
   refreshRoutes: () => void;
+  acceptCommission: (id: string) => void;
+  completeObjective: (objectiveId: string) => void;
+  completeSideJob: (id: string) => void;
+  setPendingScene: (scene: TheaterScene | null) => void;
+  setOverdue: (o: { id: string; daysLeft: number } | null) => void;
   setCommission: (c: Commission) => void;
   chooseLocation: (loc: GameLocation) => void;
   addHandCard: (card: ServiceCard) => void;
@@ -66,6 +84,11 @@ const INITIAL: Omit<ShopState, keyof { [K in keyof ShopState as ShopState[K] ext
   commission: null,
   loc: null,
   routes: [],
+  board: [],
+  overdue: null,
+  objectivesDone: [],
+  sideJobs: [],
+  pendingScene: null,
   done: {},
   hand: [],
   log: [],
@@ -74,6 +97,29 @@ const INITIAL: Omit<ShopState, keyof { [K in keyof ShopState as ShopState[K] ext
 
 let _uid = 1;
 
+/** 掷今日委托板：逾期单优先,其余从未完成的委托里随机补满 3 张 */
+function rollBoard(overdue: { id: string; daysLeft: number } | null): string[] {
+  const doneFlags = usePlayerStore.getState().flags;
+  const isDone = (id: string) => doneFlags.includes(`commission_${id}_done`);
+  const fresh = commissions.filter(c => !isDone(c.id) && c.id !== overdue?.id).map(c => c.id);
+  const fallback = commissions.filter(c => isDone(c.id) && c.id !== overdue?.id).map(c => c.id);
+  const shuffled = [...fresh].sort(() => Math.random() - 0.5);
+  const board: string[] = overdue ? [overdue.id] : [];
+  for (const id of shuffled) {
+    if (board.length >= 3) break;
+    board.push(id);
+  }
+  for (const id of [...fallback].sort(() => Math.random() - 0.5)) {
+    if (board.length >= 3) break;
+    board.push(id);
+  }
+  return board;
+}
+
+function rollSideJobs(): { id: string; done: boolean }[] {
+  return [...allSideJobs].sort(() => Math.random() - 0.5).slice(0, 2).map(j => ({ id: j.id, done: false }));
+}
+
 export const useShopStore = create<ShopState>()(
   persist(
     (set, get) => ({
@@ -81,13 +127,58 @@ export const useShopStore = create<ShopState>()(
 
       startDay: () => {
         const routes = rollRoutes(allLocations);
-        set({ ...INITIAL, routes, done: {}, hand: [], log: [], gameOver: false });
-        get().addLog('开始营业：委托、人脉、技能、便利、情报各有不同价值。', 'good');
+        // 逾期单跨天衰减:每开新一天 daysLeft-1,归零作废
+        const prevOverdue = get().overdue;
+        const overdue = prevOverdue && prevOverdue.daysLeft > 1
+          ? { ...prevOverdue, daysLeft: prevOverdue.daysLeft - 1 }
+          : prevOverdue && prevOverdue.daysLeft === 1 ? prevOverdue : null;
+        const board = rollBoard(overdue);
+        set({ ...INITIAL, routes, overdue, board, sideJobs: rollSideJobs(), done: {}, hand: [], log: [], gameOver: false });
+        get().addLog('开始营业:委托板已更新,顺手单已挂出。', 'good');
       },
 
       refreshRoutes: () => set({ routes: rollRoutes(allLocations) }),
 
       setCommission: (c) => set({ commission: c, trust: 0 }),
+
+      acceptCommission: (id) => {
+        const c = commissions.find(x => x.id === id);
+        if (!c) return;
+        const s0 = get();
+        const isOverdue = s0.overdue?.id === id;
+        set({
+          commission: c,
+          trust: 0,
+          objectivesDone: [],
+          board: s0.board.filter(b => b !== id),
+          pendingScene: c.introScene ?? null,
+          rep: isOverdue ? Math.max(0, s0.rep - 1) : s0.rep,
+        });
+        get().addLog(isOverdue
+          ? `重接逾期委托【${c.name}】,口碑 -1。这次别再让她等了。`
+          : `接下委托【${c.name}】。${c.desc}`, isOverdue ? 'bad' : 'good');
+      },
+
+      completeObjective: (objectiveId) => {
+        const s0 = get();
+        const obj = s0.commission?.objectives?.find(o => o.id === objectiveId);
+        if (!obj || s0.objectivesDone.includes(objectiveId)) return;
+        set({
+          objectivesDone: [...s0.objectivesDone, objectiveId],
+          trust: s0.trust + obj.trust,
+          pendingScene: obj.scene,
+        });
+        get().addLog(`✅ 子目标完成:${obj.desc}。信任 +${obj.trust}。`, 'good');
+      },
+
+      completeSideJob: (id) => {
+        const s0 = get();
+        if (!s0.sideJobs.some(j => j.id === id && !j.done)) return;
+        set({ sideJobs: s0.sideJobs.map(j => j.id === id ? { ...j, done: true } : j) });
+      },
+
+      setPendingScene: (scene) => set({ pendingScene: scene }),
+      setOverdue: (o) => set({ overdue: o }),
 
       chooseLocation: (loc) =>
         set(s => ({
@@ -169,7 +260,7 @@ export const useShopStore = create<ShopState>()(
     }),
     {
       name: 'xiashan-shop-store',
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => safeStorage),
       // 局内存档是当天一局的断点，跨版本恢复价值低、风险高（整对象快照随内容结构漂移）。
       // 旧版本（version < 1）一律作废重开一天。
@@ -196,6 +287,9 @@ function isValidShopSnapshot(p: unknown): boolean {
   if (s.loc !== undefined && s.loc !== null && !isLoc(s.loc)) return false;
   if (s.hand !== undefined && !Array.isArray(s.hand)) return false;
   if (s.log !== undefined && !Array.isArray(s.log)) return false;
+  if (s.board !== undefined && (!Array.isArray(s.board) || !s.board.every(b => typeof b === 'string'))) return false;
+  if (s.objectivesDone !== undefined && !Array.isArray(s.objectivesDone)) return false;
+  if (s.sideJobs !== undefined && !Array.isArray(s.sideJobs)) return false;
   if (s.commission !== undefined && s.commission !== null) {
     const c = s.commission as Record<string, unknown>;
     if (typeof c.need !== 'number' || typeof c.id !== 'string') return false;

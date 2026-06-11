@@ -13,7 +13,7 @@ import { getLocationById } from '@/data/locations';
 import { isMatch, scoreCard } from '@/engine/shopEngine';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useShopStore } from '@/store/useShopStore';
-import type { Commission, CommissionNode, Line, Mood, ServiceTag } from '@/data/types';
+import type { Commission, CommissionNode, Line, Mood, ServiceTag, TheaterScene } from '@/data/types';
 import type { HandCard } from '@/store/useShopStore';
 import { cn } from '@/lib/utils';
 import { assetUrl } from '@/lib/assets';
@@ -29,11 +29,19 @@ const MOOD_STYLE: Record<Mood, { emoji: string; color: string }> = {
 
 interface Props {
   commission: Commission;
+  /** 分幕播放：从 scene.start 播到即将进入 stopBefore 时落幕；缺省播整图 */
+  scene?: TheaterScene;
+  /** 跨幕累计信任（幕内挑战的信任也会实时写回 shop store） */
+  initialTrust?: number;
+  /** 结局分水岭（显示用），缺省取 commission.need */
+  trustGoal?: number;
+  /** 分幕播完（未到结局）时回调 */
+  onSceneEnd?: () => void;
   onComplete: (success: boolean) => void;
   onExit: () => void;
 }
 
-export default function CommissionTheater({ commission, onComplete, onExit }: Props) {
+export default function CommissionTheater({ commission, scene, initialTrust, trustGoal, onSceneEnd, onComplete, onExit }: Props) {
   const graph = commission.graph!;
   const nodesById = useMemo(() => {
     const m = new Map<string, CommissionNode>();
@@ -56,16 +64,16 @@ export default function CommissionTheater({ commission, onComplete, onExit }: Pr
   const addLog = useShopStore((s) => s.addLog);
 
   /* ── 图遍历状态 ── */
-  const [nodeId, setNodeId] = useState(graph.start);
+  const [nodeId, setNodeId] = useState(scene?.start ?? graph.start);
   const [lineIndex, setLineIndex] = useState(0);
   /** 出牌后展示的反应：反应对白播完跳转到 next */
   const [reaction, setReaction] = useState<{ lines: Line[]; next: string } | null>(null);
   const [mood, setMood] = useState<Mood>(commission.initialMood ?? '焦虑');
-  const [trust, setTrust] = useState(0);
+  const [trust, setTrust] = useState(initialTrust ?? 0);
   const [challengesDone, setChallengesDone] = useState(0);
   const [floatTrust, setFloatTrust] = useState<number | null>(null);
 
-  const trustRef = useRef(0);           // 供 branch 即时读取最新信任
+  const trustRef = useRef(initialTrust ?? 0); // 供 branch 即时读取最新信任
   const resolving = useRef(false);      // 出牌锁：一幕只结算一次
 
   const node = nodesById.get(nodeId);
@@ -109,6 +117,16 @@ export default function CommissionTheater({ commission, onComplete, onExit }: Pr
     [ownedCharacters],
   );
 
+  /* ── 节点跳转（分幕边界拦截）── */
+  const advanceTo = useCallback((next: string) => {
+    if (scene?.stopBefore && next === scene.stopBefore) {
+      onSceneEnd?.();
+      return;
+    }
+    setLineIndex(0);
+    setNodeId(next);
+  }, [scene, onSceneEnd]);
+
   /* ── 对白推进 ── */
   const handleNext = useCallback(() => {
     if (lineIndex < currentLines.length - 1) {
@@ -119,19 +137,17 @@ export default function CommissionTheater({ commission, onComplete, onExit }: Pr
     if (reaction) {
       const nxt = reaction.next;
       setReaction(null);
-      setLineIndex(0);
-      setNodeId(nxt);
+      advanceTo(nxt);
       return;
     }
     if (node?.type === 'dialogue') {
-      setLineIndex(0);
-      setNodeId(node.next);
+      advanceTo(node.next);
       return;
     }
     if (node?.type === 'ending') {
       onComplete(node.success);
     }
-  }, [lineIndex, currentLines.length, reaction, node, onComplete]);
+  }, [lineIndex, currentLines.length, reaction, node, advanceTo, onComplete]);
 
   /* ── 出牌判定 ── */
   const playChoice = useCallback(
@@ -153,6 +169,7 @@ export default function CommissionTheater({ commission, onComplete, onExit }: Pr
       const newTrust = trust + outcome.trust;
       trustRef.current = newTrust;
       setTrust(newTrust);
+      if (outcome.trust > 0) applyDelta({ trust: outcome.trust });
       if (outcome.repPenalty) applyDelta({ rep: -outcome.repPenalty });
       setMood(outcome.mood);
       setChallengesDone((d) => d + 1);
@@ -180,7 +197,8 @@ export default function CommissionTheater({ commission, onComplete, onExit }: Pr
   const clientSpeaking = curLine?.speaker === clientId;
 
   const moodS = MOOD_STYLE[mood];
-  const trustPct = Math.min(100, (trust / commission.need) * 100);
+  const goal = trustGoal ?? commission.need;
+  const trustPct = Math.min(100, (trust / goal) * 100);
 
   return (
     <div className="fixed inset-0 z-[60] overflow-hidden bg-black">
@@ -206,7 +224,7 @@ export default function CommissionTheater({ commission, onComplete, onExit }: Pr
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold text-rose-200 shrink-0">信任 {trust}/{commission.need}</span>
+          <span className="text-[11px] font-bold text-rose-200 shrink-0">信任 {trust}/{goal}</span>
           <div className="relative h-2 flex-1 rounded-full bg-black/50 overflow-hidden border border-white/10">
             <motion.div
               className="h-full rounded-full bg-gradient-to-r from-rose-400 to-pink-400"

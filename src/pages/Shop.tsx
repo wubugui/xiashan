@@ -7,15 +7,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, RefreshCw, MapPin, ClipboardList, Package, ScrollText,
-  Zap, Users, ShoppingBag, Radio,
+  Users,
 } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useShopStore, checkFail } from '@/store/useShopStore';
 import { getCharacterById } from '@/data/characters';
 import { commissions } from '@/data/commissions';
-import { allSkills, allTools, allInfos } from '@/data/serviceCards';
-import { pullSingle } from '@/engine/gachaEngine';
-import { isMatch, scoreCard, resolveSpot, pick, applyCommissionRewards } from '@/engine/shopEngine';
+import { GACHA_CONFIG } from '@/data/gachaConfig';
+import { pullSupply } from '@/engine/gachaEngine';
+import { isMatch, scoreCard, resolveSpot, hitsRequirement, applyCommissionRewards } from '@/engine/shopEngine';
+import { getSideJobById } from '@/data/sideJobs';
 import { checkPhoneEvents } from '@/engine/phoneScheduler';
 import GachaAnimation from '@/components/GachaAnimation';
 import CommissionTheater from '@/components/CommissionTheater';
@@ -37,11 +38,8 @@ import { assetUrl } from '@/lib/assets';
 
 /* ────── 常量 ────── */
 const POOL_CONFIG = [
-  { id: 'commission', label: '委托频道', sub: '抽"我要帮谁"', cost: '消耗 1 委托券', color: 'from-rose-500 to-pink-700', icon: ClipboardList },
-  { id: 'person',     label: '人物频道', sub: '抽"谁来帮我"', cost: '消耗 1 人物券', color: 'from-violet-500 to-purple-700', icon: Users },
-  { id: 'skill',      label: '技能补给', sub: '抽"怎么解决"', cost: '消耗 1 普通券', color: 'from-amber-500 to-yellow-700', icon: Zap },
-  { id: 'tool',       label: '便利服务', sub: '抽"快速改局"', cost: '消耗 2 普通券', color: 'from-cyan-500 to-sky-700', icon: ShoppingBag },
-  { id: 'info',       label: '情报网络', sub: '抽"提前知道"', cost: '消耗 1 普通券', color: 'from-emerald-500 to-teal-700', icon: Radio },
+  { id: 'board',  label: '委托板', sub: '今日 3 选 1 接单', cost: '免费接单', color: 'from-rose-500 to-pink-700', icon: ClipboardList },
+  { id: 'supply', label: '便利屋补给', sub: '人物·技能·便利·情报', cost: '消耗 1 普通券', color: 'from-violet-500 to-purple-700', icon: Users },
 ] as const;
 
 type PoolId = (typeof POOL_CONFIG)[number]['id'];
@@ -110,11 +108,11 @@ function dispatchAvailablePhoneEvents(addLog?: (text: string, cls?: 'good' | 'ba
 /* ────── 子组件：状态条 ────── */
 function StatusBar({
   time, energy, rep, money, trust, step, commissionNeed,
-  commissionTickets, personTickets, normalTickets,
+  normalTickets,
 }: {
   time: number; energy: number; rep: number; money: number;
   trust: number; step: number; commissionNeed: number;
-  commissionTickets: number; personTickets: number; normalTickets: number;
+  normalTickets: number;
 }) {
   const pct = commissionNeed > 0 ? Math.min(100, (trust / commissionNeed) * 100) : 0;
   return (
@@ -126,8 +124,6 @@ function StatusBar({
           { label: '⚡', val: energy, warn: energy <= 2 },
           { label: '📣', val: rep, warn: rep <= 1 },
           { label: '💴', val: money },
-          { label: '🎫委', val: commissionTickets },
-          { label: '🎫人', val: personTickets },
           { label: '🎫普', val: normalTickets },
         ].map(({ label, val, warn }) => (
           <span key={label} className={cn('rounded-full border border-white/10 bg-white/5 px-2 py-0.5 font-bold', warn ? 'text-red-400' : 'text-slate-200')}>
@@ -164,16 +160,18 @@ export default function Shop() {
 
   const {
     time, energy, rep, money, trust, step, commission, loc, routes, done, hand, log, gameOver,
-    startDay, refreshRoutes, setCommission, chooseLocation, addHandCard, consumeHandCard,
+    board, overdue, objectivesDone, sideJobs, pendingScene,
+    startDay, refreshRoutes, acceptCommission, completeObjective, completeSideJob,
+    setPendingScene, setOverdue, chooseLocation, addHandCard, consumeHandCard,
     applyDelta, markSpotDone, finishLocation, normalAdvance, addLog, setGameOver, resetDay,
   } = shopStore;
 
   const {
-    ownedCharacters, affinityMap, pityCounter, totalGachaCount,
-    commissionTickets, personTickets, normalTickets,
-    spendCommissionTicket, spendPersonTicket, spendNormalTickets,
-    addCommissionTickets, addPersonTickets, addNormalTickets,
-    addGachaResult, setPityCounter, setTotalGachaCount, addCharacter,
+    ownedCharacters, affinityMap, supplyPityCounter,
+    normalTickets,
+    spendNormalTickets, setSupplyPityCounter,
+    addNormalTickets,
+    addGachaResult, addCharacter,
     addSpiritStones, addReputation,
   } = playerStore;
 
@@ -189,59 +187,48 @@ export default function Shop() {
   /* ── 初始化 ── */
   const isNew = routes.length === 0 && !gameOver && commission === null && step === 1 && time === 13;
   const commissionNeed = commission?.need ?? 0;
-  const commissionReady = !!commission && trust >= commissionNeed;
+  const objectives = commission?.objectives ?? [];
+  const allObjectivesDone = objectives.length > 0 && objectives.every(o => objectivesDone.includes(o.id));
+  /** 有子目标的委托：结局分水岭 = need+5（统一信任口径）；交付条件 = 全部子目标完成 */
+  const gateGoal = commission ? commission.need + (objectives.length > 0 ? 5 : 0) : 0;
+  const commissionReady = !!commission && (objectives.length > 0 ? allObjectivesDone : trust >= commissionNeed);
 
   /* ────── 抽卡 ────── */
   const handleDraw = useCallback((pool: PoolId) => {
     if (gameOver) return toast('今日已结束。');
 
-    if (pool === 'commission') {
-      if (commission) return toast('今天已有委托，先把当前委托处理完。');
-      if (!spendCommissionTicket()) return toast('委托券不足。');
-      const c = pick(commissions);
-      setCommission(c);
-      addLog(`委托频道：抽到【${c.name}】。${c.desc}`, 'draw');
+    if (pool === 'board') {
       setActiveTab('commission');
-    } else if (pool === 'person') {
-      if (!spendPersonTicket()) return toast('人物券不足。');
+      return;
+    } else if (pool === 'supply') {
+      if (!spendNormalTickets(1)) return toast('普通券不足。');
       const ownedIds = ownedCharacters.map(o => o.characterId);
-      const { result, newPity, newTotal } = pullSingle(ownedIds, affinityMap, pityCounter, totalGachaCount);
-      setPityCounter(newPity);
-      setTotalGachaCount(newTotal);
-      addCharacter(result.character.id);
-      addGachaResult(result.character.id, result.character.rarity);
-      // 入伙演出：抽到邂逅期已攒好感的角色，出货时承认此前积累（设计文档 6.3）
-      if (result.isNew && (affinityMap[result.character.id] ?? 0) > 0) {
-        addLog(`【${result.character.name}】握住你的手："那几次委托……我都记得。"她正式加入二十五时便利屋。`, 'good');
+      const { result, newPity } = pullSupply(ownedIds, affinityMap, supplyPityCounter);
+      setSupplyPityCounter(newPity);
+      if (result.kind === 'person') {
+        addCharacter(result.character.id);
+        addGachaResult(result.character.id, result.character.rarity);
+        // 入伙演出：抽到邂逅期已攒好感的角色，出货时承认此前积累（设计文档 6.3）
+        if (result.isNew && (affinityMap[result.character.id] ?? 0) > 0) {
+          addLog(`【${result.character.name}】握住你的手："那几次委托……我都记得。"她正式加入二十五时便利屋。`, 'good');
+        }
+        const animResult: AnimGachaResult = {
+          characterId: result.character.id,
+          name: result.character.name,
+          rarity: result.character.rarity,
+          title: result.character.title,
+          isNew: result.isNew,
+        };
+        setGachaResults([animResult]);
+        setShowGacha(true);
+        addLog(`便利屋补给：✨ ${result.isNew ? '人物出货' : '重复人物'}【${result.character.name}】！`, 'good');
+      } else {
+        addHandCard(result.card);
+        const remain = GACHA_CONFIG.supplyPool.characterPity - newPity;
+        addLog(`便利屋补给：抽到【${result.card.name}】（${result.card.type}）。距人物保底还剩 ${remain} 抽。`, 'draw');
       }
-      // 转换为 GachaAnimation 所需格式
-      const animResult: AnimGachaResult = {
-        characterId: result.character.id,
-        name: result.character.name,
-        rarity: result.character.rarity,
-        title: result.character.title,
-        isNew: result.isNew,
-      };
-      setGachaResults([animResult]);
-      setShowGacha(true);
-      addLog(`人物频道：${result.isNew ? '获得' : '重复'}【${result.character.name}】`, 'draw');
-    } else if (pool === 'skill') {
-      if (!spendNormalTickets(1)) return toast('普通券不足。');
-      const card = pick(allSkills);
-      addHandCard(card);
-      addLog(`技能补给：抽到【${card.name}】（${card.type}）`, 'draw');
-    } else if (pool === 'tool') {
-      if (!spendNormalTickets(2)) return toast('普通券不足（需 2 张）。');
-      const card = pick(allTools);
-      addHandCard(card);
-      addLog(`便利服务：抽到【${card.name}】（${card.type}）`, 'draw');
-    } else if (pool === 'info') {
-      if (!spendNormalTickets(1)) return toast('普通券不足。');
-      const card = pick(allInfos);
-      addHandCard(card);
-      addLog(`情报网络：抽到【${card.name}】（${card.type}）`, 'draw');
     }
-  }, [gameOver, commission, spendCommissionTicket, spendPersonTicket, spendNormalTickets, ownedCharacters, affinityMap, pityCounter, totalGachaCount, setPityCounter, setTotalGachaCount, addCharacter, addGachaResult, addHandCard, setCommission, addLog]);
+  }, [gameOver, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, setSupplyPityCounter, addCharacter, addGachaResult, addHandCard, addLog]);
 
   /* ────── 热点点击 ────── */
   const handleSpotClick = useCallback((spot: Spot, spotIndex: number) => {
@@ -274,9 +261,30 @@ export default function Shop() {
     setHandledThisLocation(true);
     addLog(text, cls);
 
-    const newTrust = Math.max(0, trust + (delta.trust ?? 0));
-    if (commission && newTrust >= commission.need) {
-      addLog(`委托信任已达标：【${commission.name}】可以在今日结束时完成。`, 'good');
+    // 子目标 / 顺手单命中判定：在匹配热点上打出要求 type 的卡
+    if (card) {
+      const cardType = card.kind === 'person' ? card.serviceType : (card as HandCard).type;
+      if (commission?.objectives) {
+        for (const obj of commission.objectives) {
+          if (objectivesDone.includes(obj.id)) continue;
+          if (hitsRequirement(obj, cardType, spot, loc.tags)) {
+            completeObjective(obj.id); // 入队该子目标的剧场幕
+            break;
+          }
+        }
+      }
+      for (const sj of sideJobs) {
+        if (sj.done) continue;
+        const tpl = getSideJobById(sj.id);
+        if (tpl && hitsRequirement(tpl, cardType, spot, loc.tags)) {
+          completeSideJob(sj.id);
+          if (tpl.reward.money) applyDelta({ money: tpl.reward.money });
+          if (tpl.reward.normalTickets) addNormalTickets(tpl.reward.normalTickets);
+          if (tpl.reward.spiritStones) addSpiritStones(tpl.reward.spiritStones);
+          addLog(`🧾 顺手单完成【${tpl.title}】:${tpl.doneText}`, 'good');
+          break;
+        }
+      }
     }
 
     setCurrentEvent(null);
@@ -292,31 +300,32 @@ export default function Shop() {
       addLog('今日失败：时间、精力或口碑耗尽。', 'bad');
       setEndDayResult('fail');
     }
-  }, [currentEvent, loc, trust, commission, time, energy, rep,
-    consumeHandCard, applyDelta, markSpotDone, addLog, refreshRoutes, setGameOver]);
+  }, [currentEvent, loc, commission, objectivesDone, sideJobs, time, energy, rep,
+    consumeHandCard, applyDelta, markSpotDone, completeObjective, completeSideJob,
+    addNormalTickets, addSpiritStones, addLog, refreshRoutes, setGameOver]);
 
   /* ────── 结束当天 ────── */
   const handleEndDay = useCallback(() => {
-    const success = !!commission && trust >= commission.need;
-    if (success && commission) {
-      // 好感写入独立 affinityMap，无需持有；入伙只走人物频道抽卡（设计文档 6.3）
+    // 子目标制委托只能通过「交付」(剧场结局)完成；endDay 兜底视为未交付
+    const legacySuccess = !!commission && !commission.objectives?.length && trust >= commission.need;
+    if (legacySuccess && commission) {
       applyCommissionRewards(commission.rewardEffects);
-      // 发额外票
-      addCommissionTickets(1);
-      addPersonTickets(1);
-      addNormalTickets(2);
-      addSpiritStones(0); // already in rewardEffects
+      addNormalTickets(4);
       addReputation(1);
       dispatchAvailablePhoneEvents(addLog);
-      addLog(`今日完成：【${commission.name}】。奖励：委托券+1，人物券+1，普通券+2，口碑+1。`, 'good');
+      addLog(`今日完成：【${commission.name}】。奖励：普通券+4，口碑+1。`, 'good');
       setEndDayResult('success');
     } else {
+      if (commission) {
+        setOverdue({ id: commission.id, daysLeft: 2 });
+        addLog(`委托【${commission.name}】今日未交付，转入逾期——明日委托板可重接（口碑 -1）。`, 'bad');
+      }
       addNormalTickets(1);
-      addLog('今日结束：委托未彻底解决。补偿普通券 +1。', 'bad');
+      addLog('今日结束。补偿普通券 +1。', 'bad');
       setEndDayResult('fail');
     }
     setGameOver(true);
-  }, [commission, trust, addCommissionTickets, addPersonTickets, addNormalTickets, addSpiritStones, addReputation, addLog, setGameOver]);
+  }, [commission, trust, addNormalTickets, addReputation, setOverdue, addLog, setGameOver]);
 
   /* ────── 完成地点 ────── */
   const handleFinishLocation = useCallback(() => {
@@ -331,24 +340,24 @@ export default function Shop() {
   /* ────── 委托剧场结算 ────── */
   const handleTheaterComplete = useCallback((ok: boolean) => {
     setShowTheater(false);
+    setPendingScene(null);
     if (!commission) return;
+    if (overdue?.id === commission.id) setOverdue(null); // 逾期单已了结
     if (ok) {
-      // 好感写入独立 affinityMap，无需持有；入伙只走人物频道抽卡（设计文档 6.3）
+      // 好感写入独立 affinityMap，无需持有；入伙只走补给池抽卡（设计文档 6.3）
       applyCommissionRewards(commission.rewardEffects);
-      addCommissionTickets(1);
-      addPersonTickets(1);
-      addNormalTickets(2);
+      addNormalTickets(4);
       addReputation(1);
       dispatchAvailablePhoneEvents(addLog);
-      addLog(`委托完成：【${commission.name}】。奖励已发放，相关影像已解锁。`, 'good');
+      addLog(`委托交付：【${commission.name}】。奖励：普通券+4，口碑+1，相关影像已解锁。`, 'good');
       setEndDayResult('success');
     } else {
       addNormalTickets(1);
-      addLog(`委托未达成：【${commission.name}】。补偿普通券 +1。`, 'bad');
+      addLog(`委托收尾不顺：【${commission.name}】。她还是谢了你，但结局差了点意思。补偿普通券 +1。`, 'bad');
       setEndDayResult('fail');
     }
     setGameOver(true);
-  }, [commission, addCommissionTickets, addPersonTickets, addNormalTickets, addReputation, addLog, setGameOver]);
+  }, [commission, overdue, setOverdue, setPendingScene, addNormalTickets, addReputation, addLog, setGameOver]);
 
   /* ────── Toast ────── */
   const [toastMsg, setToastMsg] = useState('');
@@ -417,33 +426,43 @@ export default function Shop() {
         <StatusBar
           time={time} energy={energy} rep={rep} money={money}
           trust={trust} step={step}
-          commissionNeed={commission?.need ?? 0}
-          commissionTickets={commissionTickets}
-          personTickets={personTickets}
+          commissionNeed={gateGoal}
           normalTickets={normalTickets}
         />
 
         {/* 抽卡频道 */}
         <div className="px-3 pt-3 pb-2">
           <p className="text-[10px] text-slate-500 mb-1.5 font-medium uppercase tracking-wider">抽卡频道</p>
-          <div className="grid grid-cols-5 gap-1.5">
+          <div className="grid grid-cols-2 gap-2">
             {POOL_CONFIG.map(pool => {
               const Icon = pool.icon;
+              const pityRemain = GACHA_CONFIG.supplyPool.characterPity - supplyPityCounter;
               return (
                 <button
                   key={pool.id}
                   onClick={() => handleDraw(pool.id)}
                   disabled={gameOver}
                   className={cn(
-                    'flex flex-col items-center gap-1 rounded-xl border border-white/10 bg-slate-900/60 py-2 px-1 text-center',
+                    'flex items-center gap-2.5 rounded-xl border border-white/10 bg-slate-900/60 py-2.5 px-3 text-left',
                     'disabled:opacity-40 hover:border-white/20 active:scale-95 transition-all',
                   )}
                 >
-                  <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br shadow', pool.color)}>
-                    <Icon size={14} className="text-white" />
+                  <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br shadow', pool.color)}>
+                    <Icon size={17} className="text-white" />
                   </div>
-                  <span className="text-[9px] font-bold text-white leading-tight">{pool.label}</span>
-                  <span className="text-[8px] text-slate-500 leading-none">{pool.cost.replace('消耗 ', '')}</span>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold text-white leading-tight">{pool.label}</p>
+                    <p className="text-[9px] text-slate-500 leading-tight">{pool.sub}</p>
+                    <p className="text-[9px] text-slate-400 leading-tight">
+                      {pool.cost.replace('消耗 ', '')}
+                      {pool.id === 'supply' && (
+                        <span className="text-pink-300"> · 保底 {pityRemain} 抽</span>
+                      )}
+                      {pool.id === 'board' && !commission && (
+                        <span className="text-rose-300"> · {board.length} 单待接</span>
+                      )}
+                    </p>
+                  </div>
                 </button>
               );
             })}
@@ -562,9 +581,49 @@ export default function Shop() {
           {activeTab === 'commission' && (
             <div>
               {!commission ? (
-                <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-center">
-                  <p className="text-sm text-slate-400 mb-1">暂无委托</p>
-                  <p className="text-xs text-slate-500">从【委托频道】抽一张来获得任务目标</p>
+                /* ── 委托板：今日 3 选 1 ── */
+                <div className="space-y-2.5">
+                  <p className="text-xs text-slate-400">今日委托板——选一单接下,她在等你:</p>
+                  {board.length === 0 && (
+                    <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-center">
+                      <p className="text-sm text-slate-400">今日委托板已空</p>
+                      <p className="text-xs text-slate-500">先开始营业,委托板每天更新</p>
+                    </div>
+                  )}
+                  {board.map(id => {
+                    const c = commissions.find(x => x.id === id);
+                    if (!c) return null;
+                    const isOverdue = overdue?.id === id;
+                    const targetChar = getCharacterById(c.target);
+                    return (
+                      <div key={id} className={cn(
+                        'rounded-xl border p-3',
+                        isOverdue ? 'border-amber-500/50 bg-amber-500/10' : 'border-rose-500/30 bg-rose-500/5',
+                      )}>
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className="flex items-center gap-2 min-w-0">
+                            {targetChar && <img src={assetUrl(targetChar.avatarUrl)} alt={targetChar.name} className="h-8 w-8 rounded-full object-cover shrink-0" />}
+                            <div className="min-w-0">
+                              <p className="text-sm font-black text-white truncate">
+                                {c.name}
+                                {isOverdue && <span className="ml-1.5 rounded bg-amber-500/30 px-1 py-0.5 text-[9px] font-bold text-amber-200">逾期 {overdue!.daysLeft} 天</span>}
+                              </p>
+                              <p className="text-[10px] text-slate-400">{targetChar?.name} · 子目标 ×{c.objectives?.length ?? 0}</p>
+                            </div>
+                          </div>
+                          <span className={cn('text-xs font-bold shrink-0', rarityColor(c.rarity))}>{c.rarity}</span>
+                        </div>
+                        <p className="text-xs text-slate-400 mb-2">{c.desc}</p>
+                        <button
+                          onClick={() => { if (!gameOver) acceptCommission(id); }}
+                          disabled={gameOver}
+                          className="w-full rounded-lg bg-gradient-to-r from-rose-500 to-pink-600 py-2 text-xs font-black text-white disabled:opacity-40 active:scale-[0.99] transition-all"
+                        >
+                          {isOverdue ? '重接此单（口碑 -1）' : '接单'}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="rounded-xl border border-rose-500/40 bg-gradient-to-br from-rose-500/10 to-pink-500/5 p-4">
@@ -604,21 +663,79 @@ export default function Shop() {
                     ) : null;
                   })()}
 
-                  {/* 开始委托 CTA（有剧本才进剧场） */}
+                  {/* 子目标清单 */}
+                  {objectives.length > 0 && (
+                    <div className="mt-3 space-y-1.5">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">子目标 {objectivesDone.length}/{objectives.length}</p>
+                      {objectives.map(o => {
+                        const isDone = objectivesDone.includes(o.id);
+                        return (
+                          <div key={o.id} className={cn(
+                            'flex items-start gap-2 rounded-lg px-3 py-2 text-xs',
+                            isDone ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-white/5 border border-white/10',
+                          )}>
+                            <span className="shrink-0">{isDone ? '✅' : '⬜'}</span>
+                            <div className="min-w-0">
+                              <p className={cn('font-bold', isDone ? 'text-emerald-300 line-through' : 'text-white')}>{o.desc}</p>
+                              {!isDone && (
+                                <p className="text-[10px] text-slate-400">
+                                  {o.locTag ? `在【${o.locTag}】类地点` : '任意地点'}打出 {o.need.join('/')} 卡（匹配热点）
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* 交付 CTA */}
                   {commission.graph && commission.graph.nodes.length > 0 ? (
                     <button
                       onClick={() => setShowTheater(true)}
                       disabled={gameOver || !commissionReady}
                       className="mt-3 w-full rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 py-3 text-sm font-black text-white shadow-[0_0_24px_rgba(244,63,94,0.35)] hover:from-rose-400 disabled:opacity-40 active:scale-[0.99] transition-all"
                     >
-                      {commissionReady ? '▶ 进入委托现场' : `信任达标后进入现场（${trust}/${commissionNeed}）`}
+                      {objectives.length > 0
+                        ? (commissionReady ? '▶ 交付委托' : `完成全部子目标后交付（${objectivesDone.length}/${objectives.length}）`)
+                        : (commissionReady ? '▶ 进入委托现场' : `信任达标后进入现场（${trust}/${commissionNeed}）`)}
                     </button>
                   ) : (
                     <p className="mt-3 text-center text-[10px] text-slate-500">（本委托剧本制作中，敬请期待）</p>
                   )}
                   <p className="mt-2 text-center text-[10px] text-slate-500">
-                    提示：先在城市热点里攒够信任，再进入委托现场收尾。
+                    提示：信任影响交付结局的好坏（{trust}/{gateGoal}），子目标决定能否交付。
                   </p>
+                </div>
+              )}
+
+              {/* ── 顺手单 ── */}
+              {sideJobs.length > 0 && (
+                <div className="mt-3 rounded-xl border border-white/10 bg-slate-900/40 p-3">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">顺手单 · 跑图途中顺手完成</p>
+                  <div className="space-y-1.5">
+                    {sideJobs.map(sj => {
+                      const tpl = getSideJobById(sj.id);
+                      if (!tpl) return null;
+                      return (
+                        <div key={sj.id} className={cn(
+                          'flex items-start gap-2 rounded-lg px-3 py-2 text-xs',
+                          sj.done ? 'bg-emerald-500/10' : 'bg-white/5',
+                        )}>
+                          <span className="shrink-0">{sj.done ? '✅' : '🧾'}</span>
+                          <div className="min-w-0">
+                            <p className={cn('font-bold', sj.done ? 'text-emerald-300 line-through' : 'text-slate-200')}>{tpl.title}</p>
+                            {!sj.done && (
+                              <p className="text-[10px] text-slate-500">
+                                {tpl.text} {tpl.locTag ? `【${tpl.locTag}】地点` : '任意地点'} {tpl.need.join('/')} 卡 ·
+                                奖励 {tpl.reward.money ? `资金+${tpl.reward.money}` : ''}{tpl.reward.normalTickets ? `普通券+${tpl.reward.normalTickets}` : ''}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
@@ -926,12 +1043,17 @@ export default function Shop() {
         />
       )}
 
-      {/* ── 委托剧场 ── */}
-      {showTheater && commission && commission.graph && commission.graph.nodes.length > 0 && (
+      {/* ── 委托剧场（分幕：接单开场/子目标幕；交付：结局幕） ── */}
+      {commission && commission.graph && commission.graph.nodes.length > 0 && (pendingScene || showTheater) && (
         <CommissionTheater
+          key={pendingScene ? `scene-${pendingScene.start}` : 'final'}
           commission={commission}
+          scene={pendingScene ?? commission.finalScene}
+          initialTrust={trust}
+          trustGoal={gateGoal}
+          onSceneEnd={() => setPendingScene(null)}
           onComplete={handleTheaterComplete}
-          onExit={() => setShowTheater(false)}
+          onExit={() => { setPendingScene(null); setShowTheater(false); }}
         />
       )}
 

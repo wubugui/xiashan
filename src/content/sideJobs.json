@@ -1,0 +1,113 @@
+{
+  "sideJobs": [
+    {
+      "id": "sj_parcel",
+      "title": "代收快递",
+      "text": "便利店老板娘求帮收一批快递。",
+      "need": [
+        "补给"
+      ],
+      "locTag": "补给",
+      "reward": {
+        "money": 5
+      },
+      "doneText": "快递码得整整齐齐,老板娘塞给你一张纸币。"
+    },
+    {
+      "id": "sj_pet",
+      "title": "代喂橘猫",
+      "text": "3 楼住户出差,猫粮见底。",
+      "need": [
+        "宠物"
+      ],
+      "locTag": "邻里",
+      "reward": {
+        "normalTickets": 1
+      },
+      "doneText": "橘猫吃饱后在你脚边蹭了三圈。"
+    },
+    {
+      "id": "sj_coffee",
+      "title": "夜班送咖啡",
+      "text": "保安亭的大叔快撑不住了。",
+      "need": [
+        "补给",
+        "恢复"
+      ],
+      "locTag": "夜班",
+      "reward": {
+        "money": 4
+      },
+      "doneText": "大叔精神一振,承诺帮你多盯一眼监控。"
+    },
+    {
+      "id": "sj_guide",
+      "title": "访客引导",
+      "text": "写字楼前台忙不过来,访客排起长队。",
+      "need": [
+        "流程",
+        "表达"
+      ],
+      "locTag": "职场",
+      "reward": {
+        "normalTickets": 1
+      },
+      "doneText": "队伍十分钟清空,前台朝你比了个大拇指。"
+    },
+    {
+      "id": "sj_notice",
+      "title": "张贴寻物启事",
+      "text": "地铁口有人丢了耳机,求贴启事。",
+      "need": [
+        "观察",
+        "情报"
+      ],
+      "locTag": "通勤",
+      "reward": {
+        "money": 4
+      },
+      "doneText": "启事贴好半小时,耳机找到了。"
+    },
+    {
+      "id": "sj_studio",
+      "title": "直播间打杂",
+      "text": "隔壁直播间的设备又闹脾气了。",
+      "need": [
+        "技术",
+        "维修"
+      ],
+      "locTag": "设备",
+      "reward": {
+        "normalTickets": 1
+      },
+      "doneText": "设备恢复,主播在镜头里隔空感谢便利屋。"
+    },
+    {
+      "id": "sj_bulb",
+      "title": "换楼道灯泡",
+      "text": "4 楼楼道的灯闪了一星期。",
+      "need": [
+        "维修",
+        "技术"
+      ],
+      "locTag": "邻里",
+      "reward": {
+        "money": 4
+      },
+      "doneText": "灯亮了,晚归的住户不用再摸黑上楼。"
+    },
+    {
+      "id": "sj_kid",
+      "title": "安抚迷路小孩",
+      "text": "一个小孩在路边哭着找妈妈。",
+      "need": [
+        "安抚",
+        "表达"
+      ],
+      "reward": {
+        "normalTickets": 1
+      },
+      "doneText": "妈妈赶到时,小孩已经在跟你比划奥特曼。"
+    }
+  ]
+}
