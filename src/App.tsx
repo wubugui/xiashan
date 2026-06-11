@@ -85,8 +85,10 @@ function AppContent() {
         />
       )}
 
-      {/* 开场 intro 视频 */}
-      {showIntro && <VideoPlayer src={assetUrl('/video/intro.mp4')!} onEnd={handleIntroEnd} />}
+      {/* 开场 intro 视频只在首页播放，避免遮住远程营业/测试页面。 */}
+      {showIntro && location.pathname === '/' && (
+        <VideoPlayer src={assetUrl('/video/intro.mp4')!} onEnd={handleIntroEnd} />
+      )}
     </div>
   );
 }

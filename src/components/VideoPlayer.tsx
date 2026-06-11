@@ -86,6 +86,7 @@ export default function VideoPlayer({ src, onEnd, skippable = true, className }:
         playsInline
         className="h-full w-full object-contain"
         onEnded={onEnd}
+        onError={onEnd}
       />
 
       {/* 暂停状态提示 */}
