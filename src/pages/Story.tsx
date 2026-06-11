@@ -336,6 +336,7 @@ export default function Story() {
   }, [currentNode, spiritStones, reputation, ownedCharacters, completedNodes, flags]);
 
   const totalUnread = unreadCounts.wechat + unreadCounts.sms + unreadCounts.call;
+  const speakerLabel = currentNode?.speaker ? (getCharacterById(currentNode.speaker)?.name || currentNode.speaker) : undefined;
 
   return (
     <motion.div
@@ -423,7 +424,7 @@ export default function Story() {
       {/* 对话框 */}
       {currentNode && currentNode.type !== 'choice' && !showGacha && !showFaceSlap && (
         <DialogueBox
-          speaker={currentNode.speaker}
+          speaker={speakerLabel}
           speakerColor={currentNode.speakerColor}
           text={currentNode.text}
           onNext={handleNext}

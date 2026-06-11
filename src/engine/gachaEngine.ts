@@ -27,7 +27,11 @@ function rollRarity(pityCounter: number, totalGachaCount: number): 'SSR' | 'SR' 
 }
 
 function pickCharacter(rarity: 'SSR' | 'SR' | 'R' | 'N', ownedIds: string[]): Character {
-  const pool = characters.filter(c => c.rarity === rarity);
+  const rarityPool = characters.filter(c => c.rarity === rarity);
+  const pool = rarityPool.length > 0 ? rarityPool : characters;
+  if (pool.length === 0) {
+    throw new Error('Gacha character pool is empty.');
+  }
   // Prefer new characters
   const newOnes = pool.filter(c => !ownedIds.includes(c.id));
   const poolToPick = newOnes.length > 0 ? newOnes : pool;
