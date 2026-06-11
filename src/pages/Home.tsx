@@ -6,6 +6,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { characters } from '@/data/characters';
 import { REWARDS } from '@/data/rewards';
 import { cn } from '@/lib/utils';
+import { safeStorage } from '@/lib/safeStorage';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export default function Home() {
 
   // 每日登录检测
   useEffect(() => {
-    const lastClaimDate = localStorage.getItem('xiashan_daily_claim');
+    const lastClaimDate = safeStorage.getItem('xiashan_daily_claim');
     const today = new Date().toDateString();
     if (lastClaimDate !== today) {
       setShowDailyReward(true);
@@ -30,7 +31,7 @@ export default function Home() {
 
   const claimDailyReward = () => {
     addSpiritStones(REWARDS.daily_login);
-    localStorage.setItem('xiashan_daily_claim', new Date().toDateString());
+    safeStorage.setItem('xiashan_daily_claim', new Date().toDateString());
     setShowDailyReward(false);
   };
 

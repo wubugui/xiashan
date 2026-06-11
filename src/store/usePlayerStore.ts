@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { safeStorage } from '@/lib/safeStorage';
 
 interface OwnedCharacter {
   characterId: string;
@@ -208,6 +209,7 @@ export const usePlayerStore = create<PlayerState>()(
     {
       name: 'xiashan-player-store',
       version: 1,
+      storage: createJSONStorage(() => safeStorage),
       // 旧版本存档可能缺字段、字段为 null 或类型不符（项目从 AVG 改版而来），
       // 合并时丢弃所有与默认值类型不符的项，避免启动即崩、全页空白。
       merge: (persisted, current) => {

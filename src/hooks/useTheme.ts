@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
+import { safeStorage } from '@/lib/safeStorage';
 
 type Theme = 'light' | 'dark';
 
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme;
+    const savedTheme = safeStorage.getItem('theme') as Theme;
     if (savedTheme) {
       return savedTheme;
     }
@@ -14,7 +15,7 @@ export function useTheme() {
   useEffect(() => {
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(theme);
-    localStorage.setItem('theme', theme);
+    safeStorage.setItem('theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {

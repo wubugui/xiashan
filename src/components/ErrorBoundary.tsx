@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from 'react';
+import { safeStorage } from '@/lib/safeStorage';
 
 interface Props {
   children: ReactNode;
@@ -25,12 +26,8 @@ export default class ErrorBoundary extends Component<Props, State> {
   };
 
   handleReset = () => {
-    try {
-      localStorage.removeItem('xiashan-player-store');
-      localStorage.removeItem('xiashan-shop-store');
-    } catch {
-      // localStorage 不可用时直接刷新
-    }
+    safeStorage.removeItem('xiashan-player-store');
+    safeStorage.removeItem('xiashan-shop-store');
     this.handleReload();
   };
 

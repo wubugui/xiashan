@@ -3,7 +3,8 @@
  * 持久资产（角色/灵石/票）仍在 usePlayerStore。
  */
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { safeStorage } from '@/lib/safeStorage';
 import type { Commission, GameLocation, ServiceCard } from '@/data/types';
 import { locations as allLocations } from '@/data/locations';
 import { rollRoutes } from '@/engine/shopEngine';
@@ -168,6 +169,7 @@ export const useShopStore = create<ShopState>()(
     {
       name: 'xiashan-shop-store',
       version: 1,
+      storage: createJSONStorage(() => safeStorage),
       // 局内存档是当天一局的断点，跨版本恢复价值低、风险高（整对象快照随内容结构漂移）。
       // 旧版本（version < 1）一律作废重开一天。
       migrate: () => ({ ...INITIAL }),
