@@ -16,6 +16,7 @@ const files = {
   gacha: path.join(contentDir, 'gacha.json'),
   rewards: path.join(contentDir, 'rewards.json'),
   videos: path.join(contentDir, 'videos.json'),
+  commissions: path.join(contentDir, 'commissions.json'),
 };
 
 function readJson(file) {
@@ -182,6 +183,33 @@ export function validateContent(content = loadContent()) {
     if (ref.type === 'character' && !characterIds.has(ref.id)) targetIssues.push(`${source} character missing: ${ref.id}`);
     if (ref.type === 'node' && !nodeIds.has(ref.id)) targetIssues.push(`${source} node missing: ${ref.id}`);
     if (ref.type === 'phoneEvent' && !phoneEventIds.has(ref.id)) targetIssues.push(`${source} phone event missing: ${ref.id}`);
+  }
+
+  // ── 委托：子目标/分幕引用校验（v1.4）──
+  try {
+    const commissions = readJson(files.commissions).commissions || [];
+    addUniqueIssues(commissions, 'id', 'commission', issues);
+    for (const c of commissions) {
+      if (!characterIds.has(c.target)) issues.push(`commission ${c.id} target missing: ${c.target}`);
+      if (!c.graph) continue;
+      const gNodes = new Set(c.graph.nodes.map((n) => n.id));
+      const checkScene = (scene, label) => {
+        if (!scene) return;
+        if (!gNodes.has(scene.start)) issues.push(`commission ${c.id} ${label}.start missing node: ${scene.start}`);
+        if (scene.stopBefore && !gNodes.has(scene.stopBefore)) issues.push(`commission ${c.id} ${label}.stopBefore missing node: ${scene.stopBefore}`);
+      };
+      checkScene(c.introScene, 'introScene');
+      checkScene(c.finalScene, 'finalScene');
+      const objIds = new Set();
+      for (const o of c.objectives || []) {
+        if (objIds.has(o.id)) issues.push(`commission ${c.id} duplicate objective id: ${o.id}`);
+        objIds.add(o.id);
+        checkScene(o.scene, `objective ${o.id} scene`);
+        if (!Array.isArray(o.need) || o.need.length === 0) issues.push(`commission ${c.id} objective ${o.id} has empty need`);
+      }
+    }
+  } catch (e) {
+    issues.push(`failed to validate commissions.json: ${e.message}`);
   }
 
   return issues;

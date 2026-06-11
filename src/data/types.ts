@@ -239,6 +239,43 @@ export interface Commission {
   initialMood?: Mood;
   /** 图数据驱动的剧情 */
   graph?: CommissionGraph;
+
+  /* ── 子目标制（v1.4）：有 objectives 则交付条件 = 全部子目标完成 ── */
+  objectives?: CommissionObjective[];
+  /** 接单时播放的开场幕 */
+  introScene?: TheaterScene;
+  /** 交付时播放的结局幕（跑到 ending 为止） */
+  finalScene?: TheaterScene;
+}
+
+/** 剧场分幕：从 start 播到即将进入 stopBefore 时落幕；无 stopBefore 则播到结局 */
+export interface TheaterScene {
+  start: string;
+  stopBefore?: string;
+}
+
+export interface CommissionObjective {
+  id: string;
+  desc: string;
+  /** 用这些 type 的卡在匹配热点上打出即算完成 */
+  need: ServiceTag[];
+  /** 限定地点标签（location.tags 含此标签）；缺省则任意地点 */
+  locTag?: string;
+  /** 完成奖励信任 */
+  trust: number;
+  /** 完成后播放的剧场幕 */
+  scene: TheaterScene;
+}
+
+/** 顺手单：通用模板小委托（sideJobs.json） */
+export interface SideJob {
+  id: string;
+  title: string;
+  text: string;
+  need: ServiceTag[];
+  locTag?: string;
+  reward: { money?: number; normalTickets?: number; spiritStones?: number };
+  doneText: string;
 }
 
 /** 技能/便利/情报一次性卡 */
