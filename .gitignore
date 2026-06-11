@@ -14,6 +14,7 @@ dist-ssr
 
 # Local runtime, generated QA, and backups
 .runtime/
+.asset-backups/
 .codex-review/
 backups/
 .claude/
