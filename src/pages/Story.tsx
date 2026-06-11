@@ -25,6 +25,8 @@ export default function Story() {
     completedNodes,
     flags,
     ownedCharacters,
+    affinityMap,
+    relationshipStages,
     spiritStones,
     reputation,
     phoneMessages,
@@ -73,12 +75,13 @@ export default function Story() {
       spiritStones,
       reputation,
       ownedCharacters,
+      affinityMap,
       completedNodes,
       flags,
       phoneMessages,
       unreadCounts,
     }),
-    [spiritStones, reputation, ownedCharacters, completedNodes, flags, phoneMessages, unreadCounts],
+    [spiritStones, reputation, ownedCharacters, affinityMap, completedNodes, flags, phoneMessages, unreadCounts],
   );
 
   // 执行效果列表
@@ -114,8 +117,9 @@ export default function Story() {
       ownedCharacters: ownedCharacters.map((c) => ({
         characterId: c.characterId,
         level: c.level,
-        affinity: c.affinity,
       })),
+      affinityMap,
+      relationshipStages,
       completedNodes,
       flags,
       triggeredEventIds,
@@ -136,7 +140,7 @@ export default function Story() {
         });
       }
     });
-  }, [spiritStones, reputation, ownedCharacters, completedNodes, flags, triggeredEventIds, addTriggeredEvent, addPhoneMessage]);
+  }, [spiritStones, reputation, ownedCharacters, affinityMap, relationshipStages, completedNodes, flags, triggeredEventIds, addTriggeredEvent, addPhoneMessage]);
 
   // 推进到下一个节点
   const advanceToNode = useCallback(
@@ -175,7 +179,7 @@ export default function Story() {
         const trigger = currentNode.gachaTrigger;
         if (trigger) {
           const ownedIds = ownedCharacters.map((c) => c.characterId);
-          const pullResult = pullSingle(ownedIds, usePlayerStore.getState().pityCounter, usePlayerStore.getState().totalGachaCount);
+          const pullResult = pullSingle(ownedIds, usePlayerStore.getState().affinityMap, usePlayerStore.getState().pityCounter, usePlayerStore.getState().totalGachaCount);
           const gachaResult = pullResult.result;
           addCharacter(gachaResult.character.id);
           usePlayerStore.getState().addGachaResult(gachaResult.character.id, gachaResult.character.rarity);
@@ -264,8 +268,9 @@ export default function Story() {
           ownedCharacters: ownedCharacters.map((c) => ({
             characterId: c.characterId,
             level: c.level,
-            affinity: c.affinity,
           })),
+          affinityMap,
+          relationshipStages,
           completedNodes,
           flags,
         };
@@ -282,7 +287,7 @@ export default function Story() {
         advanceToNode(choice.nextNodeId);
       }
     },
-    [currentNode, spiritStones, reputation, ownedCharacters, completedNodes, flags, applyEffects, advanceToNode],
+    [currentNode, spiritStones, reputation, ownedCharacters, affinityMap, relationshipStages, completedNodes, flags, applyEffects, advanceToNode],
   );
 
   // 抽卡完成回调
@@ -324,8 +329,9 @@ export default function Story() {
       ownedCharacters: ownedCharacters.map((c) => ({
         characterId: c.characterId,
         level: c.level,
-        affinity: c.affinity,
       })),
+      affinityMap,
+      relationshipStages,
       completedNodes,
       flags,
     };
@@ -333,7 +339,7 @@ export default function Story() {
       if (!choice.conditions) return true;
       return evaluateAll(choice.conditions, conditionState);
     });
-  }, [currentNode, spiritStones, reputation, ownedCharacters, completedNodes, flags]);
+  }, [currentNode, spiritStones, reputation, ownedCharacters, affinityMap, relationshipStages, completedNodes, flags]);
 
   const totalUnread = unreadCounts.wechat + unreadCounts.sms + unreadCounts.call;
   const speakerLabel = currentNode?.speaker ? (getCharacterById(currentNode.speaker)?.name || currentNode.speaker) : undefined;

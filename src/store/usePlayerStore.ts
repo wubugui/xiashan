@@ -5,7 +5,6 @@ interface OwnedCharacter {
   characterId: string;
   level: number;
   exp: number;
-  affinity: number;
 }
 
 interface PhoneMessage {
@@ -47,6 +46,11 @@ interface PlayerState {
 
   // Characters
   ownedCharacters: OwnedCharacter[];
+  // 好感独立于持有：未抽到也能积累，抽到后才解锁养成内容（设计文档 6.3）
+  affinityMap: Record<string, number>;
+  relationshipStages: Record<string, number>;
+  // 每日限频记录：key（如 interact:touch:linxia / stage:linxia）→ 'YYYY-MM-DD'
+  dailyActions: Record<string, string>;
 
   // Gacha
   totalGachaCount: number;
@@ -73,6 +77,8 @@ interface PlayerState {
   setFlag: (flag: string) => void;
   addCharacter: (characterId: string) => void;
   addAffinity: (characterId: string, amount: number) => void;
+  advanceRelationshipStage: (characterId: string) => void;
+  tryDailyAction: (key: string) => boolean;
   addExp: (characterId: string, amount: number) => void;
   levelUpCharacter: (characterId: string) => void;
   addGachaResult: (characterId: string, rarity: string) => void;
@@ -96,6 +102,9 @@ const initialState = {
   completedNodes: [] as string[],
   flags: [] as string[],
   ownedCharacters: [] as OwnedCharacter[],
+  affinityMap: {} as Record<string, number>,
+  relationshipStages: {} as Record<string, number>,
+  dailyActions: {} as Record<string, string>,
   totalGachaCount: 0,
   pityCounter: 0,
   gachaHistory: [] as GachaHistoryEntry[],
@@ -140,13 +149,26 @@ export const usePlayerStore = create<PlayerState>()(
       addCharacter: (characterId) => set(s => ({
         ownedCharacters: s.ownedCharacters.some(c => c.characterId === characterId)
           ? s.ownedCharacters
-          : [...s.ownedCharacters, { characterId, level: 1, exp: 0, affinity: 0 }],
+          : [...s.ownedCharacters, { characterId, level: 1, exp: 0 }],
       })),
       addAffinity: (characterId, amount) => set(s => ({
-        ownedCharacters: s.ownedCharacters.map(c =>
-          c.characterId === characterId ? { ...c, affinity: c.affinity + amount } : c
-        ),
+        affinityMap: {
+          ...s.affinityMap,
+          [characterId]: (s.affinityMap[characterId] ?? 0) + amount,
+        },
       })),
+      advanceRelationshipStage: (characterId) => set(s => ({
+        relationshipStages: {
+          ...s.relationshipStages,
+          [characterId]: (s.relationshipStages[characterId] ?? 0) + 1,
+        },
+      })),
+      tryDailyAction: (key) => {
+        const today = new Date().toISOString().slice(0, 10);
+        if (get().dailyActions[key] === today) return false;
+        set(s => ({ dailyActions: { ...s.dailyActions, [key]: today } }));
+        return true;
+      },
       addExp: (characterId, amount) => set(s => ({
         ownedCharacters: s.ownedCharacters.map(c =>
           c.characterId === characterId ? { ...c, exp: c.exp + amount } : c
@@ -183,6 +205,28 @@ export const usePlayerStore = create<PlayerState>()(
       })),
       resetGame: () => set(initialState),
     }),
-    { name: 'xiashan-player-store' }
+    {
+      name: 'xiashan-player-store',
+      version: 1,
+      migrate: (persisted, version) => {
+        const state = persisted as Omit<Partial<PlayerState>, 'ownedCharacters'> & {
+          ownedCharacters?: { characterId: string; level: number; exp: number; affinity?: number }[];
+        };
+        if (version < 1 && Array.isArray(state.ownedCharacters)) {
+          const affinityMap: Record<string, number> = { ...(state.affinityMap ?? {}) };
+          state.ownedCharacters = state.ownedCharacters.map(c => {
+            const { affinity, ...rest } = c;
+            if (typeof affinity === 'number' && affinity > 0) {
+              affinityMap[rest.characterId] = (affinityMap[rest.characterId] ?? 0) + affinity;
+            }
+            return rest;
+          });
+          state.affinityMap = affinityMap;
+          state.relationshipStages = state.relationshipStages ?? {};
+          state.dailyActions = state.dailyActions ?? {};
+        }
+        return state as PlayerState;
+      },
+    }
   )
 );

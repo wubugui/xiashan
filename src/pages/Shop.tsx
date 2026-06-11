@@ -63,6 +63,8 @@ function dispatchAvailablePhoneEvents(addLog?: (text: string, cls?: 'good' | 'ba
     spiritStones: store.spiritStones,
     reputation: store.reputation,
     ownedCharacters: store.ownedCharacters,
+    affinityMap: store.affinityMap,
+    relationshipStages: store.relationshipStages,
     completedNodes: store.completedNodes,
     flags: store.flags,
     triggeredEventIds: store.triggeredEventIds,
@@ -166,7 +168,7 @@ export default function Shop() {
   } = shopStore;
 
   const {
-    ownedCharacters, pityCounter, totalGachaCount,
+    ownedCharacters, affinityMap, pityCounter, totalGachaCount,
     commissionTickets, personTickets, normalTickets,
     spendCommissionTicket, spendPersonTicket, spendNormalTickets,
     addCommissionTickets, addPersonTickets, addNormalTickets,
@@ -200,11 +202,15 @@ export default function Shop() {
     } else if (pool === 'person') {
       if (!spendPersonTicket()) return toast('人物券不足。');
       const ownedIds = ownedCharacters.map(o => o.characterId);
-      const { result, newPity, newTotal } = pullSingle(ownedIds, pityCounter, totalGachaCount);
+      const { result, newPity, newTotal } = pullSingle(ownedIds, affinityMap, pityCounter, totalGachaCount);
       setPityCounter(newPity);
       setTotalGachaCount(newTotal);
       addCharacter(result.character.id);
       addGachaResult(result.character.id, result.character.rarity);
+      // 入伙演出：抽到邂逅期已攒好感的角色，出货时承认此前积累（设计文档 6.3）
+      if (result.isNew && (affinityMap[result.character.id] ?? 0) > 0) {
+        addLog(`【${result.character.name}】握住你的手："那几次委托……我都记得。"她正式加入二十五时便利屋。`, 'good');
+      }
       // 转换为 GachaAnimation 所需格式
       const animResult: AnimGachaResult = {
         characterId: result.character.id,
@@ -232,7 +238,7 @@ export default function Shop() {
       addHandCard(card);
       addLog(`情报网络：抽到【${card.name}】（${card.type}）`, 'draw');
     }
-  }, [gameOver, commission, spendCommissionTicket, spendPersonTicket, spendNormalTickets, ownedCharacters, pityCounter, totalGachaCount, setPityCounter, setTotalGachaCount, addCharacter, addGachaResult, addHandCard, setCommission, addLog]);
+  }, [gameOver, commission, spendCommissionTicket, spendPersonTicket, spendNormalTickets, ownedCharacters, affinityMap, pityCounter, totalGachaCount, setPityCounter, setTotalGachaCount, addCharacter, addGachaResult, addHandCard, setCommission, addLog]);
 
   /* ────── 热点点击 ────── */
   const handleSpotClick = useCallback((spot: Spot, spotIndex: number) => {
@@ -290,8 +296,7 @@ export default function Shop() {
   const handleEndDay = useCallback(() => {
     const success = !!commission && trust >= commission.need;
     if (success && commission) {
-      addCharacter(commission.target);
-      // 执行奖励 Effects
+      // 好感写入独立 affinityMap，无需持有；入伙只走人物频道抽卡（设计文档 6.3）
       applyCommissionRewards(commission.rewardEffects);
       // 发额外票
       addCommissionTickets(1);
@@ -308,7 +313,7 @@ export default function Shop() {
       setEndDayResult('fail');
     }
     setGameOver(true);
-  }, [commission, trust, addCharacter, addCommissionTickets, addPersonTickets, addNormalTickets, addSpiritStones, addReputation, addLog, setGameOver]);
+  }, [commission, trust, addCommissionTickets, addPersonTickets, addNormalTickets, addSpiritStones, addReputation, addLog, setGameOver]);
 
   /* ────── 完成地点 ────── */
   const handleFinishLocation = useCallback(() => {
@@ -325,8 +330,7 @@ export default function Shop() {
     setShowTheater(false);
     if (!commission) return;
     if (ok) {
-      // 先把委托目标角色收为联系人，再发好感（否则 add_affinity 找不到对象会丢失）
-      addCharacter(commission.target);
+      // 好感写入独立 affinityMap，无需持有；入伙只走人物频道抽卡（设计文档 6.3）
       applyCommissionRewards(commission.rewardEffects);
       addCommissionTickets(1);
       addPersonTickets(1);
@@ -341,7 +345,7 @@ export default function Shop() {
       setEndDayResult('fail');
     }
     setGameOver(true);
-  }, [commission, addCharacter, addCommissionTickets, addPersonTickets, addNormalTickets, addReputation, addLog, setGameOver]);
+  }, [commission, addCommissionTickets, addPersonTickets, addNormalTickets, addReputation, addLog, setGameOver]);
 
   /* ────── Toast ────── */
   const [toastMsg, setToastMsg] = useState('');

@@ -3,7 +3,8 @@ import { Effect } from './types';
 interface PlayerStateForEffect {
   spiritStones: number;
   reputation: number;
-  ownedCharacters: { characterId: string; level: number; exp: number; affinity: number }[];
+  ownedCharacters: { characterId: string; level: number; exp: number }[];
+  affinityMap: Record<string, number>;
   completedNodes: string[];
   flags: string[];
   phoneMessages: { id: string; characterId: string; type: 'wechat' | 'sms'; content: string; timestamp: number; read: boolean }[];
@@ -19,9 +20,10 @@ export function executeEffect(effect: Effect, state: PlayerStateForEffect): Play
     case 'add_affinity':
       return {
         ...state,
-        ownedCharacters: state.ownedCharacters.map(c =>
-          c.characterId === effect.characterId ? { ...c, affinity: c.affinity + effect.value } : c
-        ),
+        affinityMap: {
+          ...state.affinityMap,
+          [effect.characterId]: (state.affinityMap[effect.characterId] ?? 0) + effect.value,
+        },
       };
     case 'add_exp':
       return {

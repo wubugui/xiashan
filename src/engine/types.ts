@@ -3,6 +3,7 @@ export type Condition =
   | { type: 'character_level'; characterId: string; minLevel: number }
   | { type: 'reputation'; minValue: number }
   | { type: 'affinity'; characterId: string; minValue: number }
+  | { type: 'relationship_stage'; characterId: string; minStage: number }
   | { type: 'chapter_complete'; chapterId: number }
   | { type: 'node_complete'; nodeId: string }
   | { type: 'flag_set'; flag: string }

@@ -17,6 +17,8 @@ export default function VideoGallery() {
   const spiritStones = usePlayerStore((s) => s.spiritStones);
   const reputation = usePlayerStore((s) => s.reputation);
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
+  const affinityMap = usePlayerStore((s) => s.affinityMap);
+  const relationshipStages = usePlayerStore((s) => s.relationshipStages);
   const completedNodes = usePlayerStore((s) => s.completedNodes);
   const flags = usePlayerStore((s) => s.flags);
 
@@ -27,12 +29,13 @@ export default function VideoGallery() {
       ownedCharacters: ownedCharacters.map((c) => ({
         characterId: c.characterId,
         level: c.level,
-        affinity: c.affinity,
       })),
+      affinityMap,
+      relationshipStages,
       completedNodes,
       flags,
     }),
-    [spiritStones, reputation, ownedCharacters, completedNodes, flags],
+    [spiritStones, reputation, ownedCharacters, affinityMap, relationshipStages, completedNodes, flags],
   );
 
   const isUnlocked = (video: VideoEntry) =>

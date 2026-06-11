@@ -30,7 +30,7 @@
       "description": "她说，谢谢你那天帮了我。",
       "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "affinity", "characterId": "linxia", "minValue": 50 }
+        { "type": "relationship_stage", "characterId": "linxia", "minStage": 2 }
       ]
     },
     {
@@ -48,7 +48,7 @@
       "description": "只有在你面前，她才不用扮演任何人。",
       "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "affinity", "characterId": "aruo", "minValue": 50 }
+        { "type": "relationship_stage", "characterId": "aruo", "minStage": 2 }
       ]
     },
     {
@@ -66,7 +66,7 @@
       "description": "下次别告诉苏锦黎，但可以告诉你。",
       "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "affinity", "characterId": "xiaogui", "minValue": 40 }
+        { "type": "relationship_stage", "characterId": "xiaogui", "minStage": 2 }
       ]
     },
     {
@@ -84,7 +84,7 @@
       "description": "她不聪明，但她全力以赴。",
       "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "affinity", "characterId": "yunzhiyi", "minValue": 40 }
+        { "type": "relationship_stage", "characterId": "yunzhiyi", "minStage": 2 }
       ]
     },
     {
@@ -102,7 +102,7 @@
       "description": "毯子是谁披的，她其实知道。",
       "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "affinity", "characterId": "sangluo", "minValue": 50 }
+        { "type": "relationship_stage", "characterId": "sangluo", "minStage": 2 }
       ]
     },
     {
@@ -120,7 +120,7 @@
       "description": "小声点——它刚刚原谅了这个世界。",
       "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "affinity", "characterId": "aman", "minValue": 50 }
+        { "type": "relationship_stage", "characterId": "aman", "minStage": 2 }
       ]
     },
     {
@@ -138,7 +138,7 @@
       "description": "她解开马尾的样子，只有你见过。",
       "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "affinity", "characterId": "shenzhaoning", "minValue": 50 }
+        { "type": "relationship_stage", "characterId": "shenzhaoning", "minStage": 2 }
       ]
     },
     {
@@ -156,7 +156,7 @@
       "description": "她指给你看的那颗星，没有名字。",
       "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "affinity", "characterId": "suli", "minValue": 50 }
+        { "type": "relationship_stage", "characterId": "suli", "minStage": 2 }
       ]
     },
     {
@@ -174,7 +174,7 @@
       "description": "嘘——这本书里夹着一张便签。",
       "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "affinity", "characterId": "murongxue", "minValue": 50 }
+        { "type": "relationship_stage", "characterId": "murongxue", "minStage": 2 }
       ]
     }
   ]

@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Info, History } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
-import { pullSingle, pullTen } from '@/engine/gachaEngine';
+import { pullSingle, pullTen, isHeartUp, HEART_UP_WEIGHT } from '@/engine/gachaEngine';
 import { GACHA_CONFIG } from '@/data/gachaConfig';
+import { characters } from '@/data/characters';
 import GachaAnimation from '@/components/GachaAnimation';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +13,7 @@ export default function Gacha() {
   const navigate = useNavigate();
   const spiritStones = usePlayerStore((s) => s.spiritStones);
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
+  const affinityMap = usePlayerStore((s) => s.affinityMap);
   const pityCounter = usePlayerStore((s) => s.pityCounter);
   const totalGachaCount = usePlayerStore((s) => s.totalGachaCount);
   const gachaHistory = usePlayerStore((s) => s.gachaHistory);
@@ -40,7 +42,7 @@ export default function Gacha() {
       const ownedIds = ownedCharacters.map((c) => c.characterId);
 
       if (isTen) {
-        const result = pullTen(ownedIds, pityCounter, totalGachaCount);
+        const result = pullTen(ownedIds, affinityMap, pityCounter, totalGachaCount);
         const formatted = result.results.map((r) => ({
           characterId: r.character.id,
           name: r.character.name,
@@ -60,7 +62,7 @@ export default function Gacha() {
         setGachaResults(formatted);
         setIsTenPull(true);
       } else {
-        const result = pullSingle(ownedIds, pityCounter, totalGachaCount);
+        const result = pullSingle(ownedIds, affinityMap, pityCounter, totalGachaCount);
         const formatted = [
           {
             characterId: result.result.character.id,
@@ -82,7 +84,12 @@ export default function Gacha() {
 
       setShowAnimation(true);
     },
-    [spiritStones, ownedCharacters, pityCounter, totalGachaCount, addCharacter, addSpiritStones, addGachaResult, setPityCounter, setTotalGachaCount],
+    [spiritStones, ownedCharacters, affinityMap, pityCounter, totalGachaCount, addCharacter, addSpiritStones, addGachaResult, setPityCounter, setTotalGachaCount],
+  );
+
+  // 心动 UP：好感已达标但尚未入伙的角色（同稀有度内权重提升）
+  const heartUpCharacters = characters.filter((c) =>
+    isHeartUp(c.id, ownedCharacters.map((o) => o.characterId), affinityMap),
   );
 
   const handleAnimationComplete = useCallback(() => {
@@ -192,6 +199,21 @@ export default function Gacha() {
             已抽 {totalGachaCount} 次
           </p>
         </div>
+
+        {/* 心动 UP 提示 */}
+        {heartUpCharacters.length > 0 && (
+          <div className="mb-4 flex flex-wrap items-center justify-center gap-1.5 px-4">
+            <span className="text-xs font-bold text-pink-400">💗 心动UP×{HEART_UP_WEIGHT}</span>
+            {heartUpCharacters.map((c) => (
+              <span
+                key={c.id}
+                className="rounded-full border border-pink-500/30 bg-pink-500/10 px-2 py-0.5 text-xs text-pink-300"
+              >
+                {c.name}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* 操作按钮 */}
         <div className="flex items-center gap-3">

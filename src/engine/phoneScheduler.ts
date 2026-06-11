@@ -4,7 +4,9 @@ import { evaluateAll } from './conditionEngine';
 interface PlayerStateForScheduler {
   spiritStones: number;
   reputation: number;
-  ownedCharacters: { characterId: string; level: number; affinity: number }[];
+  ownedCharacters: { characterId: string; level: number }[];
+  affinityMap: Record<string, number>;
+  relationshipStages: Record<string, number>;
   completedNodes: string[];
   flags: string[];
   triggeredEventIds: string[];

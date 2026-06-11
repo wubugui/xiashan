@@ -3,7 +3,9 @@ import { Condition } from './types';
 interface PlayerStateForCondition {
   spiritStones: number;
   reputation: number;
-  ownedCharacters: { characterId: string; level: number; affinity: number }[];
+  ownedCharacters: { characterId: string; level: number }[];
+  affinityMap: Record<string, number>;
+  relationshipStages: Record<string, number>;
   completedNodes: string[];
   flags: string[];
 }
@@ -18,10 +20,10 @@ export function evaluateCondition(condition: Condition, state: PlayerStateForCon
     }
     case 'reputation':
       return state.reputation >= condition.minValue;
-    case 'affinity': {
-      const ch = state.ownedCharacters.find(c => c.characterId === condition.characterId);
-      return ch ? ch.affinity >= condition.minValue : false;
-    }
+    case 'affinity':
+      return (state.affinityMap[condition.characterId] ?? 0) >= condition.minValue;
+    case 'relationship_stage':
+      return (state.relationshipStages[condition.characterId] ?? 0) >= condition.minStage;
     case 'chapter_complete':
       return state.completedNodes.some(n => n.startsWith(`ch${condition.chapterId}_`));
     case 'node_complete':

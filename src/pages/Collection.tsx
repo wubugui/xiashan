@@ -13,6 +13,7 @@ type RarityFilter = '全部' | 'SSR' | 'SR' | 'R' | 'N';
 export default function Collection() {
   const navigate = useNavigate();
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
+  const affinityMap = usePlayerStore((s) => s.affinityMap);
   const [activeFilter, setActiveFilter] = useState<RarityFilter>('全部');
 
   const filters: RarityFilter[] = ['全部', 'SSR', 'SR', 'R', 'N'];
@@ -22,10 +23,10 @@ export default function Collection() {
       .map((oc) => {
         const char = getCharacterById(oc.characterId);
         if (!char) return null;
-        return { ...char, level: oc.level, affinity: oc.affinity };
+        return { ...char, level: oc.level, affinity: affinityMap[oc.characterId] ?? 0 };
       })
       .filter(Boolean) as (typeof characters[number] & { level: number; affinity: number })[];
-  }, [ownedCharacters]);
+  }, [ownedCharacters, affinityMap]);
 
   const filteredList = useMemo(() => {
     if (activeFilter === '全部') return ownedList;

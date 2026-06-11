@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Hand, MessageCircle, Gift, TrendingUp } from 'lucide-react';
+import { ChevronLeft, Hand, MessageCircle, Gift, TrendingUp, Heart } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
+import { getRelationshipStages, getStageInfo, getNextStage } from '@/data/relationship';
 import { cn } from '@/lib/utils';
 import { assetUrl } from '@/lib/assets';
 
@@ -31,6 +32,9 @@ const rarityLabel = {
 };
 
 const UPGRADE_COST = 100;
+const INTERACT_AFFINITY = 2;
+const GIFT_COST = 50;
+const GIFT_AFFINITY = 5;
 
 const expressionLabels = [
   ['smile', '微笑'],
@@ -46,21 +50,30 @@ export default function CharacterDetail() {
   const navigate = useNavigate();
 
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
+  const affinityMap = usePlayerStore((s) => s.affinityMap);
+  const relationshipStages = usePlayerStore((s) => s.relationshipStages);
   const spiritStones = usePlayerStore((s) => s.spiritStones);
   const addSpiritStones = usePlayerStore((s) => s.addSpiritStones);
   const addExp = usePlayerStore((s) => s.addExp);
   const levelUpCharacter = usePlayerStore((s) => s.levelUpCharacter);
   const addAffinity = usePlayerStore((s) => s.addAffinity);
+  const advanceRelationshipStage = usePlayerStore((s) => s.advanceRelationshipStage);
+  const tryDailyAction = usePlayerStore((s) => s.tryDailyAction);
 
   const [activeTab, setActiveTab] = useState<TabType>('info');
   const [interactionResponse, setInteractionResponse] = useState<string | null>(null);
 
   const character = id ? getCharacterById(id) : undefined;
   const ownedChar = ownedCharacters.find((c) => c.characterId === id);
+  const owned = !!ownedChar;
 
   const level = ownedChar?.level || 1;
   const exp = ownedChar?.exp || 0;
-  const affinity = ownedChar?.affinity || 0;
+  const affinity = id ? affinityMap[id] ?? 0 : 0;
+  const stage = id ? relationshipStages[id] ?? 0 : 0;
+  const stageInfo = id ? getStageInfo(id, stage) : undefined;
+  const nextStage = id ? getNextStage(id, stage) : undefined;
+  const maxStage = id ? getRelationshipStages(id).length : 0;
   const expToLevel = level * 100;
   const expPercent = Math.min((exp / expToLevel) * 100, 100);
 
@@ -92,13 +105,42 @@ export default function CharacterDetail() {
   }, [character, level]);
 
   const handleInteract = (type: 'touch' | 'talk' | 'gift') => {
-    if (!character) return;
+    if (!character || !owned) return;
     const interaction = availableInteractions.find((i) => i.type === type);
-    if (interaction) {
-      setInteractionResponse(interaction.response);
-      addAffinity(character.id, 2);
+    if (!interaction) return;
+    if (type === 'gift' && spiritStones < GIFT_COST) {
+      setInteractionResponse(`（灵石不足，送礼需要 ${GIFT_COST}。）`);
       setTimeout(() => setInteractionResponse(null), 3000);
+      return;
     }
+    // 可再生好感源按自然日限频（设计文档 6.3）
+    if (!tryDailyAction(`interact:${type}:${character.id}`)) {
+      setInteractionResponse('（今天已经这样相处过了，明天再来吧。）');
+      setTimeout(() => setInteractionResponse(null), 3000);
+      return;
+    }
+    if (type === 'gift') {
+      addSpiritStones(-GIFT_COST);
+      addAffinity(character.id, GIFT_AFFINITY);
+    } else {
+      addAffinity(character.id, INTERACT_AFFINITY);
+    }
+    setInteractionResponse(interaction.response);
+    setTimeout(() => setInteractionResponse(null), 3000);
+  };
+
+  const handleAdvanceStage = () => {
+    if (!character || !owned || !nextStage) return;
+    if (affinity < nextStage.threshold) return;
+    // 每角色每日最多推进一阶，保住养成节奏（设计文档 6.3）
+    if (!tryDailyAction(`stage:${character.id}`)) {
+      setInteractionResponse('（今天的相处已经够多了，关系的事……明天再继续吧。）');
+      setTimeout(() => setInteractionResponse(null), 3000);
+      return;
+    }
+    advanceRelationshipStage(character.id);
+    setInteractionResponse(nextStage.text);
+    setTimeout(() => setInteractionResponse(null), 6000);
   };
 
   const handleUpgrade = () => {
@@ -186,6 +228,7 @@ export default function CharacterDetail() {
         <div className="mt-3 flex items-center gap-4 text-xs text-slate-400">
           <span>属性: <span className={rarityLabel[character.rarity]}>{character.element}</span></span>
           <span>好感: <span className="text-pink-400">{affinity}</span></span>
+          <span>关系: <span className="text-rose-300">{stageInfo?.name ?? (owned ? '初识' : '委托人')}</span></span>
         </div>
 
         {/* 当前台词 */}
@@ -297,10 +340,64 @@ export default function CharacterDetail() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
+            {/* 关系阶段 */}
+            <div className="rounded-xl bg-slate-800/40 p-4">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-sm text-slate-400">
+                  <Heart size={14} className="text-rose-400" />
+                  关系阶段
+                </span>
+                <span className="text-sm font-bold text-rose-300">
+                  {stage}/{maxStage} · {stageInfo?.name ?? (owned ? '初识' : '委托人')}
+                </span>
+              </div>
+              {nextStage ? (
+                <>
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between text-xs text-slate-500">
+                      <span>下一阶：{nextStage.name}</span>
+                      <span>好感 {Math.min(affinity, nextStage.threshold)}/{nextStage.threshold}</span>
+                    </div>
+                    <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-700">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min((affinity / nextStage.threshold) * 100, 100)}%` }}
+                        className="h-full rounded-full bg-gradient-to-r from-rose-500 to-pink-400"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleAdvanceStage}
+                    disabled={!owned || affinity < nextStage.threshold}
+                    className={cn(
+                      'mt-3 w-full rounded-lg py-2 text-sm font-bold transition-colors',
+                      owned && affinity >= nextStage.threshold
+                        ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white'
+                        : 'cursor-not-allowed bg-slate-700/40 text-slate-500',
+                    )}
+                  >
+                    {!owned
+                      ? '抽到她后才能加深关系'
+                      : affinity >= nextStage.threshold
+                        ? '加深关系'
+                        : '好感不足'}
+                  </button>
+                </>
+              ) : (
+                <p className="mt-2 text-xs text-slate-500">关系已满阶——她是二十五时的常客了。</p>
+              )}
+            </div>
+
+            {!owned && (
+              <p className="rounded-lg bg-slate-800/30 px-3 py-2 text-xs leading-relaxed text-slate-500">
+                她还只是便利屋的委托人。继续帮她完成委托，好感不会丢失；好感攒到 40 后人物频道触发心动UP，抽到她即可解锁互动与关系。
+              </p>
+            )}
+
             <div className="flex gap-3">
               <button
                 onClick={() => handleInteract('touch')}
-                disabled={!availableInteractions.some((i) => i.type === 'touch')}
+                disabled={!owned || !availableInteractions.some((i) => i.type === 'touch')}
                 className={cn(
                   'flex flex-1 flex-col items-center gap-2 rounded-xl py-4',
                   'bg-slate-800/40 border border-slate-700/30',
@@ -313,7 +410,7 @@ export default function CharacterDetail() {
               </button>
               <button
                 onClick={() => handleInteract('talk')}
-                disabled={!availableInteractions.some((i) => i.type === 'talk')}
+                disabled={!owned || !availableInteractions.some((i) => i.type === 'talk')}
                 className={cn(
                   'flex flex-1 flex-col items-center gap-2 rounded-xl py-4',
                   'bg-slate-800/40 border border-slate-700/30',
@@ -326,7 +423,7 @@ export default function CharacterDetail() {
               </button>
               <button
                 onClick={() => handleInteract('gift')}
-                disabled={!availableInteractions.some((i) => i.type === 'gift')}
+                disabled={!owned || !availableInteractions.some((i) => i.type === 'gift')}
                 className={cn(
                   'flex flex-1 flex-col items-center gap-2 rounded-xl py-4',
                   'bg-slate-800/40 border border-slate-700/30',
@@ -335,7 +432,7 @@ export default function CharacterDetail() {
                 )}
               >
                 <Gift size={20} />
-                <span className="text-xs">送礼</span>
+                <span className="text-xs">送礼 💎{GIFT_COST}</span>
               </button>
             </div>
 
@@ -351,7 +448,7 @@ export default function CharacterDetail() {
               </motion.div>
             )}
 
-            {!availableInteractions.length && (
+            {owned && !availableInteractions.length && (
               <p className="text-center text-xs text-slate-600">提升等级解锁更多互动</p>
             )}
           </motion.div>
