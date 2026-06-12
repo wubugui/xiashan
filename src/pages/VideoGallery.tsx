@@ -8,6 +8,8 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { evaluateAll } from '@/engine/conditionEngine';
 import { cn } from '@/lib/utils';
 import { assetUrl } from '@/lib/assets';
+import PageBackdrop from '@/components/PageBackdrop';
+import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 
 export default function VideoGallery() {
   const navigate = useNavigate();
@@ -42,8 +44,13 @@ export default function VideoGallery() {
     !video.unlockConditions || video.unlockConditions.length === 0 || evaluateAll(video.unlockConditions, conditionState);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#101827] pb-nav">
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800" />
+    <div className="relative min-h-screen overflow-hidden bg-[#050914] pb-nav">
+      <PageBackdrop
+        image={SCENE_BACKDROPS.studio.image}
+        mobileImage={SCENE_BACKDROPS.studio.mobileImage}
+        position={SCENE_BACKDROPS.studio.position}
+        overlayClassName="from-slate-950/50 via-slate-950/60 to-slate-950/90"
+      />
 
       <div className="relative z-10">
         <div className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/78 backdrop-blur-xl">

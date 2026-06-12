@@ -8,6 +8,8 @@ import { REWARDS } from '@/data/rewards';
 import { cn } from '@/lib/utils';
 import { safeStorage } from '@/lib/safeStorage';
 import ResetSaveButton from '@/components/ResetSaveButton';
+import PageBackdrop from '@/components/PageBackdrop';
+import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -92,55 +94,14 @@ export default function Home() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-950"
+      className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#050914]"
     >
-      {/* 城市剪影背景 */}
-      <div className="absolute inset-0">
-        {/* 天空渐变 */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800" />
-
-        {/* 星星 */}
-        {[...Array(30)].map((_, i) => (
-          <motion.div
-            key={i}
-            animate={{
-              opacity: [0.2, 0.8, 0.2],
-              scale: [0.8, 1.2, 0.8],
-            }}
-            transition={{
-              duration: 2 + Math.random() * 3,
-              repeat: Infinity,
-              delay: Math.random() * 3,
-            }}
-            className="absolute h-1 w-1 rounded-full bg-white/60"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 40}%`,
-            }}
-          />
-        ))}
-
-        {/* 月亮 */}
-        <div className="absolute right-[15%] top-[12%] h-16 w-16 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 shadow-[0_0_60px_rgba(251,191,36,0.3)]" />
-
-        {/* 城市剪影 */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 320" className="w-full" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="cityGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#1e293b" />
-                <stop offset="100%" stopColor="#0f172a" />
-              </linearGradient>
-            </defs>
-            <path
-              fill="url(#cityGrad)"
-              d="M0,320 L0,200 L60,200 L60,160 L80,160 L80,140 L100,140 L100,200 L140,200 L140,120 L160,120 L160,100 L180,100 L180,120 L200,120 L200,200 L260,200 L260,170 L280,170 L280,150 L300,150 L300,170 L320,170 L320,200 L380,200 L380,80 L400,80 L400,60 L420,60 L420,80 L440,80 L440,200 L500,200 L500,180 L520,180 L520,160 L540,160 L540,180 L560,180 L560,200 L620,200 L620,130 L640,130 L640,110 L660,110 L660,130 L680,130 L680,200 L740,200 L740,90 L760,90 L760,70 L780,70 L780,90 L800,90 L800,200 L860,200 L860,160 L880,160 L880,140 L900,140 L900,160 L920,160 L920,200 L980,200 L980,110 L1000,110 L1000,80 L1020,80 L1020,110 L1040,110 L1040,200 L1100,200 L1100,170 L1120,170 L1120,150 L1140,150 L1140,170 L1160,170 L1160,200 L1220,200 L1220,130 L1240,130 L1240,100 L1260,100 L1260,130 L1280,130 L1280,200 L1340,200 L1340,180 L1360,180 L1360,160 L1380,160 L1380,180 L1400,180 L1400,200 L1440,200 L1440,320 Z"
-            />
-          </svg>
-          {/* 城市灯光 */}
-          <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-500/10 via-amber-400/20 to-amber-500/10" />
-        </div>
-      </div>
+      <PageBackdrop
+        image={SCENE_BACKDROPS.street.image}
+        mobileImage={SCENE_BACKDROPS.street.mobileImage}
+        position={SCENE_BACKDROPS.street.position}
+        overlayClassName="from-slate-950/30 via-slate-950/50 to-slate-950/80"
+      />
 
       {/* 测试清档 */}
       <div className="absolute right-4 top-4 z-20">
@@ -183,8 +144,8 @@ export default function Home() {
           transition={{ delay: 0.5, duration: 0.6 }}
           className={cn(
             'mb-8 w-full rounded-xl',
-            'bg-slate-900/60 backdrop-blur-md',
-            'border border-slate-700/30',
+            'bg-slate-950/60 backdrop-blur-xl',
+            'border border-white/10 shadow-[0_18px_45px_rgba(0,0,0,0.28)]',
             'px-5 py-4',
           )}
         >
@@ -230,8 +191,8 @@ export default function Home() {
                 onClick={action.onClick}
                 className={cn(
                   'group relative overflow-hidden rounded-xl',
-                  'bg-slate-900/60 backdrop-blur-md',
-                  'border border-slate-700/30',
+                  'bg-slate-950/60 backdrop-blur-xl',
+                  'border border-white/10',
                   'px-5 py-6',
                   'transition-shadow duration-300',
                   `hover:${action.glow}`,

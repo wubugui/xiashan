@@ -13,6 +13,8 @@ import SMSList from '@/components/PhoneSimulator/SMS/SMSList';
 import SMSDetail from '@/components/PhoneSimulator/SMS/SMSDetail';
 import BrowserHome from '@/components/PhoneSimulator/Browser/BrowserHome';
 import BrowserPage from '@/components/PhoneSimulator/Browser/BrowserPage';
+import PageBackdrop from '@/components/PageBackdrop';
+import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 
 type PhoneScreen =
   | { type: 'home' }
@@ -128,8 +130,15 @@ export default function Phone() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="relative flex min-h-screen items-center justify-center bg-slate-950"
+      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050914]"
     >
+      <PageBackdrop
+        image={SCENE_BACKDROPS.street.image}
+        mobileImage={SCENE_BACKDROPS.street.mobileImage}
+        position={SCENE_BACKDROPS.street.position}
+        overlayClassName="from-slate-950/40 via-slate-950/60 to-slate-950/90"
+      />
+
       {/* 返回按钮 */}
       <div className="absolute left-4 top-4 z-30">
         <button
@@ -141,20 +150,22 @@ export default function Phone() {
       </div>
 
       {/* 手机模拟器 */}
-      <PhoneFrame onClose={() => navigate(-1)}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={screen.type + (screen.type === 'wechat_chat' || screen.type === 'sms_chat' || screen.type === 'in_call' || screen.type === 'incoming_call' || screen.type === 'browser_page' ? `-${(screen as { characterId?: string; url?: string }).characterId || (screen as { url?: string }).url || ''}` : '')}
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -20, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="h-full"
-          >
-            {renderScreen()}
-          </motion.div>
-        </AnimatePresence>
-      </PhoneFrame>
+      <div className="relative z-10">
+        <PhoneFrame onClose={() => navigate(-1)}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={screen.type + (screen.type === 'wechat_chat' || screen.type === 'sms_chat' || screen.type === 'in_call' || screen.type === 'incoming_call' || screen.type === 'browser_page' ? `-${(screen as { characterId?: string; url?: string }).characterId || (screen as { url?: string }).url || ''}` : '')}
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -20, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="h-full"
+            >
+              {renderScreen()}
+            </motion.div>
+          </AnimatePresence>
+        </PhoneFrame>
+      </div>
     </motion.div>
   );
 }

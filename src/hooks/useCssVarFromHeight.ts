@@ -11,9 +11,9 @@ export function useCssVarFromHeight(varName: string, ref: RefObject<HTMLElement 
     const el = ref.current;
     if (!el) {
       root.style.setProperty(varName, '0px');
-      return () => { root.style.setProperty(varName, '0px'); };
+      return;
     }
-    const update = () => root.style.setProperty(varName, `${el.offsetHeight}px`);
+    const update = () => root.style.setProperty(varName, `${Math.ceil(el.getBoundingClientRect().height)}px`);
     update();
     let ro: ResizeObserver | undefined;
     if (typeof ResizeObserver !== 'undefined') {
@@ -24,7 +24,13 @@ export function useCssVarFromHeight(varName: string, ref: RefObject<HTMLElement 
     return () => {
       ro?.disconnect();
       window.removeEventListener('resize', update);
-      root.style.setProperty(varName, '0px');
     };
   });
+
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    return () => {
+      root.style.setProperty(varName, '0px');
+    };
+  }, [ref, varName]);
 }

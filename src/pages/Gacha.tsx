@@ -11,6 +11,8 @@ import GachaAnimation from '@/components/GachaAnimation';
 import SupplyReveal, { type RevealItem } from '@/components/SupplyReveal';
 import confetti from 'canvas-confetti';
 import { cn } from '@/lib/utils';
+import PageBackdrop from '@/components/PageBackdrop';
+import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 
 export default function Gacha() {
   const navigate = useNavigate();
@@ -127,10 +129,17 @@ export default function Gacha() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="relative flex min-h-screen flex-col items-center overflow-hidden bg-slate-950"
+      className="relative flex min-h-screen flex-col items-center overflow-hidden bg-[#050914]"
     >
+      <PageBackdrop
+        image={SCENE_BACKDROPS.store.image}
+        mobileImage={SCENE_BACKDROPS.store.mobileImage}
+        position={SCENE_BACKDROPS.store.position}
+        overlayClassName="from-slate-950/35 via-slate-950/60 to-slate-950/90"
+      />
+
       {/* 浮动粒子背景 */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 z-[1] overflow-hidden">
         {[...Array(20)].map((_, i) => (
           <motion.div
             key={i}
@@ -145,13 +154,13 @@ export default function Gacha() {
               delay: Math.random() * 5,
               ease: 'linear',
             }}
-            className={cn(
-              'absolute rounded-full',
-              i % 3 === 0
-                ? 'h-1.5 w-1.5 bg-amber-400/40'
+              className={cn(
+                'absolute rounded-full',
+                i % 3 === 0
+                ? 'h-1.5 w-1.5 bg-amber-300/40'
                 : i % 3 === 1
-                  ? 'h-1 w-1 bg-purple-400/30'
-                  : 'h-2 w-2 bg-blue-400/20',
+                  ? 'h-1 w-1 bg-cyan-200/30'
+                  : 'h-2 w-2 bg-white/20',
             )}
             style={{
               left: `${Math.random() * 100}%`,
@@ -170,7 +179,7 @@ export default function Gacha() {
           <ChevronLeft size={20} />
         </button>
         <div className="flex-1" />
-        <div className="flex items-center gap-2 rounded-full bg-slate-800/60 px-3 py-1.5 backdrop-blur-sm">
+        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/50 px-3 py-1.5 shadow-lg backdrop-blur-xl">
           <span className="text-sm">💎</span>
           <span className="text-sm font-bold text-amber-300">{spiritStones.toLocaleString()}</span>
         </div>
@@ -190,9 +199,9 @@ export default function Gacha() {
           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           className={cn(
             'relative mb-6 flex h-52 w-52 items-center justify-center rounded-2xl',
-            'bg-gradient-to-br from-purple-900/60 to-slate-900/80',
-            'border border-purple-500/30',
-            'backdrop-blur-sm',
+            'bg-slate-950/50',
+            'border border-white/10',
+            'backdrop-blur-xl',
           )}
         >
           <div className="text-center">
@@ -211,7 +220,7 @@ export default function Gacha() {
           <motion.div
             animate={{ rotate: [0, -360] }}
             transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-            className="absolute inset-2 rounded-xl border border-dashed border-purple-500/20"
+            className="absolute inset-2 rounded-xl border border-dashed border-amber-200/20"
           />
         </motion.div>
 
@@ -246,9 +255,9 @@ export default function Gacha() {
             onClick={() => setShowRates(!showRates)}
             className={cn(
               'flex items-center gap-1.5 rounded-lg px-3 py-2',
-              'bg-slate-800/60 text-xs text-slate-400',
-              'border border-slate-700/30',
-              'hover:bg-slate-700/60 hover:text-white',
+              'bg-slate-950/50 text-xs text-slate-300',
+              'border border-white/10 backdrop-blur-xl',
+              'hover:bg-white/10 hover:text-white',
               'transition-colors duration-200',
             )}
           >
@@ -259,9 +268,9 @@ export default function Gacha() {
             onClick={() => setShowHistory(!showHistory)}
             className={cn(
               'flex items-center gap-1.5 rounded-lg px-3 py-2',
-              'bg-slate-800/60 text-xs text-slate-400',
-              'border border-slate-700/30',
-              'hover:bg-slate-700/60 hover:text-white',
+              'bg-slate-950/50 text-xs text-slate-300',
+              'border border-white/10 backdrop-blur-xl',
+              'hover:bg-white/10 hover:text-white',
               'transition-colors duration-200',
             )}
           >
@@ -279,7 +288,7 @@ export default function Gacha() {
               exit={{ opacity: 0, height: 0 }}
               className="mt-4 w-full max-w-xs overflow-hidden"
             >
-              <div className="rounded-xl bg-slate-800/60 p-4 backdrop-blur-sm">
+              <div className="rounded-xl border border-white/10 bg-slate-950/60 p-4 shadow-xl backdrop-blur-xl">
                 <p className="mb-2 text-xs font-bold text-slate-400">抽取概率</p>
                 <div className="space-y-2">
                   {[
@@ -312,7 +321,7 @@ export default function Gacha() {
               exit={{ opacity: 0, height: 0 }}
               className="mt-4 w-full max-w-xs overflow-hidden"
             >
-              <div className="max-h-40 overflow-y-auto rounded-xl bg-slate-800/60 p-4 backdrop-blur-sm">
+              <div className="max-h-40 overflow-y-auto rounded-xl border border-white/10 bg-slate-950/60 p-4 shadow-xl backdrop-blur-xl">
                 <p className="mb-2 text-xs font-bold text-slate-400">抽卡记录</p>
                 {gachaHistory.length === 0 ? (
                   <p className="text-xs text-slate-600">暂无记录</p>

@@ -314,10 +314,8 @@ export default function Story() {
 
   // 背景样式
   const bgStyle = useMemo(() => {
-    if (currentNode?.backgroundUrl) {
-      return { backgroundImage: `url(${assetUrl(currentNode.backgroundUrl)})` };
-    }
-    return {};
+    const backgroundUrl = currentNode?.backgroundUrl ?? '/bg/scene/street-storefront.jpg';
+    return { backgroundImage: `url(${assetUrl(backgroundUrl)})` };
   }, [currentNode?.backgroundUrl]);
 
   // 过滤可选选项（满足条件的）
@@ -359,10 +357,6 @@ export default function Story() {
           ...bgStyle,
         }}
       >
-        {/* 无图片时的渐变背景 */}
-        {!currentNode?.backgroundUrl && (
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950" />
-        )}
         {/* 背景遮罩 */}
         <div className="absolute inset-0 bg-black/30" />
       </div>

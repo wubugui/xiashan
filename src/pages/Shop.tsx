@@ -23,7 +23,9 @@ import CommissionTheater from '@/components/CommissionTheater';
 import ResetSaveButton from '@/components/ResetSaveButton';
 import SupplyReveal, { type RevealItem } from '@/components/SupplyReveal';
 import { useCssVarFromHeight } from '@/hooks/useCssVarFromHeight';
+import PageBackdrop from '@/components/PageBackdrop';
 import type { Spot } from '@/data/types';
+import { backdropForLocation, SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 
 /** GachaAnimation 内部格式（与 engine 的 GachaResult 不同） */
 interface AnimGachaResult {
@@ -410,32 +412,43 @@ export default function Shop() {
       return { kind: 'person' as const, id: c.id, name: c.name, serviceType: c.serviceType, level: o.level };
     })
     .filter((x): x is PersonCard => x !== null);
+  const pageBackdrop = backdropForLocation(loc?.id);
 
   /* ─────────────────────── RENDER ─────────────────────── */
 
   /* 开始界面 */
   if (isNew) {
     return (
-      <div className="min-h-screen bg-[#080b12] flex flex-col items-center justify-center px-6 gap-6">
-        <div className="text-center">
+      <div className="relative flex min-h-screen flex-col items-center justify-center gap-6 overflow-hidden bg-[#050914] px-6">
+        <PageBackdrop
+          image={SCENE_BACKDROPS.street.image}
+          mobileImage={SCENE_BACKDROPS.street.mobileImage}
+          position={SCENE_BACKDROPS.street.position}
+          overlayClassName="from-slate-950/30 via-slate-950/60 to-slate-950/90"
+        />
+        <div className="relative z-10 text-center">
           <h1 className="text-3xl font-black text-amber-300 mb-2">二十五时便利屋</h1>
           <p className="text-slate-400 text-sm">开在一天的第二十五小时 · 专收时间表漏掉的麻烦</p>
         </div>
         <button
           onClick={() => { startDay(); setHandledThisLocation(false); setActiveTab('map'); }}
-          className="rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 px-10 py-4 text-lg font-black text-amber-950 shadow-[0_0_30px_rgba(251,191,36,0.4)] hover:from-amber-400"
+          className="relative z-10 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 px-10 py-4 text-lg font-black text-amber-950 shadow-[0_0_30px_rgba(251,191,36,0.4)] hover:from-amber-400"
         >
           开始营业
         </button>
-        <button onClick={() => navigate('/')} className="text-slate-500 text-sm">返回首页</button>
+        <button onClick={() => navigate('/')} className="relative z-10 text-slate-400 text-sm">返回首页</button>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#080b12] pb-chrome">
-      {/* 背景 */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 pointer-events-none" />
+    <div className="relative min-h-screen overflow-hidden bg-[#050914] pb-chrome">
+      <PageBackdrop
+        image={pageBackdrop.image}
+        mobileImage={pageBackdrop.mobileImage}
+        position={pageBackdrop.position}
+        overlayClassName="from-slate-950/50 via-slate-950/70 to-slate-950/90"
+      />
 
       <div className="relative z-10">
         {/* 顶栏 */}

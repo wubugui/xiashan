@@ -7,6 +7,8 @@ import { getCharacterById } from '@/data/characters';
 import { getRelationshipStages, getStageInfo, getNextStage } from '@/data/relationship';
 import { cn } from '@/lib/utils';
 import { assetUrl } from '@/lib/assets';
+import PageBackdrop from '@/components/PageBackdrop';
+import { backdropForCharacter } from '@/lib/pageBackdrops';
 
 type TabType = 'info' | 'interact' | 'upgrade';
 
@@ -164,9 +166,17 @@ export default function CharacterDetail() {
   }
 
   const heroArtUrl = character.gachaBackgroundUrl || character.portraitUrl;
+  const pageBackdrop = backdropForCharacter(character.id);
 
   return (
-    <div className="relative min-h-screen bg-slate-950 pb-nav">
+    <div className="relative min-h-screen overflow-hidden bg-[#050914] pb-nav">
+      <PageBackdrop
+        image={pageBackdrop.image}
+        mobileImage={pageBackdrop.mobileImage}
+        position={pageBackdrop.position}
+        overlayClassName="from-slate-950/60 via-slate-950/80 to-slate-950/95"
+      />
+
       {/* 返回按钮 */}
       <div className="absolute left-4 top-4 z-30">
         <button
@@ -180,7 +190,7 @@ export default function CharacterDetail() {
       {/* 角色立绘区域 */}
       <div
         className={cn(
-          'relative flex h-72 items-center justify-center',
+          'relative z-10 flex h-72 items-center justify-center',
           'bg-gradient-to-b',
           rarityGradient[character.rarity],
         )}
@@ -214,7 +224,7 @@ export default function CharacterDetail() {
       </div>
 
       {/* 角色信息 */}
-      <div className="relative px-5 pt-2">
+      <div className="relative z-10 px-5 pt-2">
         <div className="flex items-end justify-between">
           <div>
             <h1 className="text-2xl font-black text-white">{character.name}</h1>
@@ -242,7 +252,7 @@ export default function CharacterDetail() {
       </div>
 
       {/* 标签栏 */}
-      <div className="mt-5 flex border-b border-slate-800 px-5">
+      <div className="relative z-10 mt-5 flex border-b border-white/10 px-5">
         {([
           { id: 'info' as TabType, label: '信息' },
           { id: 'interact' as TabType, label: '互动' },
@@ -268,7 +278,7 @@ export default function CharacterDetail() {
       </div>
 
       {/* 标签内容 */}
-      <div className="px-5 pt-4">
+      <div className="relative z-10 px-5 pt-4">
         {/* 信息标签 */}
         {activeTab === 'info' && (
           <motion.div

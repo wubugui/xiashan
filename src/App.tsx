@@ -56,7 +56,7 @@ function AppContent() {
   };
 
   return (
-    <div className="relative min-h-screen bg-slate-950">
+    <div className="relative min-h-screen bg-[#050914]">
       <Routes location={location}>
         <Route path="/" element={<Home />} />
         <Route path="/story" element={<Story />} />

@@ -6,6 +6,8 @@ import type { LucideIcon } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import LinkGame from '@/components/minigames/LinkGame';
 import { cn } from '@/lib/utils';
+import PageBackdrop from '@/components/PageBackdrop';
+import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 
 /**
  * 小游戏中心。新增一个小游戏 = 往 GAMES 里加一行配置 + 一个组件，
@@ -34,8 +36,13 @@ export default function Minigame() {
   if (active === 'link') return <LinkGame onExit={() => setActive(null)} />;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#101827] pb-nav">
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800" />
+    <div className="relative min-h-screen overflow-hidden bg-[#050914] pb-nav">
+      <PageBackdrop
+        image={SCENE_BACKDROPS.store.image}
+        mobileImage={SCENE_BACKDROPS.store.mobileImage}
+        position={SCENE_BACKDROPS.store.position}
+        overlayClassName="from-slate-950/50 via-slate-950/70 to-slate-950/90"
+      />
 
       <div className="relative z-10">
         <div className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/78 backdrop-blur-xl">

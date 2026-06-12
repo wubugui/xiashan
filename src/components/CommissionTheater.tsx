@@ -199,11 +199,15 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
   const moodS = MOOD_STYLE[mood];
   const goal = trustGoal ?? commission.need;
   const trustPct = Math.min(100, (trust / goal) * 100);
+  const fallbackBg = assetCssBackground('url("/bg/scene/street-storefront.jpg") center / cover no-repeat');
 
   return (
     <div className="fixed inset-0 z-[60] overflow-hidden bg-black">
       {/* 背景 */}
-      <div className="absolute inset-0" style={{ background: assetCssBackground(bg) ?? 'linear-gradient(135deg,#20283a,#10141f)' }} />
+      <div
+        className="absolute inset-0"
+        style={{ background: assetCssBackground(bg) ?? fallbackBg }}
+      />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40" />
 
       {/* 顶部 HUD */}

@@ -7,6 +7,8 @@ import { characters, getCharacterById } from '@/data/characters';
 import { GACHA_CONFIG } from '@/data/gachaConfig';
 import CharacterCard from '@/components/CharacterCard';
 import { cn } from '@/lib/utils';
+import PageBackdrop from '@/components/PageBackdrop';
+import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 
 type RarityFilter = '全部' | 'SSR' | 'SR' | 'R' | 'N';
 
@@ -41,12 +43,13 @@ export default function Collection() {
   }, [ownedList]);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#101827] pb-nav">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_10%,rgba(168,85,247,0.22),transparent_34%),linear-gradient(120deg,#0f172a_0%,#1f2937_48%,#cbd5e1_49%,#e5e7eb_100%)]" />
-      <div className="absolute inset-0 opacity-25 [background-image:radial-gradient(circle,rgba(255,255,255,0.18)_1px,transparent_1px)] [background-size:18px_18px]" />
-      <div className="absolute -right-16 top-0 h-28 w-[40vw] -skew-x-[28deg] bg-fuchsia-500/55" />
-      <div className="absolute -left-14 top-24 h-24 w-[22vw] -skew-x-[28deg] bg-purple-500/55" />
-      <div className="absolute -bottom-20 right-0 h-48 w-[64vw] -skew-x-[24deg] bg-fuchsia-500/55" />
+    <div className="relative min-h-screen overflow-hidden bg-[#050914] pb-nav">
+      <PageBackdrop
+        image={SCENE_BACKDROPS.street.image}
+        mobileImage={SCENE_BACKDROPS.street.mobileImage}
+        position={SCENE_BACKDROPS.street.position}
+        overlayClassName="from-slate-950/60 via-slate-950/70 to-slate-950/90"
+      />
 
       <div className="relative z-10">
         <div className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/78 backdrop-blur-xl">

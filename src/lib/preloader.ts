@@ -68,7 +68,9 @@ export async function preloadAllAssets(
 
   // Step 2: compare to locally stored version
   let storedVersion = '';
-  try { storedVersion = localStorage.getItem(STORAGE_KEY) ?? ''; } catch {}
+  try { storedVersion = localStorage.getItem(STORAGE_KEY) ?? ''; } catch {
+    storedVersion = '';
+  }
 
   if (serverVersion && storedVersion === serverVersion) {
     // Assets unchanged — browser HTTP cache is still valid, skip downloads
@@ -95,6 +97,8 @@ export async function preloadAllAssets(
 
   // Step 4: persist new version so next launch skips downloads
   if (serverVersion) {
-    try { localStorage.setItem(STORAGE_KEY, serverVersion); } catch {}
+    try { localStorage.setItem(STORAGE_KEY, serverVersion); } catch {
+      // Storage can be unavailable in private modes; downloads already finished.
+    }
   }
 }

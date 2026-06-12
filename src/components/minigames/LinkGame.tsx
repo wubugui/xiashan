@@ -7,6 +7,8 @@ import { getCharacterById } from '@/data/characters';
 import type { ServiceTag } from '@/data/types';
 import { cn } from '@/lib/utils';
 import { assetUrl } from '@/lib/assets';
+import PageBackdrop from '@/components/PageBackdrop';
+import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 
 /**
  * 打烊后的理货时间 — 便利屋日结小游戏。
@@ -351,10 +353,15 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#101827]" style={{ userSelect: 'none' }}>
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800" />
+    <div className="relative min-h-screen overflow-hidden bg-[#050914]" style={{ userSelect: 'none' }}>
+      <PageBackdrop
+        image={SCENE_BACKDROPS.store.image}
+        mobileImage={SCENE_BACKDROPS.store.mobileImage}
+        position={SCENE_BACKDROPS.store.position}
+        overlayClassName="from-slate-950/50 via-slate-950/60 to-slate-950/90"
+      />
       {/* 便利屋氛围 */}
-      <div className="pointer-events-none absolute inset-x-0 top-14 flex justify-around text-2xl opacity-[0.07]">
+      <div className="pointer-events-none absolute inset-x-0 top-14 z-[1] flex justify-around text-2xl opacity-[0.07]">
         <span>🏪</span><span>🌙</span><span>🏪</span><span>🌙</span><span>🏪</span>
       </div>
 
