@@ -7,7 +7,6 @@ import { useShopStore } from '@/store/useShopStore';
 import { pullSupply, isHeartUp, HEART_UP_WEIGHT } from '@/engine/gachaEngine';
 import { GACHA_CONFIG } from '@/data/gachaConfig';
 import { characters } from '@/data/characters';
-import type { ServiceCard } from '@/data/types';
 import GachaAnimation from '@/components/GachaAnimation';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +22,7 @@ export default function Gacha() {
   const addGachaResult = usePlayerStore((s) => s.addGachaResult);
   const setSupplyPityCounter = usePlayerStore((s) => s.setSupplyPityCounter);
   const addHandCard = useShopStore((s) => s.addHandCard);
+  const addHintTokens = usePlayerStore((s) => s.addHintTokens);
 
   const [showAnimation, setShowAnimation] = useState(false);
   const [gachaResults, setGachaResults] = useState<
@@ -31,8 +31,8 @@ export default function Gacha() {
   const [isTenPull, setIsTenPull] = useState(false);
   const [showRates, setShowRates] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  /** 本次抽到的消耗卡汇总（人物动画播完后展示） */
-  const [cardResults, setCardResults] = useState<ServiceCard[] | null>(null);
+  /** 本次抽到的消耗卡/道具汇总（人物动画播完后展示） */
+  const [cardResults, setCardResults] = useState<{ name: string; type: string; rarity: string; kind: string }[] | null>(null);
 
   const pityRemaining = GACHA_CONFIG.supplyPool.characterPity - supplyPityCounter;
 
@@ -46,7 +46,7 @@ export default function Gacha() {
       let ownedIds = ownedCharacters.map((c) => c.characterId);
       let pity = supplyPityCounter;
       const persons: { characterId: string; name: string; rarity: 'N' | 'R' | 'SR' | 'SSR'; title: string; isNew: boolean }[] = [];
-      const cards: ServiceCard[] = [];
+      const cards: { name: string; type: string; rarity: string; kind: string }[] = [];
 
       for (let i = 0; i < (isTen ? 10 : 1); i++) {
         const { result, newPity } = pullSupply(ownedIds, affinityMap, pity);
@@ -62,9 +62,12 @@ export default function Gacha() {
             title: result.character.title,
             isNew: result.isNew,
           });
+        } else if (result.kind === 'hint') {
+          addHintTokens(1);
+          cards.push({ name: '消消乐提示券', type: '道具', rarity: 'R', kind: 'hint' });
         } else {
           addHandCard(result.card);
-          cards.push(result.card);
+          cards.push({ name: result.card.name, type: result.card.type, rarity: result.card.rarity, kind: result.card.kind });
         }
       }
       setSupplyPityCounter(pity);
@@ -79,7 +82,7 @@ export default function Gacha() {
         setCardResults(cards);
       }
     },
-    [spiritStones, ownedCharacters, affinityMap, supplyPityCounter, addCharacter, addSpiritStones, addGachaResult, setSupplyPityCounter, addHandCard],
+    [spiritStones, ownedCharacters, affinityMap, supplyPityCounter, addCharacter, addSpiritStones, addGachaResult, setSupplyPityCounter, addHandCard, addHintTokens],
   );
 
   // 心动 UP：好感已达标但尚未入伙的角色（同稀有度内权重提升）
@@ -92,7 +95,7 @@ export default function Gacha() {
     setGachaResults([]);
   }, []);
 
-  const cardKindIcon = (kind: string) => (kind === 'skill' ? '⚡' : kind === 'tool' ? '🧰' : '📡');
+  const cardKindIcon = (kind: string) => (kind === 'skill' ? '⚡' : kind === 'tool' ? '🧰' : kind === 'hint' ? '💡' : '📡');
 
   return (
     <motion.div
@@ -259,6 +262,7 @@ export default function Gacha() {
                     { label: '技能卡', rate: `${GACHA_CONFIG.supplyPool.cardWeights.skill}%`, color: 'text-amber-400' },
                     { label: '便利卡', rate: `${GACHA_CONFIG.supplyPool.cardWeights.tool}%`, color: 'text-cyan-400' },
                     { label: '情报卡', rate: `${GACHA_CONFIG.supplyPool.cardWeights.info}%`, color: 'text-emerald-400' },
+                    { label: '提示券', rate: `${GACHA_CONFIG.supplyPool.cardWeights.hint}%`, color: 'text-yellow-300' },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center justify-between">
                       <span className={`text-sm font-bold ${item.color}`}>{item.label}</span>

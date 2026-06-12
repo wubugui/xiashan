@@ -172,7 +172,7 @@ export default function Shop() {
     spendNormalTickets, setSupplyPityCounter,
     addNormalTickets,
     addGachaResult, addCharacter,
-    addSpiritStones, addReputation,
+    addSpiritStones, addReputation, addHintTokens,
   } = playerStore;
 
   /* ── 本地 UI 状态 ── */
@@ -224,6 +224,19 @@ export default function Shop() {
         setGachaResults([animResult]);
         setShowGacha(true);
         addLog(`便利屋补给：✨ ${result.isNew ? '人物出货' : '重复人物'}【${result.character.name}】！`, 'good');
+      } else if (result.kind === 'hint') {
+        addHintTokens(1);
+        const remain = GACHA_CONFIG.supplyPool.characterPity - newPity;
+        addLog(`便利屋补给：抽到【消消乐提示券】×1。距人物保底还剩 ${remain} 抽。`, 'draw');
+        setDrawnCard({
+          name: '消消乐提示券',
+          type: '道具',
+          rarity: 'R',
+          desc: '消消乐每日免费提示用完后，消耗 1 张继续获得提示。',
+          kind: 'hint',
+          pityRemain: remain,
+        });
+        window.setTimeout(() => setDrawnCard(d => (d && d.kind === 'hint' ? null : d)), 2200);
       } else {
         addHandCard(result.card);
         const remain = GACHA_CONFIG.supplyPool.characterPity - newPity;
@@ -239,7 +252,7 @@ export default function Shop() {
         window.setTimeout(() => setDrawnCard(d => (d && d.name === result.card.name ? null : d)), 2200);
       }
     }
-  }, [gameOver, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, setSupplyPityCounter, addCharacter, addGachaResult, addHandCard, addLog]);
+  }, [gameOver, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, setSupplyPityCounter, addCharacter, addGachaResult, addHandCard, addHintTokens, addLog]);
 
   /* ────── 热点点击 ────── */
   const handleSpotClick = useCallback((spot: Spot, spotIndex: number) => {
@@ -1080,7 +1093,7 @@ export default function Shop() {
                   'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl',
                   drawnCard.kind === 'skill' ? 'bg-amber-500/20' : drawnCard.kind === 'tool' ? 'bg-cyan-500/20' : 'bg-emerald-500/20',
                 )}>
-                  {drawnCard.kind === 'skill' ? '⚡' : drawnCard.kind === 'tool' ? '🧰' : '📡'}
+                  {drawnCard.kind === 'skill' ? '⚡' : drawnCard.kind === 'tool' ? '🧰' : drawnCard.kind === 'hint' ? '💡' : '📡'}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">

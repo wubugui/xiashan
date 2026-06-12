@@ -38,6 +38,10 @@ interface PlayerState {
   normalTickets: number;
   /** 统一补给池保底计数（抽到人物时清零） */
   supplyPityCounter: number;
+  /** 消消乐提示券（补给池可抽，免费次数用完后消耗） */
+  hintTokens: number;
+  /** 消消乐当日免费提示使用记录 */
+  freeHints: { date: string; used: number };
 
   // Story progress
   currentChapterId: number;
@@ -70,6 +74,9 @@ interface PlayerState {
   addNormalTickets: (n: number) => void;
   spendNormalTickets: (n: number) => boolean;
   setSupplyPityCounter: (n: number) => void;
+  addHintTokens: (n: number) => void;
+  /** 消耗一次消消乐提示：优先每日免费(3次)，再扣提示券；都没有返回 'none' */
+  consumeMinigameHint: () => 'free' | 'token' | 'none';
   setCurrentNode: (nodeId: string) => void;
   completeNode: (nodeId: string) => void;
   setFlag: (flag: string) => void;
@@ -94,6 +101,8 @@ const initialState = {
   reputation: 0,
   normalTickets: 7,
   supplyPityCounter: 0,
+  hintTokens: 0,
+  freeHints: { date: '', used: 0 },
   currentChapterId: 1,
   currentNodeId: 'ch1_01',
   completedNodes: [] as string[],
@@ -120,6 +129,21 @@ export const usePlayerStore = create<PlayerState>()(
       addReputation: (amount) => set(s => ({ reputation: s.reputation + amount })),
       addNormalTickets: (n) => set(s => ({ normalTickets: s.normalTickets + n })),
       setSupplyPityCounter: (n) => set({ supplyPityCounter: n }),
+      addHintTokens: (n) => set(s => ({ hintTokens: s.hintTokens + n })),
+      consumeMinigameHint: () => {
+        const today = new Date().toISOString().slice(0, 10);
+        const s0 = get();
+        const used = s0.freeHints.date === today ? s0.freeHints.used : 0;
+        if (used < 3) {
+          set({ freeHints: { date: today, used: used + 1 } });
+          return 'free';
+        }
+        if (s0.hintTokens > 0) {
+          set({ hintTokens: s0.hintTokens - 1 });
+          return 'token';
+        }
+        return 'none';
+      },
       spendNormalTickets: (n) => {
         if (get().normalTickets < n) return false;
         set(s => ({ normalTickets: s.normalTickets - n }));

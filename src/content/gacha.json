@@ -16,9 +16,10 @@
     "characterRate": 0.06,
     "characterPity": 15,
     "cardWeights": {
-      "skill": 50,
-      "tool": 26,
-      "info": 18
+      "skill": 46,
+      "tool": 24,
+      "info": 16,
+      "hint": 8
     }
   }
 }

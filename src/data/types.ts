@@ -91,7 +91,7 @@ export interface GachaConfig {
     cost: number;
     characterRate: number;
     characterPity: number;
-    cardWeights: { skill: number; tool: number; info: number };
+    cardWeights: { skill: number; tool: number; info: number; hint: number };
   };
 }
 

@@ -87,7 +87,9 @@ export function pullTen(ownedIds: string[], affinityMap: Record<string, number>,
  */
 export type SupplyPullResult =
   | { kind: 'person'; character: Character; isNew: boolean }
-  | { kind: 'card'; card: ServiceCard };
+  | { kind: 'card'; card: ServiceCard }
+  /** 消消乐提示券（计数道具，不进手牌） */
+  | { kind: 'hint' };
 
 function rollCharacterRarity(): 'SSR' | 'SR' | 'R' | 'N' {
   const roll = Math.random();
@@ -114,17 +116,21 @@ export function pullSupply(
       newPity: 0,
     };
   }
-  const pools: [number, ServiceCard[]][] = [
+  const pools: [number, ServiceCard[] | 'hint'][] = [
     [cfg.cardWeights.skill, allSkills],
     [cfg.cardWeights.tool, allTools],
     [cfg.cardWeights.info, allInfos],
+    [cfg.cardWeights.hint, 'hint'],
   ];
   const total = pools.reduce((a, [w]) => a + w, 0);
   let roll = Math.random() * total;
-  let chosen = pools[pools.length - 1][1];
+  let chosen: ServiceCard[] | 'hint' = pools[pools.length - 1][1];
   for (const [w, pool] of pools) {
     roll -= w;
     if (roll < 0) { chosen = pool; break; }
+  }
+  if (chosen === 'hint') {
+    return { result: { kind: 'hint' }, newPity: pityCounter + 1 };
   }
   const card = chosen[Math.floor(Math.random() * chosen.length)];
   return { result: { kind: 'card', card }, newPity: pityCounter + 1 };

@@ -16,7 +16,8 @@ const COLS = 6;
 const CELL = 52; // px per tile
 const REWARD_PER_TILE = 5; // 每消除一块 5 灵石
 const DRAG_THRESHOLD = CELL * 0.28; // 拖动距离超过此值才触发交换
-const HINT_COOLDOWN = 5; // 提示冷却（秒）
+const HINT_COOLDOWN = 3; // 提示冷却（秒）
+const FREE_HINTS_PER_DAY = 3;
 
 /** 六种图块：颜色 + 图案双重区分，色盲也能靠形状分辨 */
 const TILE_STYLES: Record<string, { emoji: string; bg: string; border: string }> = {
@@ -115,6 +116,9 @@ function findHint(g: Tile[][]): [number, number, number, number] | null {
 
 export default function LinkGame({ onExit }: { onExit: () => void }) {
   const addSpiritStones = usePlayerStore((s) => s.addSpiritStones);
+  const hintTokens = usePlayerStore((s) => s.hintTokens);
+  const freeHints = usePlayerStore((s) => s.freeHints);
+  const consumeMinigameHint = usePlayerStore((s) => s.consumeMinigameHint);
 
   const [grid, setGrid] = useState<Tile[][]>(() => buildGrid());
   const [flashing, setFlashing] = useState<Set<string>>(new Set());
@@ -125,6 +129,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
   const [hintPair, setHintPair] = useState<Set<string> | null>(null);
   const [hintReadyAt, setHintReadyAt] = useState(0); // 提示冷却截止时间戳
   const [reshuffled, setReshuffled] = useState(false); // 死局洗牌提示
+  const [hintNotice, setHintNotice] = useState<string | null>(null);
 
   const drag = useRef<{ r: number; c: number; x: number; y: number } | null>(null);
   const [dragVisual, setDragVisual] = useState<{ r: number; c: number; dx: number; dy: number } | null>(null);
@@ -136,6 +141,8 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
 
   const mmss = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
   const hintCooldownLeft = Math.max(0, Math.ceil((hintReadyAt - Date.now()) / 1000));
+  const today = new Date().toISOString().slice(0, 10);
+  const freeLeft = Math.max(0, FREE_HINTS_PER_DAY - (freeHints.date === today ? freeHints.used : 0));
 
   /** 死局检测：无可消除一步时自动洗牌 */
   const ensurePlayable = useCallback((g: Tile[][]) => {
@@ -208,7 +215,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
     [busy, grid, cascade],
   );
 
-  /** 提示：高亮一组可消除的交换 */
+  /** 提示：每日 3 次免费，之后消耗提示券（补给池可抽） */
   const showHint = useCallback(() => {
     if (busy || Date.now() < hintReadyAt) return;
     const hint = findHint(grid);
@@ -216,11 +223,21 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
       ensurePlayable(grid);
       return;
     }
+    const source = consumeMinigameHint();
+    if (source === 'none') {
+      setHintNotice('今日免费提示用完了，提示券也没有了——去「便利屋补给池」抽几张💡吧！');
+      window.setTimeout(() => setHintNotice(null), 2600);
+      return;
+    }
+    if (source === 'token') {
+      setHintNotice('消耗 1 张提示券 💡');
+      window.setTimeout(() => setHintNotice(null), 1600);
+    }
     const [r1, c1, r2, c2] = hint;
     setHintPair(new Set([`${r1},${c1}`, `${r2},${c2}`]));
     setHintReadyAt(Date.now() + HINT_COOLDOWN * 1000);
     window.setTimeout(() => setHintPair(null), 2500);
-  }, [busy, grid, hintReadyAt, ensurePlayable]);
+  }, [busy, grid, hintReadyAt, ensurePlayable, consumeMinigameHint]);
 
   /* ── 拖动事件处理 ── */
 
@@ -303,7 +320,8 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
               disabled={busy || hintCooldownLeft > 0}
               className="flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-400/40 px-3 py-1.5 font-bold text-amber-300 hover:bg-amber-500/30 disabled:opacity-40"
             >
-              <Lightbulb size={13} /> {hintCooldownLeft > 0 ? `提示 ${hintCooldownLeft}s` : '提示'}
+              <Lightbulb size={13} />
+              {hintCooldownLeft > 0 ? `提示 ${hintCooldownLeft}s` : freeLeft > 0 ? `提示 ${freeLeft}/${FREE_HINTS_PER_DAY}` : `提示 💡×${hintTokens}`}
             </button>
             <button
               onClick={newGame}
@@ -420,6 +438,17 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
               <p className="text-sm font-bold text-amber-900">
                 +{flashing.size * REWARD_PER_TILE * Math.max(1, combo)} 灵石{combo >= 2 ? `（连锁 ×${combo} 加成）` : ''}
               </p>
+            </motion.div>
+          )}
+          {hintNotice && (
+            <motion.div
+              key="hint-notice"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="pointer-events-none fixed left-1/2 top-[30%] z-50 w-[85%] max-w-xs -translate-x-1/2 rounded-2xl bg-slate-800/95 border border-amber-400/40 px-4 py-3 text-center shadow-xl"
+            >
+              <p className="text-sm font-bold text-amber-200">{hintNotice}</p>
             </motion.div>
           )}
           {reshuffled && (
