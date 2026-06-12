@@ -4,12 +4,23 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { traeBadgePlugin } from 'vite-plugin-trae-solo-badge';
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, extname } from 'node:path';
+import { extname, join, relative, sep } from 'node:path';
 import type { Plugin } from 'vite';
 
-const ASSET_EXTS = new Set(['.svg', '.png', '.jpg', '.webp']);
-// These subdirs contain source/unused files and are not preloaded
-const EXCLUDE_DIRS = new Set(['source', 'setting', 'video']);
+const ASSET_EXTS = new Set(['.svg', '.png', '.jpg', '.jpeg', '.webp']);
+// These subdirs contain source/unused/heavy files and are not preloaded.
+const EXCLUDE_DIRS = new Set([
+  'source',
+  'setting',
+  'video',
+  'generated',
+  '\u89d2\u8272\u80cc\u666f',
+  '\u7acb\u7ed8',
+]);
+
+function toPublicPath(file: string): string {
+  return `/${relative('public', file).split(sep).join('/')}`;
+}
 
 function assetManifestPlugin(): Plugin {
   function generate() {
@@ -29,11 +40,26 @@ function assetManifestPlugin(): Plugin {
 
     walk('public');
     files.sort();
-    for (const f of files) hasher.update(readFileSync(f));
+
+    const assets = files.map((file) => {
+      const content = readFileSync(file);
+      const path = toPublicPath(file);
+      const hash = createHash('sha256').update(content).digest('hex').slice(0, 16);
+      return { path, hash, bytes: content.length };
+    });
+
+    for (const asset of assets) {
+      hasher.update(asset.path);
+      hasher.update('\0');
+      hasher.update(asset.hash);
+      hasher.update('\0');
+      hasher.update(String(asset.bytes));
+      hasher.update('\0');
+    }
 
     const version = hasher.digest('hex').slice(0, 12);
-    writeFileSync('public/asset-manifest.json', JSON.stringify({ version }));
-    console.log(`[asset-manifest] version=${version} (${files.length} assets)`);
+    writeFileSync('public/asset-manifest.json', `${JSON.stringify({ version, assets })}\n`);
+    console.log(`[asset-manifest] version=${version} (${assets.length} assets)`);
   }
 
   return {
