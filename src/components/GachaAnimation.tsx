@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -82,6 +82,17 @@ const rarityRank = {
   R: 1,
   SR: 2,
   SSR: 3,
+};
+
+const gachaSceneComposition: Record<string, { mobileFocus: string; desktopFocus: string; panel: 'left' | 'right'; mobilePanel?: 'top' | 'bottom' }> = {
+  suli: { mobileFocus: '48% 50%', desktopFocus: '50% 50%', panel: 'left' },
+  aruo: { mobileFocus: '58% 50%', desktopFocus: '50% 50%', panel: 'left' },
+  sangluo: { mobileFocus: '56% 50%', desktopFocus: '50% 50%', panel: 'left' },
+  aman: { mobileFocus: '38% 50%', desktopFocus: '50% 50%', panel: 'right' },
+  shenzhaoning: { mobileFocus: '54% 50%', desktopFocus: '50% 50%', panel: 'left' },
+  murongxue: { mobileFocus: '50% 50%', desktopFocus: '50% 50%', panel: 'left' },
+  yunzhiyi: { mobileFocus: '42% 50%', desktopFocus: '50% 50%', panel: 'left' },
+  linxia: { mobileFocus: '42% 50%', desktopFocus: '50% 50%', panel: 'right' },
 };
 
 function fireSSRConfetti() {
@@ -285,20 +296,35 @@ function GachaShowcase({
   const quote = character?.gachaQuote || character?.dialogues?.[0]?.text || '你抽到了新的羁绊。';
   const tags = character?.gachaTags || [character?.element, result.title].filter(Boolean);
   const canSwitch = results.length > 1;
+  const composition = gachaSceneComposition[result.characterId] ?? {
+    mobileFocus: '50% 50%',
+    desktopFocus: '50% 50%',
+    panel: 'left' as const,
+  };
+  const panelOnRight = composition.panel === 'right';
+  const panelOnTopMobile = composition.mobilePanel === 'top';
+  const sceneStyle = {
+    '--gacha-focus-mobile': composition.mobileFocus,
+    '--gacha-focus-desktop': composition.desktopFocus,
+  } as CSSProperties;
 
   return (
     <motion.div
       key={`${result.characterId}-${activeIndex}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="relative h-full w-full overflow-hidden bg-[#071126]"
+      style={sceneStyle}
+      className="relative h-full w-full overflow-hidden bg-[#030712]"
     >
       {resolvedBackgroundUrl ? (
-        <img
+        <motion.img
+          key={resolvedBackgroundUrl}
           src={resolvedBackgroundUrl}
-          alt=""
-          className="absolute inset-0 h-full w-full scale-110 object-cover object-center opacity-45 blur-md"
-          aria-hidden="true"
+          alt={result.name}
+          initial={{ opacity: 0.92 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.65, ease: 'easeOut' }}
+          className="absolute inset-0 h-full w-full object-cover [object-position:var(--gacha-focus-mobile)] md:[object-position:var(--gacha-focus-desktop)]"
         />
       ) : (
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_58%_42%,rgba(148,163,184,0.24),transparent_34%),linear-gradient(90deg,rgba(7,17,38,0.96)_0%,rgba(15,23,42,0.74)_42%,rgba(15,23,42,0.24)_72%,rgba(49,46,129,0.42)_100%)]" />
@@ -306,41 +332,26 @@ function GachaShowcase({
       <div
         className={cn(
           'absolute inset-0',
-          hasSceneArt
-            ? 'bg-[linear-gradient(180deg,rgba(7,17,38,0.42)_0%,rgba(7,17,38,0.16)_33%,rgba(7,17,38,0.72)_72%,rgba(7,17,38,0.98)_100%)] md:bg-[linear-gradient(90deg,rgba(7,17,38,0.97)_0%,rgba(15,23,42,0.78)_35%,rgba(15,23,42,0.2)_72%,rgba(7,17,38,0.34)_100%)]'
-            : 'bg-[radial-gradient(circle_at_58%_42%,rgba(148,163,184,0.24),transparent_34%),linear-gradient(90deg,rgba(7,17,38,0.96)_0%,rgba(15,23,42,0.74)_42%,rgba(15,23,42,0.24)_72%,rgba(49,46,129,0.42)_100%)]',
+          panelOnRight
+            ? 'bg-[linear-gradient(180deg,rgba(3,7,18,0.02)_0%,rgba(3,7,18,0.14)_45%,rgba(3,7,18,0.9)_100%)] md:bg-[linear-gradient(270deg,rgba(3,7,18,0.9)_0%,rgba(15,23,42,0.62)_28%,rgba(15,23,42,0.16)_55%,rgba(3,7,18,0.02)_100%)]'
+            : 'bg-[linear-gradient(180deg,rgba(3,7,18,0.02)_0%,rgba(3,7,18,0.14)_45%,rgba(3,7,18,0.9)_100%)] md:bg-[linear-gradient(90deg,rgba(3,7,18,0.9)_0%,rgba(15,23,42,0.62)_28%,rgba(15,23,42,0.16)_55%,rgba(3,7,18,0.02)_100%)]',
         )}
       />
-      <div className={cn('absolute -left-16 top-0 h-44 w-[48vw] -skew-x-[24deg] bg-indigo-300/40', hasSceneArt && 'opacity-20')} />
-      <div className={cn('absolute -right-20 top-24 h-28 w-[28vw] -skew-x-[30deg] bg-indigo-300/70', hasSceneArt && 'opacity-15')} />
-      <div className={cn('absolute -bottom-16 right-0 h-56 w-[72vw] -skew-x-[24deg] bg-indigo-300/70', hasSceneArt && 'opacity-20')} />
-      <div className="absolute inset-0 opacity-25 [background-image:radial-gradient(circle,rgba(255,255,255,0.22)_1px,transparent_1px)] [background-size:18px_18px]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_16%,rgba(255,255,255,0.16),transparent_24%),radial-gradient(circle_at_52%_58%,rgba(251,191,36,0.16),transparent_34%)] opacity-80" />
+      <div className="absolute inset-0 opacity-[0.13] [background-image:radial-gradient(circle,rgba(255,255,255,0.55)_1px,transparent_1px)] [background-size:18px_18px]" />
+      <div className="absolute inset-0 shadow-[inset_0_0_120px_rgba(0,0,0,0.72)]" />
 
       <motion.div
         initial={{ rotate: -8, scale: 0.9, opacity: 0 }}
-        animate={{ rotate: 0, scale: 1, opacity: 0.45 }}
+        animate={{ rotate: 0, scale: 1, opacity: 0.28 }}
         transition={{ duration: 0.7 }}
-        className="absolute left-[31%] top-[6%] h-[82vh] w-[82vh] rounded-full border-[6px] border-amber-100/45"
+        className="pointer-events-none absolute left-1/2 top-[8%] h-[74vh] w-[74vh] -translate-x-1/2 rounded-full border-[5px] border-amber-100/45 mix-blend-screen"
       >
         <div className="absolute inset-12 rounded-full border border-amber-100/35" />
         <div className="absolute inset-24 rounded-full border border-amber-100/25" />
       </motion.div>
 
-      {hasSceneArt && resolvedBackgroundUrl ? (
-        <motion.div
-          key={resolvedBackgroundUrl}
-          initial={{ y: 36, opacity: 0, scale: 0.96 }}
-          animate={{ y: 0, opacity: 1, scale: 1 }}
-          transition={{ type: 'spring', damping: 24, stiffness: 120 }}
-          className="absolute inset-x-3 top-[6vh] z-10 h-[34vh] md:inset-y-8 md:left-[35%] md:right-8 md:top-8 md:h-auto"
-        >
-          <img
-            src={resolvedBackgroundUrl}
-            alt={result.name}
-            className="h-full w-full object-contain object-center drop-shadow-[0_22px_55px_rgba(0,0,0,0.58)]"
-          />
-        </motion.div>
-      ) : resolvedPortraitUrl ? (
+      {!hasSceneArt && resolvedPortraitUrl ? (
         <motion.img
           key={resolvedPortraitUrl}
           src={resolvedPortraitUrl}
@@ -356,44 +367,70 @@ function GachaShowcase({
         </div>
       ) : null}
 
-      <div className="absolute inset-x-5 bottom-24 z-20 md:left-10 md:right-auto md:top-[56%] md:w-[31%] md:max-w-lg md:-translate-y-1/2">
-        <div className="mb-3 flex items-center gap-1">
+      <motion.div
+        initial={{ y: 28, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.16, duration: 0.45, ease: 'easeOut' }}
+        className={cn(
+          'absolute z-20 flex max-w-[68vw] flex-col md:max-w-[30rem]',
+          panelOnRight ? 'right-5 items-end text-right md:right-10' : 'left-5 items-start text-left md:left-10',
+          panelOnTopMobile ? 'top-14 md:bottom-10 md:top-auto' : 'bottom-12 md:bottom-10',
+        )}
+      >
+        <div className={cn('mb-2 flex items-center gap-1', panelOnRight && 'justify-end')}>
           {Array.from({ length: rarityStars[result.rarity] }).map((_, i) => (
             <motion.span
               key={i}
               initial={{ y: 12, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: i * 0.06 }}
-              className="text-2xl text-amber-200 drop-shadow-[0_0_10px_rgba(251,191,36,0.7)] md:text-4xl"
+              className="text-2xl text-amber-200 drop-shadow-[0_0_10px_rgba(251,191,36,0.75)] md:text-4xl"
             >
               ★
             </motion.span>
           ))}
         </div>
-        <div className="rounded-r-2xl bg-slate-950/55 py-2 pr-4 backdrop-blur-sm md:pr-6">
-          <div className={cn('bg-gradient-to-r bg-clip-text text-4xl font-black text-transparent drop-shadow-lg md:text-5xl', rarityAccent[result.rarity])}>
-            {result.name}
-          </div>
+        <div className={cn('bg-gradient-to-r bg-clip-text text-4xl font-black leading-none text-transparent drop-shadow-[0_4px_18px_rgba(0,0,0,0.95)] md:text-7xl', rarityAccent[result.rarity])}>
+          {result.name}
         </div>
-        <div className="mt-4 flex flex-wrap gap-2 md:mt-5 md:gap-3">
-          <span className="rounded-full bg-amber-300/75 px-4 py-1.5 text-sm font-bold text-slate-950 shadow-lg md:px-6 md:py-2 md:text-base">
+        <div className={cn('mt-3 flex flex-wrap gap-1.5 md:mt-5 md:gap-3', panelOnRight && 'justify-end')}>
+          <span className="rounded-full bg-amber-300/90 px-3 py-1 text-xs font-black text-slate-950 shadow-[0_0_18px_rgba(251,191,36,0.36)] md:px-5 md:py-2 md:text-base">
             {result.rarity}
           </span>
           {tags.map((tag) => (
-            <span key={tag} className="rounded-full border border-white/25 bg-slate-950/50 px-4 py-1.5 text-sm font-semibold text-white shadow-lg backdrop-blur-sm md:px-6 md:py-2 md:text-base">
+            <span key={tag} className="rounded-full border border-white/30 bg-slate-950/34 px-3 py-1 text-xs font-semibold text-white shadow-lg backdrop-blur-sm md:px-5 md:py-2 md:text-base">
               {tag}
             </span>
           ))}
           {result.isNew && (
-            <span className="rounded-full bg-red-500 px-4 py-1.5 text-sm font-bold text-white shadow-lg md:px-5 md:py-2 md:text-base">
+            <span className="rounded-full bg-red-500 px-3 py-1 text-xs font-black text-white shadow-lg md:px-5 md:py-2 md:text-base">
               NEW
             </span>
           )}
         </div>
-        <p className="mt-5 max-h-[18vh] overflow-hidden text-base font-semibold leading-relaxed text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] md:mt-9 md:max-h-none md:text-2xl">
+        <p className="mt-3 max-h-[10vh] max-w-md overflow-hidden text-sm font-bold leading-relaxed text-white drop-shadow-[0_3px_12px_rgba(0,0,0,0.95)] md:mt-7 md:max-h-none md:text-2xl">
           {quote}
         </p>
-      </div>
+        <div className={cn('mt-4 flex items-center gap-2 md:gap-3', panelOnRight && 'justify-end')}>
+          {canSwitch && (
+            <span className="rounded-full border border-white/20 bg-slate-950/38 px-3 py-1.5 text-xs font-semibold text-white/82 backdrop-blur-sm md:text-sm">
+              {activeIndex + 1}/{results.length}
+            </span>
+          )}
+        </div>
+      </motion.div>
+
+      <motion.button
+        onClick={onComplete}
+        initial={{ y: 16, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.28, duration: 0.38, ease: 'easeOut' }}
+        className="group absolute bottom-4 left-1/2 z-40 flex h-10 -translate-x-1/2 items-center gap-3 rounded-full border border-white/20 bg-slate-950/30 px-4 text-sm font-bold text-white/88 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-md transition hover:border-amber-200/70 hover:bg-slate-950/44 hover:text-amber-100 md:bottom-7 md:h-11 md:px-5"
+      >
+        <span className="h-px w-7 bg-gradient-to-r from-transparent via-amber-200/75 to-amber-200/20" />
+        <span className="tracking-[0.18em]">收下羁绊</span>
+        <ChevronRight size={17} strokeWidth={2.2} className="-ml-1 text-amber-200/90 transition-transform group-hover:translate-x-0.5" />
+      </motion.button>
 
       {canSwitch && (
         <>
@@ -414,19 +451,6 @@ function GachaShowcase({
         </>
       )}
 
-      <div className="absolute bottom-5 right-8 z-40 flex items-center gap-4">
-        {canSwitch && (
-          <span className="rounded-full bg-slate-950/55 px-4 py-2 text-sm font-semibold text-white/80 backdrop-blur-sm">
-            {activeIndex + 1}/{results.length}
-          </span>
-        )}
-        <button
-          onClick={onComplete}
-          className="rounded-lg bg-amber-400 px-10 py-3 text-lg font-black text-slate-950 shadow-[0_0_24px_rgba(251,191,36,0.45)] hover:bg-amber-300"
-        >
-          确认
-        </button>
-      </div>
     </motion.div>
   );
 }
