@@ -108,13 +108,18 @@ const INITIAL: Omit<ShopState, keyof { [K in keyof ShopState as ShopState[K] ext
 let _uid = 1;
 
 /** 掷今日委托板：逾期单优先,其余从未完成的委托里随机补满 3 张 */
-function rollBoard(overdue: { id: string; daysLeft: number } | null): string[] {
+function rollBoard(overdue: { id: string; daysLeft: number } | null, forced: string[] = []): string[] {
   const doneFlags = usePlayerStore.getState().flags;
   const isDone = (id: string) => doneFlags.includes(`commission_${id}_done`);
-  const fresh = commissions.filter(c => !isDone(c.id) && c.id !== overdue?.id).map(c => c.id);
-  const fallback = commissions.filter(c => isDone(c.id) && c.id !== overdue?.id).map(c => c.id);
+  // Forced commissions always appear first (skip if already done)
+  const board: string[] = [
+    ...forced.filter(f => !isDone(f)),
+    ...(overdue && !forced.includes(overdue.id) ? [overdue.id] : []),
+  ];
+  const excluded = new Set([...forced, overdue?.id ?? '']);
+  const fresh = commissions.filter(c => !isDone(c.id) && !excluded.has(c.id)).map(c => c.id);
+  const fallback = commissions.filter(c => isDone(c.id) && !excluded.has(c.id)).map(c => c.id);
   const shuffled = [...fresh].sort(() => Math.random() - 0.5);
-  const board: string[] = overdue ? [overdue.id] : [];
   for (const id of shuffled) {
     if (board.length >= 3) break;
     board.push(id);
@@ -142,7 +147,10 @@ export const useShopStore = create<ShopState>()(
         const overdue = prevOverdue && prevOverdue.daysLeft > 1
           ? { ...prevOverdue, daysLeft: prevOverdue.daysLeft - 1 }
           : prevOverdue && prevOverdue.daysLeft === 1 ? prevOverdue : null;
-        const board = rollBoard(overdue);
+        // 教学模式下保证「面试」委托出现在委托板
+        const ts = usePlayerStore.getState().tutorialStep;
+        const forced = (ts >= 0 && ts < 4) ? ['interview'] : [];
+        const board = rollBoard(overdue, forced);
         // 手牌跨天保留：消耗卡是持有资产（含店外抽卡页抽到的），不随开新一天清空
         set({ ...INITIAL, routes, overdue, board, sideJobs: rollSideJobs(), done: {}, hand: get().hand, log: [], gameOver: false });
         get().addLog('开始营业:委托板已更新,顺手单已挂出。', 'good');

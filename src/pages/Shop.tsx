@@ -2,7 +2,7 @@
  * 都市便利屋 · 分池抽卡 主界面
  * 移动端竖屏布局，复用 GachaAnimation。
  */
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -20,11 +20,12 @@ import { getSideJobById } from '@/data/sideJobs';
 import { checkPhoneEvents } from '@/engine/phoneScheduler';
 import GachaAnimation from '@/components/GachaAnimation';
 import CommissionTheater from '@/components/CommissionTheater';
+import TutorialOverlay from '@/components/TutorialOverlay';
 import ResetSaveButton from '@/components/ResetSaveButton';
 import SupplyReveal, { type RevealItem } from '@/components/SupplyReveal';
 import { useCssVarFromHeight } from '@/hooks/useCssVarFromHeight';
 import PageBackdrop from '@/components/PageBackdrop';
-import type { Spot } from '@/data/types';
+import type { Commission, Spot } from '@/data/types';
 import { backdropForLocation, SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 
 /** GachaAnimation 内部格式（与 engine 的 GachaResult 不同） */
@@ -42,7 +43,7 @@ import { assetCssBackground, assetUrl } from '@/lib/assets';
 
 /* ────── 常量 ────── */
 const POOL_CONFIG = [
-  { id: 'board',  label: '委托板', sub: '今日 3 选 1 接单', cost: '免费接单', color: 'from-rose-500 to-pink-700', icon: ClipboardList },
+  { id: 'board',  label: '今日待办', sub: '接单·执行·交付', cost: '免费接单', color: 'from-rose-500 to-pink-700', icon: ClipboardList },
   { id: 'supply', label: '便利屋补给', sub: '人物·技能·便利·情报', cost: '消耗 1 普通券', color: 'from-violet-500 to-purple-700', icon: Users },
 ] as const;
 
@@ -124,11 +125,11 @@ function StatusBar({
       {/* 资源行 */}
       <div className="flex gap-2 flex-wrap mb-1.5">
         {[
-          { label: '⏱', val: time, warn: time <= 3 },
-          { label: '⚡', val: energy, warn: energy <= 2 },
-          { label: '📣', val: rep, warn: rep <= 1 },
-          { label: '💴', val: money },
-          { label: '🎫普', val: normalTickets },
+          { label: '⏱时间', val: time, warn: time <= 3 },
+          { label: '⚡精力', val: energy, warn: energy <= 2 },
+          { label: '📣口碑', val: rep, warn: rep <= 1 },
+          { label: '💴资金', val: money },
+          { label: '🎫券', val: normalTickets },
         ].map(({ label, val, warn }) => (
           <span key={label} className={cn('rounded-full border border-white/10 bg-white/5 px-2 py-0.5 font-bold', warn ? 'text-red-400' : 'text-slate-200')}>
             {label} <b>{val}</b>
@@ -150,6 +151,42 @@ function StatusBar({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ────── 子组件：当前目标条 ────── */
+function GoalBar({
+  commission, trust, commissionNeed, objectives, objectivesDone, commissionReady, gameOver,
+}: {
+  commission: Commission | null; trust: number; commissionNeed: number;
+  objectives: { id: string }[]; objectivesDone: string[]; commissionReady: boolean; gameOver: boolean;
+}) {
+  if (gameOver) return null;
+  if (!commission) {
+    return (
+      <div className="mx-3 mt-2 mb-0.5 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-200 animate-pulse">
+        ▶ 前往「委托」Tab接单，开始今日任务
+      </div>
+    );
+  }
+  if (commissionReady) {
+    return (
+      <div className="mx-3 mt-2 mb-0.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-200 animate-pulse">
+        ✅ 目标达成！在「委托」Tab点击「交付委托」
+      </div>
+    );
+  }
+  if (objectives.length > 0) {
+    return (
+      <div className="mx-3 mt-2 mb-0.5 rounded-lg border border-amber-500/30 bg-amber-500/8 px-3 py-1.5 text-xs font-medium text-amber-200">
+        📋 完成子目标 {objectivesDone.length}/{objectives.length}——在地图热点打出对应卡
+      </div>
+    );
+  }
+  return (
+    <div className="mx-3 mt-2 mb-0.5 rounded-lg border border-slate-600/40 bg-slate-800/40 px-3 py-1.5 text-xs font-medium text-slate-300">
+      📍 处理地点热点、积累信任 {trust}/{commissionNeed}，达标后交付
     </div>
   );
 }
@@ -178,6 +215,7 @@ export default function Shop() {
     addNormalTickets,
     addGachaResult, addCharacter,
     addSpiritStones, addReputation, addHintTokens,
+    tutorialStep, setTutorialStep,
   } = playerStore;
 
   /* ── 本地 UI 状态 ── */
@@ -204,6 +242,49 @@ export default function Shop() {
   /** 有子目标的委托：结局分水岭 = need+5（统一信任口径）；交付条件 = 全部子目标完成 */
   const gateGoal = commission ? commission.need + (objectives.length > 0 ? 5 : 0) : 0;
   const commissionReady = !!commission && (objectives.length > 0 ? allObjectivesDone : trust >= commissionNeed);
+
+  /* ────── 教学：步骤自动推进 ────── */
+  // Step 3 → 4: interview commission accepted
+  useEffect(() => {
+    if (tutorialStep === 3 && commission?.id === 'interview') {
+      setTutorialStep(4);
+    }
+  }, [tutorialStep, commission?.id, setTutorialStep]);
+
+  // Step 4 → 5: any hotspot resolved
+  useEffect(() => {
+    if (tutorialStep === 4) {
+      const anyDone = Object.values(done).some(loc => Object.values(loc).some(Boolean));
+      if (anyDone) setTutorialStep(5);
+    }
+  }, [tutorialStep, done, setTutorialStep]);
+
+  // Handler for "继续" / "好，我来！" / "领取奖励" taps in tutorial overlay
+  const handleTutorialContinue = useCallback(() => {
+    if (tutorialStep === 1 || tutorialStep === 2) {
+      setTutorialStep(tutorialStep + 1);
+    } else if (tutorialStep === 6) {
+      // Guaranteed linxia gacha as tutorial reward
+      const linxiaChar = getCharacterById('linxia');
+      if (linxiaChar) {
+        addCharacter('linxia');
+        addGachaResult('linxia', 'R');
+        const animResult: AnimGachaResult = {
+          characterId: 'linxia',
+          name: linxiaChar.name,
+          rarity: 'R' as const,
+          title: linxiaChar.title,
+          isNew: true,
+        };
+        setGachaResults([animResult]);
+        setShowGacha(true);
+      } else {
+        setTutorialStep(-1);
+        setEndDayResult('success');
+        setGameOver(true);
+      }
+    }
+  }, [tutorialStep, setTutorialStep, addCharacter, addGachaResult, setGachaResults, setShowGacha, setEndDayResult, setGameOver]);
 
   /* ────── 抽卡 ────── */
   const handleDraw = useCallback((pool: PoolId) => {
@@ -419,6 +500,11 @@ export default function Shop() {
       addReputation(1);
       dispatchAvailablePhoneEvents(addLog);
       addLog(`委托交付：【${commission.name}】。奖励：普通券+4，口碑+1，相关影像已解锁。`, 'good');
+      // 教学流程：拦截「面试」委托完成，改为显示江夏入伙庆典，不直接结束当日
+      if (tutorialStep > 0 && tutorialStep < 6) {
+        setTutorialStep(6);
+        return;
+      }
       setEndDayResult('success');
     } else {
       addNormalTickets(1);
@@ -426,7 +512,7 @@ export default function Shop() {
       setEndDayResult('fail');
     }
     setGameOver(true);
-  }, [commission, overdue, setOverdue, setPendingScene, addNormalTickets, addReputation, addLog, setGameOver]);
+  }, [commission, overdue, setOverdue, setPendingScene, addNormalTickets, addReputation, addLog, setGameOver, tutorialStep, setTutorialStep]);
 
   /* ────── Toast ────── */
   const [toastMsg, setToastMsg] = useState('');
@@ -462,10 +548,15 @@ export default function Shop() {
           <p className="text-slate-400 text-sm">开在一天的第二十五小时 · 专收时间表漏掉的麻烦</p>
         </div>
         <button
-          onClick={() => { startDay(); setHandledThisLocation(false); setActiveTab('map'); }}
+          onClick={() => {
+            startDay();
+            setHandledThisLocation(false);
+            setActiveTab('map');
+            if (tutorialStep === 0) setTutorialStep(1);
+          }}
           className="relative z-10 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 px-10 py-4 text-lg font-black text-amber-950 shadow-[0_0_30px_rgba(251,191,36,0.4)] hover:from-amber-400"
         >
-          开始营业
+          {tutorialStep === 0 ? '开始营业（新手引导）' : '开始营业'}
         </button>
         <button onClick={() => navigate('/')} className="relative z-10 text-slate-400 text-sm">返回首页</button>
       </div>
@@ -510,21 +601,33 @@ export default function Shop() {
           normalTickets={normalTickets}
         />
 
-        {/* 抽卡频道 */}
-        <div className="px-3 pt-3 pb-2">
-          <p className="text-[10px] text-slate-500 mb-1.5 font-medium uppercase tracking-wider">抽卡频道</p>
+        {/* 当前目标提示 */}
+        <GoalBar
+          commission={commission}
+          trust={trust}
+          commissionNeed={commissionNeed}
+          objectives={objectives}
+          objectivesDone={objectivesDone}
+          commissionReady={commissionReady}
+          gameOver={gameOver}
+        />
+
+        {/* 今日待办 + 便利屋补给 */}
+        <div className="px-3 pt-2 pb-2">
           <div className="grid grid-cols-2 gap-2">
             {POOL_CONFIG.map(pool => {
               const Icon = pool.icon;
               const pityRemain = GACHA_CONFIG.supplyPool.characterPity - supplyPityCounter;
+              const isBoardPulse = pool.id === 'board' && !commission && !gameOver;
               return (
                 <button
                   key={pool.id}
                   onClick={() => handleDraw(pool.id)}
                   disabled={gameOver}
                   className={cn(
-                    'flex items-center gap-2.5 rounded-xl border border-white/10 bg-slate-900/60 py-2.5 px-3 text-left',
+                    'flex items-center gap-2.5 rounded-xl border bg-slate-900/60 py-2.5 px-3 text-left',
                     'disabled:opacity-40 hover:border-white/20 active:scale-95 transition-all',
+                    isBoardPulse ? 'border-rose-400/60 shadow-[0_0_12px_rgba(251,113,133,0.3)] animate-pulse' : 'border-white/10',
                   )}
                 >
                   <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br shadow', pool.color)}>
@@ -1044,11 +1147,12 @@ export default function Shop() {
                   </span>
                 </div>
                 <p className="text-sm text-slate-300 mb-2">{currentEvent.spot.text}</p>
-                <div className="flex gap-1 flex-wrap">
+                <div className="flex gap-1 flex-wrap mb-1.5">
                   {currentEvent.spot.need.map(n => (
                     <span key={n} className="rounded-full bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.5 text-[10px] text-amber-300">推荐: {n}</span>
                   ))}
                 </div>
+                <p className="text-[10px] text-slate-500">打出与推荐类型匹配的卡（黄色高亮）可获得额外信任</p>
               </div>
 
               {/* 普通处理 */}
@@ -1208,7 +1312,16 @@ export default function Shop() {
         <GachaAnimation
           results={gachaResults}
           isTenPull={false}
-          onComplete={() => { setShowGacha(false); setGachaResults([]); }}
+          onComplete={() => {
+            setShowGacha(false);
+            setGachaResults([]);
+            // Tutorial reward gacha → mark complete and end day
+            if (tutorialStep === 6) {
+              setTutorialStep(-1);
+              setEndDayResult('success');
+              setGameOver(true);
+            }
+          }}
         />
       )}
 
@@ -1237,6 +1350,17 @@ export default function Shop() {
           >
             {toastMsg}
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── 教学引导覆盖层 ── */}
+      <AnimatePresence>
+        {tutorialStep > 0 && tutorialStep <= 6 && (
+          <TutorialOverlay
+            key={tutorialStep}
+            step={tutorialStep}
+            onContinue={handleTutorialContinue}
+          />
         )}
       </AnimatePresence>
     </div>
