@@ -19,6 +19,32 @@ export function scoreCard(cardType: ServiceTag, spotNeeds: ServiceTag[]): number
   return isMatch(cardType, spotNeeds) ? 10 : 0;
 }
 
+/* ─────────────── 疲劳系统 ───────────────
+ * 单一仪表替代旧的「时间 13 点 + 路段 1-5 + 精力 8」三时钟：
+ * 内容数据（locations.json 等）仍用 time/energy 表达消耗，运行时统一折算成疲劳，
+ * 旧内容无需迁移。一天的体力预算 ≈ 13×4 + 8×6 = 100。
+ */
+export const FATIGUE_MAX = 100;
+/** 疲惫线：信任收益减半 */
+export const FATIGUE_TIRED = 60;
+/** 透支线：不能接新委托 */
+export const FATIGUE_EXHAUSTED = 85;
+const FATIGUE_PER_TIME = 4;
+const FATIGUE_PER_ENERGY = 6;
+/** 同一自然日内咖啡效果递减：-20 → -12 → -6 → 无效 */
+export const COFFEE_RELIEFS = [20, 12, 6];
+export const COFFEE_COST = 5;
+
+/** 把内容数据的 time/energy 消耗折算成疲劳增量（正值 = 更累） */
+export function fatigueFromDelta(d: { time?: number; energy?: number; fatigue?: number }): number {
+  return (d.fatigue ?? 0) - (d.time ?? 0) * FATIGUE_PER_TIME - (d.energy ?? 0) * FATIGUE_PER_ENERGY;
+}
+
+/** 今天第 n+1 杯咖啡能缓解多少疲劳（0 = 喝不下了） */
+export function coffeeRelief(n: number): number {
+  return COFFEE_RELIEFS[n] ?? 0;
+}
+
 /* ─────────────── 资源增减 ─────────────── */
 
 /** 匹配时降低资源消耗（负值 +1，不超过 0） */
@@ -37,9 +63,17 @@ export function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-/** 从地点列表随机取 count 个路线 */
-export function rollRoutes(allLocations: GameLocation[], count = 3): GameLocation[] {
-  return [...allLocations].sort(() => Math.random() - 0.5).slice(0, count);
+/** 从地点列表随机取 count 个路线。
+ *  mustTags：委托未完成子目标的 locTag——保底掷出至少一个匹配地点，
+ *  消灭「接了单却一直刷不到目标地点」的纯运气墙。 */
+export function rollRoutes(allLocations: GameLocation[], count = 3, mustTags: string[] = []): GameLocation[] {
+  const shuffled = [...allLocations].sort(() => Math.random() - 0.5);
+  const picked = shuffled.slice(0, count);
+  if (mustTags.length > 0 && !picked.some(l => l.tags.some(t => mustTags.includes(t)))) {
+    const candidate = shuffled.slice(count).find(l => l.tags.some(t => mustTags.includes(t)));
+    if (candidate) picked[picked.length - 1] = candidate;
+  }
+  return picked;
 }
 
 /* ─────────────── 事件结算 ─────────────── */

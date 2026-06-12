@@ -14,8 +14,11 @@ import { useShopStore, checkFail } from '@/store/useShopStore';
 import { getCharacterById } from '@/data/characters';
 import { commissions } from '@/data/commissions';
 import { GACHA_CONFIG } from '@/data/gachaConfig';
-import { pullSupply } from '@/engine/gachaEngine';
-import { isMatch, scoreCard, resolveSpot, hitsRequirement, applyCommissionRewards } from '@/engine/shopEngine';
+import { pullSupply, RATE_UP_DAYS } from '@/engine/gachaEngine';
+import {
+  isMatch, scoreCard, resolveSpot, hitsRequirement, applyCommissionRewards,
+  fatigueFromDelta, coffeeRelief, FATIGUE_TIRED, FATIGUE_EXHAUSTED, FATIGUE_MAX, COFFEE_COST,
+} from '@/engine/shopEngine';
 import { getSideJobById } from '@/data/sideJobs';
 import { checkPhoneEvents } from '@/engine/phoneScheduler';
 import GachaAnimation from '@/components/GachaAnimation';
@@ -25,7 +28,7 @@ import ResetSaveButton from '@/components/ResetSaveButton';
 import SupplyReveal, { type RevealItem } from '@/components/SupplyReveal';
 import { useCssVarFromHeight } from '@/hooks/useCssVarFromHeight';
 import PageBackdrop from '@/components/PageBackdrop';
-import type { Commission, Spot } from '@/data/types';
+import type { Commission, CommissionObjective, Spot } from '@/data/types';
 import { backdropForLocation, SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 
 /** GachaAnimation 内部格式（与 engine 的 GachaResult 不同） */
@@ -113,32 +116,48 @@ function dispatchAvailablePhoneEvents(addLog?: (text: string, cls?: 'good' | 'ba
 
 /* ────── 子组件：状态条 ────── */
 function StatusBar({
-  time, energy, rep, money, trust, step, commissionNeed,
+  fatigue, rep, money, trust, commissionNeed,
   normalTickets,
 }: {
-  time: number; energy: number; rep: number; money: number;
-  trust: number; step: number; commissionNeed: number;
+  fatigue: number; rep: number; money: number;
+  trust: number; commissionNeed: number;
   normalTickets: number;
 }) {
   const pct = commissionNeed > 0 ? Math.min(100, (trust / commissionNeed) * 100) : 0;
+  const fatigueState = fatigue >= FATIGUE_EXHAUSTED ? '透支' : fatigue >= FATIGUE_TIRED ? '疲惫' : '';
   return (
     <div className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/90 backdrop-blur-xl px-3 py-2 text-xs">
       {/* 资源行 */}
       <div className="flex gap-2 flex-wrap mb-1.5">
         {[
-          { label: '⏱时间', val: time, warn: time <= 3 },
-          { label: '⚡精力', val: energy, warn: energy <= 2 },
           { label: '📣口碑', val: rep, warn: rep <= 1 },
-          { label: '💴资金', val: money },
-          { label: '🎫券', val: normalTickets },
+          { label: '💴资金', val: money, warn: false },
+          { label: '🎫券', val: normalTickets, warn: false },
         ].map(({ label, val, warn }) => (
           <span key={label} className={cn('rounded-full border border-white/10 bg-white/5 px-2 py-0.5 font-bold', warn ? 'text-red-400' : 'text-slate-200')}>
             {label} <b>{val}</b>
           </span>
         ))}
-        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 font-bold text-slate-200">
-          路线 <b>{Math.min(step, 5)}</b>/5
+      </div>
+      {/* 疲劳仪表 */}
+      <div className="flex items-center gap-2 mb-1">
+        <span className={cn(
+          'shrink-0 font-bold',
+          fatigue >= FATIGUE_EXHAUSTED ? 'text-red-400' : fatigue >= FATIGUE_TIRED ? 'text-amber-300' : 'text-slate-400',
+        )}>
+          😪疲劳 {fatigue}/100{fatigueState && ` · ${fatigueState}`}
         </span>
+        <div className="h-1.5 flex-1 rounded-full bg-slate-800 overflow-hidden">
+          <div
+            className={cn(
+              'h-full rounded-full transition-all duration-500',
+              fatigue >= FATIGUE_EXHAUSTED ? 'bg-gradient-to-r from-red-500 to-rose-600'
+                : fatigue >= FATIGUE_TIRED ? 'bg-gradient-to-r from-amber-400 to-orange-500'
+                : 'bg-gradient-to-r from-emerald-400 to-teal-500',
+            )}
+            style={{ width: `${Math.min(100, fatigue)}%` }}
+          />
+        </div>
       </div>
       {/* 信任进度条 */}
       {commissionNeed > 0 && (
@@ -156,12 +175,13 @@ function StatusBar({
   );
 }
 
-/* ────── 子组件：当前目标条 ────── */
+/* ────── 子组件：当前目标条（常驻导航：始终告诉玩家下一步去哪、做什么） ────── */
 function GoalBar({
-  commission, trust, commissionNeed, objectives, objectivesDone, commissionReady, gameOver,
+  commission, trust, commissionNeed, objectives, objectivesDone, nextObjective, commissionReady, gameOver,
 }: {
   commission: Commission | null; trust: number; commissionNeed: number;
-  objectives: { id: string }[]; objectivesDone: string[]; commissionReady: boolean; gameOver: boolean;
+  objectives: { id: string }[]; objectivesDone: string[];
+  nextObjective: CommissionObjective | null; commissionReady: boolean; gameOver: boolean;
 }) {
   if (gameOver) return null;
   if (!commission) {
@@ -178,10 +198,11 @@ function GoalBar({
       </div>
     );
   }
-  if (objectives.length > 0) {
+  if (objectives.length > 0 && nextObjective) {
     return (
       <div className="mx-3 mt-2 mb-0.5 rounded-lg border border-amber-500/30 bg-amber-500/8 px-3 py-1.5 text-xs font-medium text-amber-200">
-        📋 完成子目标 {objectivesDone.length}/{objectives.length}——在地图热点打出对应卡
+        📋 【{commission.name}】{objectivesDone.length}/{objectives.length} · 下一步：{nextObjective.desc}——
+        {nextObjective.locTag ? `去【${nextObjective.locTag}】类地点` : '任意地点'}打出 {nextObjective.need.join('/')} 卡
       </div>
     );
   }
@@ -201,19 +222,20 @@ export default function Shop() {
   const shopStore = useShopStore();
 
   const {
-    time, energy, rep, money, trust, step, commission, loc, routes, done, hand, log, gameOver,
-    board, overdue, objectivesDone, sideJobs, pendingScene, lastCardType,
-    startDay, refreshRoutes, acceptCommission, completeObjective, completeSideJob,
-    setPendingScene, setOverdue, chooseLocation, leaveLocation, addHandCard, consumeHandCard,
-    applyDelta, markSpotDone, finishLocation, normalAdvance, addLog, setGameOver, resetDay,
+    fatigue, rep, money, trust, coffees, commission, isRevisit, loc, routes, done, hand, log, gameOver,
+    board, objectivesDone, sideJobs, pendingScene, lastCardType,
+    startDay, refreshRoutes, acceptCommission, abandonCommission, clearCommission,
+    completeObjective, completeSideJob, noteCommissionFocus,
+    setPendingScene, chooseLocation, leaveLocation, addHandCard, consumeHandCard,
+    applyDelta, markSpotDone, finishLocation, normalAdvance, buyCoffee, addLog, setGameOver, resetDay,
     setLastCardType,
   } = shopStore;
 
   const {
     ownedCharacters, affinityMap, supplyPityCounter,
-    normalTickets,
+    normalTickets, flags, rateUpUntil, coldUntil,
     spendNormalTickets, setSupplyPityCounter,
-    addNormalTickets,
+    addNormalTickets, addAffinity, setCharacterRateUp,
     addGachaResult, addCharacter,
     addSpiritStones, addReputation, addHintTokens,
     tutorialStep, setTutorialStep,
@@ -226,6 +248,10 @@ export default function Shop() {
   const [gachaResults, setGachaResults] = useState<AnimGachaResult[]>([]);
   const [showGacha, setShowGacha] = useState(false);
   const [endDayResult, setEndDayResult] = useState<'success' | 'fail' | null>(null);
+  /** 刚了结的委托名（清空槽位后结算弹窗仍需展示） */
+  const [completedName, setCompletedName] = useState<string | null>(null);
+  /** 放弃委托确认弹窗 */
+  const [showAbandonConfirm, setShowAbandonConfirm] = useState(false);
   const [showTheater, setShowTheater] = useState(false);
   const [handledThisLocation, setHandledThisLocation] = useState(false);
   /** 补给池非人物出货的开箱演出（人物走全屏 GachaAnimation） */
@@ -237,13 +263,17 @@ export default function Shop() {
   useCssVarFromHeight('--bar-h', actionBarRef);
 
   /* ── 初始化 ── */
-  const isNew = routes.length === 0 && !gameOver && commission === null && step === 1 && time === 13;
+  const isNew = routes.length === 0 && !gameOver && commission === null && fatigue === 0;
   const commissionNeed = commission?.need ?? 0;
   const objectives = commission?.objectives ?? [];
   const allObjectivesDone = objectives.length > 0 && objectives.every(o => objectivesDone.includes(o.id));
   /** 有子目标的委托：结局分水岭 = need+5（统一信任口径）；交付条件 = 全部子目标完成 */
   const gateGoal = commission ? commission.need + (objectives.length > 0 ? 5 : 0) : 0;
   const commissionReady = !!commission && (objectives.length > 0 ? allObjectivesDone : trust >= commissionNeed);
+  /** 下一个未完成子目标（GoalBar 导航用） */
+  const nextObjective = objectives.find(o => !objectivesDone.includes(o.id)) ?? null;
+  /** 未完成子目标的限定地点标签（路线「委托相关」徽标用） */
+  const pendingTags = objectives.filter(o => !objectivesDone.includes(o.id) && o.locTag).map(o => o.locTag!);
 
   /* ────── 教学：步骤自动推进 ────── */
   // Step 3 → 4: interview commission accepted
@@ -298,7 +328,7 @@ export default function Shop() {
     } else if (pool === 'supply') {
       if (!spendNormalTickets(1)) return toast('普通券不足。');
       const ownedIds = ownedCharacters.map(o => o.characterId);
-      const { result, newPity } = pullSupply(ownedIds, affinityMap, supplyPityCounter);
+      const { result, newPity } = pullSupply(ownedIds, affinityMap, supplyPityCounter, { rateUpUntil, coldUntil });
       setSupplyPityCounter(newPity);
       if (result.kind === 'person') {
         addCharacter(result.character.id);
@@ -349,7 +379,7 @@ export default function Shop() {
         }
       }
     }
-  }, [gameOver, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, setSupplyPityCounter, addCharacter, addGachaResult, addHandCard, addHintTokens, addSpiritStones, addLog]);
+  }, [gameOver, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, rateUpUntil, coldUntil, setSupplyPityCounter, addCharacter, addGachaResult, addHandCard, addHintTokens, addSpiritStones, addLog]);
 
   /* ────── 热点点击 ────── */
   const handleSpotClick = useCallback((spot: Spot, spotIndex: number) => {
@@ -386,6 +416,11 @@ export default function Shop() {
       refreshRoutes();
     }
 
+    // 疲惫状态：信任收益减半（向上取整）
+    if (fatigue >= FATIGUE_TIRED && (delta.trust ?? 0) > 1) {
+      delta.trust = Math.ceil((delta.trust ?? 0) / 2);
+    }
+
     applyDelta(delta);
     markSpotDone(locId, spotIndex);
     setHandledThisLocation(true);
@@ -397,6 +432,7 @@ export default function Shop() {
     setLastCardType(card ? (card.kind === 'person' ? card.serviceType : (card as HandCard).type) : null);
 
     // 子目标 / 顺手单命中判定：在匹配热点上打出要求 type 的卡
+    let objectiveHit = false;
     if (card) {
       const cardType = card.kind === 'person' ? card.serviceType : (card as HandCard).type;
       if (commission?.objectives) {
@@ -404,6 +440,7 @@ export default function Shop() {
           if (objectivesDone.includes(obj.id)) continue;
           if (hitsRequirement(obj, cardType, spot, loc.tags)) {
             completeObjective(obj.id); // 入队该子目标的剧场幕
+            objectiveHit = true;
             break;
           }
         }
@@ -424,19 +461,21 @@ export default function Shop() {
 
     setCurrentEvent(null);
 
-    // 检查失败
+    // 委托催促埋点：连续干别的事，她会发消息来问
+    noteCommissionFocus(objectiveHit);
+
+    // 检查强制打烊
     const newState = {
-      time: Math.max(0, time + (delta.time ?? 0)),
-      energy: Math.max(0, energy + (delta.energy ?? 0)),
+      fatigue: Math.min(FATIGUE_MAX, fatigue + fatigueFromDelta(delta)),
       rep: Math.max(0, rep + (delta.rep ?? 0)),
     };
     if (checkFail(newState)) {
       setGameOver(true);
-      addLog('今日失败：时间、精力或口碑耗尽。', 'bad');
+      addLog('🌙 强制打烊：疲劳爆表或口碑见底。委托进度已保留。', 'bad');
       setEndDayResult('fail');
     }
-  }, [currentEvent, loc, commission, objectivesDone, sideJobs, time, energy, rep, lastCardType,
-    consumeHandCard, applyDelta, markSpotDone, completeObjective, completeSideJob,
+  }, [currentEvent, loc, commission, objectivesDone, sideJobs, fatigue, rep, lastCardType,
+    consumeHandCard, applyDelta, markSpotDone, completeObjective, completeSideJob, noteCommissionFocus,
     addNormalTickets, addSpiritStones, addLog, refreshRoutes, setGameOver, setLastCardType]);
 
   /* ────── 冒险解法（危险热点）：不出牌，付出更多资源换高信任 ────── */
@@ -446,47 +485,54 @@ export default function Shop() {
     const risk = spot.risk!;
 
     playSound('risk');
-    applyDelta(risk.delta);
+    // 疲惫状态：冒险解法的信任收益同样减半
+    const riskDelta = { ...risk.delta };
+    if (fatigue >= FATIGUE_TIRED && (riskDelta.trust ?? 0) > 1) {
+      riskDelta.trust = Math.ceil((riskDelta.trust ?? 0) / 2);
+    }
+    applyDelta(riskDelta);
     markSpotDone(locId, spotIndex);
     setHandledThisLocation(true);
     setLastCardType(null);
-    addLog(`⚡ ${spot.name}：${risk.text}`, (risk.delta.trust ?? 0) > 0 ? 'good' : 'bad');
+    addLog(`⚡ ${spot.name}：${risk.text}`, (riskDelta.trust ?? 0) > 0 ? 'good' : 'bad');
     setCurrentEvent(null);
 
     const newState = {
-      time: Math.max(0, time + (risk.delta.time ?? 0)),
-      energy: Math.max(0, energy + (risk.delta.energy ?? 0)),
-      rep: Math.max(0, rep + (risk.delta.rep ?? 0)),
+      fatigue: Math.min(FATIGUE_MAX, fatigue + fatigueFromDelta(riskDelta)),
+      rep: Math.max(0, rep + (riskDelta.rep ?? 0)),
     };
     if (checkFail(newState)) {
       setGameOver(true);
-      addLog('今日失败：时间、精力或口碑耗尽。', 'bad');
+      addLog('🌙 强制打烊：疲劳爆表或口碑见底。委托进度已保留。', 'bad');
       setEndDayResult('fail');
     }
-  }, [currentEvent, loc, time, energy, rep, applyDelta, markSpotDone, setLastCardType, addLog, setGameOver]);
+  }, [currentEvent, loc, fatigue, rep, applyDelta, markSpotDone, setLastCardType, addLog, setGameOver]);
 
   /* ────── 结束当天 ────── */
   const handleEndDay = useCallback(() => {
     // 子目标制委托只能通过「交付」(剧场结局)完成；endDay 兜底视为未交付
     const legacySuccess = !!commission && !commission.objectives?.length && trust >= commission.need;
     if (legacySuccess && commission) {
+      setCompletedName(commission.name);
       applyCommissionRewards(commission.rewardEffects);
       addNormalTickets(4);
       addReputation(1);
+      setCharacterRateUp(commission.target, RATE_UP_DAYS);
       dispatchAvailablePhoneEvents(addLog);
-      addLog(`今日完成：【${commission.name}】。奖励：普通券+4，口碑+1。`, 'good');
+      addLog(`今日完成：【${commission.name}】。奖励：普通券+4，口碑+1，缘分UP。`, 'good');
+      clearCommission();
       setEndDayResult('success');
     } else {
+      // 锁单制：未交付不再逾期作废，进度保留到明天
       if (commission) {
-        setOverdue({ id: commission.id, daysLeft: 2 });
-        addLog(`委托【${commission.name}】今日未交付，转入逾期——明日委托板可重接（口碑 -1）。`, 'bad');
+        addLog(`委托【${commission.name}】今日未交付——进度已保留，明天接着为她奔走。`, '');
       }
       addNormalTickets(1);
-      addLog('今日结束。补偿普通券 +1。', 'bad');
+      addLog('今日打烊。补偿普通券 +1。', '');
       setEndDayResult('fail');
     }
     setGameOver(true);
-  }, [commission, trust, addNormalTickets, addReputation, setOverdue, addLog, setGameOver]);
+  }, [commission, trust, addNormalTickets, addReputation, setCharacterRateUp, clearCommission, addLog, setGameOver]);
 
   /* ────── 完成地点 ────── */
   const handleFinishLocation = useCallback(() => {
@@ -496,25 +542,36 @@ export default function Shop() {
     const allSpotsDone = loc.spots.every((_, i) => done[loc.id]?.[i]);
     if (!handledThisLocation && !allSpotsDone) return toast('至少处理一个热点，或点「换地点」退回路线选择。');
     playSound('location-done');
-    const result = finishLocation();
+    finishLocation();
     setHandledThisLocation(false);
-    if (result === 'end_day') handleEndDay();
-  }, [gameOver, loc, done, handledThisLocation, finishLocation, handleEndDay]);
+    checkAndFail();
+  }, [gameOver, loc, done, handledThisLocation, finishLocation]);
 
   /* ────── 委托剧场结算 ────── */
   const handleTheaterComplete = useCallback((ok: boolean) => {
     setShowTheater(false);
     setPendingScene(null);
     if (!commission) return;
-    if (overdue?.id === commission.id) setOverdue(null); // 逾期单已了结
+    setCompletedName(commission.name);
     if (ok) {
-      // 好感写入独立 affinityMap，无需持有；入伙只走补给池抽卡（设计文档 6.3）
-      applyCommissionRewards(commission.rewardEffects);
-      addNormalTickets(4);
-      addReputation(1);
-      dispatchAvailablePhoneEvents(addLog);
-      addLog(`委托交付：【${commission.name}】。奖励：普通券+4，口碑+1，相关影像已解锁。`, 'good');
+      if (isRevisit) {
+        // 回访单：奖励递减（防券/口碑通胀），但缘分 UP 照常刷新
+        addNormalTickets(1);
+        applyDelta({ money: 10 });
+        addAffinity(commission.target, 2);
+        setCharacterRateUp(commission.target, RATE_UP_DAYS);
+        addLog(`回访交付：【${commission.name}】。普通券+1，资金+10，好感+2，缘分UP——这几天更容易遇到她。`, 'good');
+      } else {
+        // 好感写入独立 affinityMap，无需持有；入伙只走补给池抽卡（设计文档 6.3）
+        applyCommissionRewards(commission.rewardEffects);
+        addNormalTickets(4);
+        addReputation(1);
+        setCharacterRateUp(commission.target, RATE_UP_DAYS);
+        dispatchAvailablePhoneEvents(addLog);
+        addLog(`委托交付：【${commission.name}】。奖励：普通券+4，口碑+1，缘分UP——这几天更容易遇到她。`, 'good');
+      }
       playSound('commission-success');
+      clearCommission();
       // 教学流程：拦截「面试」委托完成，改为显示江夏入伙庆典，不直接结束当日
       if (tutorialStep > 0 && tutorialStep < 6) {
         setTutorialStep(6);
@@ -525,10 +582,11 @@ export default function Shop() {
       addNormalTickets(1);
       playSound('commission-fail');
       addLog(`委托收尾不顺：【${commission.name}】。她还是谢了你，但结局差了点意思。补偿普通券 +1。`, 'bad');
+      clearCommission();
       setEndDayResult('fail');
     }
     setGameOver(true);
-  }, [commission, overdue, setOverdue, setPendingScene, addNormalTickets, addReputation, addLog, setGameOver, tutorialStep, setTutorialStep]);
+  }, [commission, isRevisit, setPendingScene, addNormalTickets, addReputation, addAffinity, setCharacterRateUp, applyDelta, clearCommission, addLog, setGameOver, tutorialStep, setTutorialStep]);
 
   /* ────── Toast ────── */
   const [toastMsg, setToastMsg] = useState('');
@@ -619,8 +677,8 @@ export default function Shop() {
 
         {/* 状态条 */}
         <StatusBar
-          time={time} energy={energy} rep={rep} money={money}
-          trust={trust} step={step}
+          fatigue={fatigue} rep={rep} money={money}
+          trust={trust}
           commissionNeed={gateGoal}
           normalTickets={normalTickets}
         />
@@ -632,6 +690,7 @@ export default function Shop() {
           commissionNeed={commissionNeed}
           objectives={objectives}
           objectivesDone={objectivesDone}
+          nextObjective={nextObjective}
           commissionReady={commissionReady}
           gameOver={gameOver}
         />
@@ -706,28 +765,51 @@ export default function Shop() {
               {!loc ? (
                 /* 路线选择 */
                 <>
-                  <p className="text-xs text-slate-400">选择前往的地点（共 5 段路线）：</p>
-                  {routes.map(l => (
+                  <p className="text-xs text-slate-400">选择前往的地点（疲劳见底前可以一直跑）：</p>
+                  {routes.map(l => {
+                    const isCommissionSpot = pendingTags.length > 0 && l.tags.some(t => pendingTags.includes(t));
+                    return (
+                      <button
+                        key={l.id}
+                        onClick={() => { if (!gameOver) { playSound('route-select'); chooseLocation(l); setHandledThisLocation(false); } }}
+                        disabled={gameOver}
+                        className={cn(
+                          'w-full rounded-xl border bg-slate-900/60 p-3 text-left',
+                          'active:scale-[0.99] transition-all disabled:opacity-40',
+                          isCommissionSpot
+                            ? 'border-rose-400/50 shadow-[0_0_10px_rgba(251,113,133,0.2)] hover:border-rose-300/70'
+                            : 'border-white/10 hover:border-amber-400/40',
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <span className="font-bold text-white text-sm">
+                            {l.name}
+                            {isCommissionSpot && <span className="ml-1.5 rounded bg-rose-500/30 px-1 py-0.5 text-[9px] font-bold text-rose-200">📍 委托相关</span>}
+                          </span>
+                          <span className="text-[10px] text-amber-300 shrink-0">{l.recommend.join(' / ')}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {l.tags.map(t => (
+                            <span key={t} className="rounded-full bg-white/5 border border-white/10 px-1.5 py-0.5 text-[10px] text-slate-400">{t}</span>
+                          ))}
+                        </div>
+                      </button>
+                    );
+                  })}
+                  {!gameOver && (
                     <button
-                      key={l.id}
-                      onClick={() => { if (!gameOver) { playSound('route-select'); chooseLocation(l); setHandledThisLocation(false); } }}
-                      disabled={gameOver}
-                      className={cn(
-                        'w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-left',
-                        'hover:border-amber-400/40 active:scale-[0.99] transition-all disabled:opacity-40',
-                      )}
+                      onClick={() => {
+                        if (fatigue >= FATIGUE_MAX - 4) return toast('累得不想再多走一步了。');
+                        playSound('route-select');
+                        applyDelta({ fatigue: 4 });
+                        refreshRoutes();
+                        addLog('🔄 花力气重新打听了一圈，换了一批落脚点。疲劳 +4。');
+                      }}
+                      className="w-full rounded-xl border border-dashed border-white/20 bg-slate-900/40 py-2.5 text-xs font-bold text-slate-400 hover:border-amber-400/40 hover:text-amber-300 active:scale-[0.99] transition-all"
                     >
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <span className="font-bold text-white text-sm">{l.name}</span>
-                        <span className="text-[10px] text-amber-300 shrink-0">{l.recommend.join(' / ')}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {l.tags.map(t => (
-                          <span key={t} className="rounded-full bg-white/5 border border-white/10 px-1.5 py-0.5 text-[10px] text-slate-400">{t}</span>
-                        ))}
-                      </div>
+                      🔄 重新打听（换一批地点 · 疲劳 +4）
                     </button>
-                  ))}
+                  )}
                   {gameOver && (
                     <p className="text-center text-sm text-slate-500 py-4">今日已结束。点击"新一天"重新开始。</p>
                   )}
@@ -860,12 +942,12 @@ export default function Shop() {
                   {board.map(id => {
                     const c = commissions.find(x => x.id === id);
                     if (!c) return null;
-                    const isOverdue = overdue?.id === id;
+                    const isRevisitItem = flags.includes(`commission_${id}_done`);
                     const targetChar = getCharacterById(c.target);
                     return (
                       <div key={id} className={cn(
                         'rounded-xl border p-3',
-                        isOverdue ? 'border-amber-500/50 bg-amber-500/10' : 'border-rose-500/30 bg-rose-500/5',
+                        isRevisitItem ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-rose-500/30 bg-rose-500/5',
                       )}>
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <div className="flex items-center gap-2 min-w-0">
@@ -873,7 +955,7 @@ export default function Shop() {
                             <div className="min-w-0">
                               <p className="text-sm font-black text-white truncate">
                                 {c.name}
-                                {isOverdue && <span className="ml-1.5 rounded bg-amber-500/30 px-1 py-0.5 text-[9px] font-bold text-amber-200">逾期 {overdue!.daysLeft} 天</span>}
+                                {isRevisitItem && <span className="ml-1.5 rounded bg-emerald-500/30 px-1 py-0.5 text-[9px] font-bold text-emerald-200">回访</span>}
                               </p>
                               <p className="text-[10px] text-slate-400">{targetChar?.name} · 子目标 ×{c.objectives?.length ?? 0}</p>
                             </div>
@@ -883,10 +965,15 @@ export default function Shop() {
                         <p className="text-xs text-slate-400 mb-2">{c.desc}</p>
                         <button
                           onClick={() => { if (!gameOver) { playSound('commission-accept'); acceptCommission(id); } }}
-                          disabled={gameOver}
-                          className="w-full rounded-lg bg-gradient-to-r from-rose-500 to-pink-600 py-2 text-xs font-black text-white disabled:opacity-40 active:scale-[0.99] transition-all"
+                          disabled={gameOver || fatigue >= FATIGUE_EXHAUSTED}
+                          className={cn(
+                            'w-full rounded-lg py-2 text-xs font-black text-white disabled:opacity-40 active:scale-[0.99] transition-all',
+                            isRevisitItem ? 'bg-gradient-to-r from-emerald-600 to-teal-600' : 'bg-gradient-to-r from-rose-500 to-pink-600',
+                          )}
                         >
-                          {isOverdue ? '重接此单（口碑 -1）' : '接单'}
+                          {fatigue >= FATIGUE_EXHAUSTED
+                            ? '太累了，先休息再接单'
+                            : isRevisitItem ? '再帮她一次（回访单 · 奖励递减）' : '接单'}
                         </button>
                       </div>
                     );
@@ -959,20 +1046,33 @@ export default function Shop() {
                   {/* 交付 CTA */}
                   {commission.graph && commission.graph.nodes.length > 0 ? (
                     <button
-                      onClick={() => setShowTheater(true)}
+                      onClick={() => {
+                        // 回访单无回访幕时不进剧场，直接结算交付
+                        if (isRevisit && !commission.replayScene) handleTheaterComplete(true);
+                        else setShowTheater(true);
+                      }}
                       disabled={gameOver || !commissionReady}
                       className="mt-3 w-full rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 py-3 text-sm font-black text-white shadow-[0_0_24px_rgba(244,63,94,0.35)] hover:from-rose-400 disabled:opacity-40 active:scale-[0.99] transition-all"
                     >
                       {objectives.length > 0
-                        ? (commissionReady ? '▶ 交付委托' : `完成全部子目标后交付（${objectivesDone.length}/${objectives.length}）`)
+                        ? (commissionReady ? (isRevisit ? '▶ 交付回访单' : '▶ 交付委托') : `完成全部子目标后交付（${objectivesDone.length}/${objectives.length}）`)
                         : (commissionReady ? '▶ 进入委托现场' : `信任达标后进入现场（${trust}/${commissionNeed}）`)}
                     </button>
                   ) : (
                     <p className="mt-3 text-center text-[10px] text-slate-500">（本委托剧本制作中，敬请期待）</p>
                   )}
                   <p className="mt-2 text-center text-[10px] text-slate-500">
-                    提示：信任影响交付结局的好坏（{trust}/{gateGoal}），子目标决定能否交付。
+                    提示：信任影响交付结局的好坏（{trust}/{gateGoal}），子目标决定能否交付。委托永不过期，进度跨天保留。
                   </p>
+                  {/* 放弃委托：唯一的失败途径（教学期隐藏，防卡新手引导） */}
+                  {!gameOver && !(tutorialStep > 0 && tutorialStep <= 6) && (
+                    <button
+                      onClick={() => setShowAbandonConfirm(true)}
+                      className="mt-2 w-full rounded-lg border border-white/10 bg-slate-800/60 py-2 text-[11px] font-bold text-slate-400 hover:bg-slate-700/60 active:scale-[0.99] transition-all"
+                    >
+                      ✕ 放弃委托（她会失望的）
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -1125,16 +1225,26 @@ export default function Shop() {
             </button>
           )
         )}
-        <button
-          onClick={() => { if (money >= 5) { applyDelta({ money: -5, energy: 2 }); addLog('买咖啡：精力 +2，资金 -5。', 'good'); toast('☕ 咕嘟咕嘟……精力 +2（资金 -5）'); } else toast('资金不足，咖啡 5 块一杯。'); }}
-          disabled={gameOver || money < 5}
-          className="rounded-xl bg-slate-800 border border-white/10 px-3 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 disabled:opacity-40"
-        >
-          ☕ 买咖啡
-        </button>
-        {!gameOver && step > 5 && (
-          <button onClick={handleEndDay} className="rounded-xl bg-rose-600 px-3 py-2.5 text-xs font-bold text-white">
-            结束今日
+        {(() => {
+          const today = new Date().toISOString().slice(0, 10);
+          const nextRelief = coffeeRelief(coffees.date === today ? coffees.n : 0);
+          return (
+            <button
+              onClick={() => {
+                if (money < COFFEE_COST) return toast(`资金不足，咖啡 ${COFFEE_COST} 块一杯。`);
+                const relief = buyCoffee();
+                if (relief > 0) toast(`☕ 咕嘟咕嘟……疲劳 -${relief}（资金 -${COFFEE_COST}）`);
+              }}
+              disabled={gameOver || money < COFFEE_COST || nextRelief === 0}
+              className="rounded-xl bg-slate-800 border border-white/10 px-3 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 disabled:opacity-40"
+            >
+              {nextRelief > 0 ? `☕ 买咖啡（疲劳 -${nextRelief}）` : '☕ 今天喝不下了'}
+            </button>
+          );
+        })()}
+        {!gameOver && (
+          <button onClick={handleEndDay} className="rounded-xl bg-indigo-700 px-3 py-2.5 text-xs font-bold text-white hover:bg-indigo-600">
+            🌙 打烊休息
           </button>
         )}
       </div>
@@ -1205,9 +1315,16 @@ export default function Shop() {
                   >
                     <p className="text-xs font-bold text-red-300 mb-1">⚡ {currentEvent.spot.risk.label}</p>
                     <p className="text-[10px] text-slate-400">
-                      {Object.entries(currentEvent.spot.risk.delta)
-                        .map(([k, v]) => `${{ time: '时间', energy: '精力', trust: '信任', rep: '口碑', money: '资金' }[k]}${(v as number) > 0 ? '+' : ''}${v}`)
-                        .join('，')}
+                      {(() => {
+                        const d = currentEvent.spot.risk!.delta;
+                        const f = fatigueFromDelta(d);
+                        const labels = { trust: '信任', rep: '口碑', money: '资金' } as const;
+                        return [
+                          f !== 0 ? `疲劳${f > 0 ? '+' : ''}${f}` : '',
+                          ...(Object.keys(labels) as (keyof typeof labels)[])
+                            .map(k => d[k] ? `${labels[k]}${(d[k] as number) > 0 ? '+' : ''}${d[k]}` : ''),
+                        ].filter(Boolean).join('，');
+                      })()}
                     </p>
                   </button>
                 )}
@@ -1282,6 +1399,55 @@ export default function Shop() {
         )}
       </AnimatePresence>
 
+      {/* ── 放弃委托确认弹窗 ── */}
+      <AnimatePresence>
+        {showAbandonConfirm && commission && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm px-6"
+            onClick={() => setShowAbandonConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.85, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', damping: 22 }}
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-sm rounded-2xl border border-red-500/40 bg-slate-900 p-5 text-center shadow-[0_0_60px_rgba(239,68,68,0.2)]"
+            >
+              <div className="text-3xl mb-2">💔</div>
+              <h2 className="text-base font-black text-white mb-1.5">真的要放弃【{commission.name}】？</h2>
+              <p className="text-xs text-slate-400 mb-4">
+                {(() => {
+                  const owned = ownedCharacters.some(o => o.characterId === commission.target);
+                  const targetChar = getCharacterById(commission.target);
+                  const name = targetChar?.name ?? '她';
+                  if (owned) return `${name}会很失望：好感下降，且一段时间内不会再发委托给你。`;
+                  if (commission.rarity === 'SR' || commission.rarity === 'SSR') return `放${name}鸽子的消息会传开：一段时间内你将更难遇到她（出现率下降），她的委托也不会上板。`;
+                  return '放了客人鸽子，口碑会受损（-1）。';
+                })()}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowAbandonConfirm(false)}
+                  className="flex-1 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 py-2.5 text-sm font-black text-white"
+                >
+                  继续做下去
+                </button>
+                <button
+                  onClick={() => { abandonCommission(); setShowAbandonConfirm(false); toast('委托已放弃。'); }}
+                  className="flex-1 rounded-xl border border-red-500/40 bg-red-500/10 py-2.5 text-sm font-bold text-red-300 hover:bg-red-500/20"
+                >
+                  放弃委托
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── 结算弹窗 ── */}
       <AnimatePresence>
         {endDayResult && (
@@ -1303,20 +1469,24 @@ export default function Shop() {
                   : 'border-red-500/40 bg-slate-900 shadow-[0_0_60px_rgba(239,68,68,0.2)]',
               )}
             >
-              <div className="text-4xl mb-3">{endDayResult === 'success' ? '🎉' : '😔'}</div>
+              <div className="text-4xl mb-3">{endDayResult === 'success' ? '🎉' : commission ? '🌙' : '😔'}</div>
               <h2 className="text-xl font-black text-white mb-2">
-                {endDayResult === 'success' ? '委托完成！' : '今日结束'}
+                {endDayResult === 'success' ? '委托完成！' : '今日打烊'}
               </h2>
-              {endDayResult === 'success' && commission && (
+              {endDayResult === 'success' && completedName && (
                 <p className="text-sm text-slate-400 mb-4">
-                  【{commission.name}】已完成，角色好感度提升，相关视频已解锁。
+                  【{completedName}】已完成，角色好感度提升，相关视频已解锁。
                 </p>
               )}
               {endDayResult === 'fail' && (
-                <p className="text-sm text-slate-400 mb-4">委托未完成，明天再努力吧。</p>
+                <p className="text-sm text-slate-400 mb-4">
+                  {commission
+                    ? `委托【${commission.name}】进度已保留——明天接着为她奔走，她等你。`
+                    : '明天再加油吧。'}
+                </p>
               )}
               <button
-                onClick={() => { setEndDayResult(null); resetDay(); setHandledThisLocation(false); setActiveTab('map'); }}
+                onClick={() => { setEndDayResult(null); setCompletedName(null); resetDay(); setHandledThisLocation(false); setActiveTab('map'); }}
                 className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-3 font-black text-amber-950"
               >
                 开始新的一天
@@ -1354,7 +1524,7 @@ export default function Shop() {
         <CommissionTheater
           key={pendingScene ? `scene-${pendingScene.start}` : 'final'}
           commission={commission}
-          scene={pendingScene ?? commission.finalScene}
+          scene={pendingScene ?? (isRevisit ? commission.replayScene : commission.finalScene)}
           initialTrust={trust}
           trustGoal={gateGoal}
           onSceneEnd={() => setPendingScene(null)}
@@ -1390,14 +1560,14 @@ export default function Shop() {
     </div>
   );
 
-  /* ── 检查失败（在 normalAdvance 后调用） ── */
+  /* ── 检查强制打烊（在改变疲劳/口碑的操作后调用） ── */
   function checkAndFail() {
     // 状态更新是异步的，延迟一帧检查
     setTimeout(() => {
       const s = useShopStore.getState();
       if (checkFail(s) && !s.gameOver) {
         s.setGameOver(true);
-        s.addLog('今日失败：时间、精力或口碑耗尽。', 'bad');
+        s.addLog('🌙 强制打烊：疲劳爆表或口碑见底。委托进度已保留。', 'bad');
         setEndDayResult('fail');
       }
     }, 0);

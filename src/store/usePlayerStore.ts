@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeStorage } from '@/lib/safeStorage';
+import { getCharacterById } from '@/data/characters';
+import { surplusCards, SHARD_VALUE, MAX_STAGE, type Rarity } from '@/engine/bondEngine';
 
 interface OwnedCharacter {
   characterId: string;
@@ -28,6 +30,13 @@ interface GachaHistoryEntry {
   characterId: string;
   rarity: string;
   timestamp: number;
+}
+
+/** N 个自然日后的日期（'YYYY-MM-DD'），用于缘分 UP / 冷淡的限时计时 */
+function dateAfterDays(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
 }
 
 interface PlayerState {
@@ -61,6 +70,14 @@ interface PlayerState {
   relationshipStages: Record<string, number>;
   // 每日限频记录：key（如 interact:touch:linxia / stage:linxia）→ 'YYYY-MM-DD'
   dailyActions: Record<string, string>;
+  /** 累计获得的同角色卡数（首张=1）：关系阶段的「钥匙」门槛 */
+  dupeCount: Record<string, number>;
+  /** 缘分碎片（引荐系统通货，溢出卡折算所得） */
+  bondShards: number;
+  /** 缘分 UP 截止日（completedCommission → 限时权重 ×4）：characterId → 'YYYY-MM-DD' 含当日 */
+  rateUpUntil: Record<string, string>;
+  /** 冷淡截止日（放弃委托 → 限时权重 ×0.25 + 委托不上板）：characterId → 'YYYY-MM-DD' 含当日 */
+  coldUntil: Record<string, string>;
 
   // Gacha
   totalGachaCount: number;
@@ -90,6 +107,13 @@ interface PlayerState {
   setFlag: (flag: string) => void;
   addCharacter: (characterId: string) => void;
   addAffinity: (characterId: string, amount: number) => void;
+  addBondShards: (amount: number) => void;
+  /** 把所有角色超出满阶所需（5 张）的溢出信物折算成缘分碎片，返回折得数量 */
+  convertSurplusToShards: () => number;
+  /** 完成她的委托：缘分 UP 若干自然日（同时解除冷淡） */
+  setCharacterRateUp: (characterId: string, days: number) => void;
+  /** 放弃她的委托：冷淡若干自然日 */
+  setCharacterCold: (characterId: string, days: number) => void;
   advanceRelationshipStage: (characterId: string) => void;
   tryDailyAction: (key: string) => boolean;
   addExp: (characterId: string, amount: number) => void;
@@ -121,6 +145,10 @@ const initialState = {
   affinityMap: {} as Record<string, number>,
   relationshipStages: {} as Record<string, number>,
   dailyActions: {} as Record<string, string>,
+  dupeCount: {} as Record<string, number>,
+  bondShards: 0,
+  rateUpUntil: {} as Record<string, string>,
+  coldUntil: {} as Record<string, string>,
   totalGachaCount: 0,
   pityCounter: 0,
   gachaHistory: [] as GachaHistoryEntry[],
@@ -172,13 +200,41 @@ export const usePlayerStore = create<PlayerState>()(
         ownedCharacters: s.ownedCharacters.some(c => c.characterId === characterId)
           ? s.ownedCharacters
           : [...s.ownedCharacters, { characterId, level: 1, exp: 0 }],
+        // 重复卡不再是空气：累计计数，作为关系阶段的钥匙门槛
+        dupeCount: { ...s.dupeCount, [characterId]: (s.dupeCount[characterId] ?? 0) + 1 },
       })),
       addAffinity: (characterId, amount) => set(s => ({
         affinityMap: {
           ...s.affinityMap,
-          [characterId]: (s.affinityMap[characterId] ?? 0) + amount,
+          [characterId]: Math.max(0, (s.affinityMap[characterId] ?? 0) + amount),
         },
       })),
+      addBondShards: (amount) => set(s => ({ bondShards: Math.max(0, s.bondShards + amount) })),
+      convertSurplusToShards: () => {
+        const s0 = get();
+        let gained = 0;
+        const dupeCount = { ...s0.dupeCount };
+        for (const [id, n] of Object.entries(dupeCount)) {
+          const surplus = surplusCards(n);
+          if (surplus <= 0) continue;
+          const rarity = getCharacterById(id)?.rarity as Rarity | undefined;
+          if (!rarity) continue;
+          gained += surplus * SHARD_VALUE[rarity];
+          dupeCount[id] = MAX_STAGE;
+        }
+        if (gained > 0) set(s => ({ dupeCount, bondShards: s.bondShards + gained }));
+        return gained;
+      },
+      setCharacterRateUp: (characterId, days) => set(s => {
+        const coldUntil = { ...s.coldUntil };
+        delete coldUntil[characterId];
+        return { rateUpUntil: { ...s.rateUpUntil, [characterId]: dateAfterDays(days) }, coldUntil };
+      }),
+      setCharacterCold: (characterId, days) => set(s => {
+        const rateUpUntil = { ...s.rateUpUntil };
+        delete rateUpUntil[characterId];
+        return { coldUntil: { ...s.coldUntil, [characterId]: dateAfterDays(days) }, rateUpUntil };
+      }),
       advanceRelationshipStage: (characterId) => set(s => ({
         relationshipStages: {
           ...s.relationshipStages,
@@ -229,7 +285,7 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'xiashan-player-store',
-      version: 4,
+      version: 5,
       storage: createJSONStorage(() => safeStorage),
       // 旧版本存档可能缺字段、字段为 null 或类型不符（项目从 AVG 改版而来），
       // 合并时丢弃所有与默认值类型不符的项，避免启动即崩、全页空白。
@@ -254,6 +310,24 @@ export const usePlayerStore = create<PlayerState>()(
           personTickets?: number;
           commissionTickets?: number;
         };
+        if (version < 5) {
+          // 重复卡计数从抽卡历史回放统计（老玩家不亏）；已拥有但无历史记录的保底 1 张
+          const s5 = state as typeof state & {
+            dupeCount?: Record<string, number>;
+            gachaHistory?: { characterId: string }[];
+          };
+          const dupeCount: Record<string, number> = {};
+          for (const entry of s5.gachaHistory ?? []) {
+            if (entry?.characterId) dupeCount[entry.characterId] = (dupeCount[entry.characterId] ?? 0) + 1;
+          }
+          for (const c of s5.ownedCharacters ?? []) {
+            if (c?.characterId && !dupeCount[c.characterId]) dupeCount[c.characterId] = 1;
+          }
+          s5.dupeCount = dupeCount;
+          s5.bondShards = typeof state.bondShards === 'number' ? state.bondShards : 0;
+          s5.rateUpUntil = {};
+          s5.coldUntil = {};
+        }
         if (version < 4) {
           // Existing players skip the tutorial; brand-new saves start it
           const s4 = state as typeof state & { tutorialStep?: number };

@@ -179,7 +179,8 @@ export default function Story() {
         const trigger = currentNode.gachaTrigger;
         if (trigger) {
           const ownedIds = ownedCharacters.map((c) => c.characterId);
-          const pullResult = pullSingle(ownedIds, usePlayerStore.getState().affinityMap, usePlayerStore.getState().pityCounter, usePlayerStore.getState().totalGachaCount);
+          const ps = usePlayerStore.getState();
+          const pullResult = pullSingle(ownedIds, ps.affinityMap, ps.pityCounter, ps.totalGachaCount, { rateUpUntil: ps.rateUpUntil, coldUntil: ps.coldUntil });
           const gachaResult = pullResult.result;
           addCharacter(gachaResult.character.id);
           usePlayerStore.getState().addGachaResult(gachaResult.character.id, gachaResult.character.rarity);

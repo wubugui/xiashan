@@ -24,6 +24,7 @@ export default function VideoGallery() {
   const relationshipStages = usePlayerStore((s) => s.relationshipStages);
   const completedNodes = usePlayerStore((s) => s.completedNodes);
   const flags = usePlayerStore((s) => s.flags);
+  const dupeCount = usePlayerStore((s) => s.dupeCount);
 
   const conditionState = useMemo(
     () => ({
@@ -37,8 +38,9 @@ export default function VideoGallery() {
       relationshipStages,
       completedNodes,
       flags,
+      dupeCount,
     }),
-    [spiritStones, reputation, ownedCharacters, affinityMap, relationshipStages, completedNodes, flags],
+    [spiritStones, reputation, ownedCharacters, affinityMap, relationshipStages, completedNodes, flags, dupeCount],
   );
 
   const isUnlocked = (video: VideoEntry) =>

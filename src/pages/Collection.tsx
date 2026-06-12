@@ -67,6 +67,12 @@ export default function Collection() {
                 已收集 {ownedCharacters.length}/{characters.length} · SSR {ownedByRarity.SSR || 0} · SR {ownedByRarity.SR || 0}
               </p>
             </div>
+            <button
+              onClick={() => navigate('/bonds')}
+              className="shrink-0 rounded-full border border-pink-400/30 bg-pink-500/10 px-3 py-1.5 text-xs font-bold text-pink-300 hover:bg-pink-500/20"
+            >
+              💌 缘分图鉴
+            </button>
           </div>
 
           <div className="px-4 pb-3">

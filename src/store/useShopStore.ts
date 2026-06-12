@@ -10,7 +10,12 @@ import type { Commission, GameLocation, ServiceCard, ServiceTag, TheaterScene } 
 import { sideJobs as allSideJobs } from '@/data/sideJobs';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { locations as allLocations } from '@/data/locations';
-import { rollRoutes } from '@/engine/shopEngine';
+import { getCharacterById } from '@/data/characters';
+import {
+  rollRoutes, fatigueFromDelta, coffeeRelief,
+  FATIGUE_MAX, FATIGUE_TIRED, FATIGUE_EXHAUSTED, COFFEE_COST,
+} from '@/engine/shopEngine';
+import { COLD_DAYS } from '@/engine/gachaEngine';
 
 export interface HandCard extends ServiceCard {
   /** 唯一实例 id，用于消耗时精准移除 */
@@ -24,22 +29,24 @@ export interface LogEntry {
 
 interface ShopState {
   /* ── 局内资源 ── */
-  time: number;
-  energy: number;
+  /** 疲劳（0-100）：唯一的体力仪表。60+ 疲惫（信任减半），85+ 透支（接不了新单），100 强制打烊 */
+  fatigue: number;
   rep: number;
   money: number;
   trust: number;
-  step: number;
+  /** 今日咖啡杯数（同一自然日内效果递减） */
+  coffees: { date: string; n: number };
 
   /* ── 进程 ── */
+  /** 当前接取的委托：锁单制——永不过期、进度跨天保留，只能交付或主动放弃 */
   commission: Commission | null;
+  /** 是否为回访单（该委托已完成过且重接）：剧场走精简模式、奖励递减 */
+  isRevisit: boolean;
   loc: GameLocation | null;
   routes: GameLocation[];
   /* ── 委托板（v1.4）── */
-  /** 今日可接委托 id（含逾期单） */
+  /** 今日可接委托 id */
   board: string[];
-  /** 逾期委托：失败后次日可重接，最多拖 2 天 */
-  overdue: { id: string; daysLeft: number } | null;
   /** 已完成子目标 id */
   objectivesDone: string[];
   /** 今日顺手单 */
@@ -56,15 +63,20 @@ interface ShopState {
   lastCardType: ServiceTag | null;
   /** 今日已读浏览器情报的委托 id：接单时初始信任 +2 */
   intel: string[];
+  /** 连续未推进委托子目标的行动次数（攒到 3 次触发委托人手机轻催促） */
+  offTask: number;
 
   /* ── Actions ── */
   startDay: () => void;
   refreshRoutes: () => void;
   acceptCommission: (id: string) => void;
+  /** 主动放弃当前委托：唯一的委托失败途径，按目标角色稀有度/持有分层惩罚 */
+  abandonCommission: () => void;
+  /** 委托了结（交付成功或收尾失败后）：清空委托槽位 */
+  clearCommission: () => void;
   completeObjective: (objectiveId: string) => void;
   completeSideJob: (id: string) => void;
   setPendingScene: (scene: TheaterScene | null) => void;
-  setOverdue: (o: { id: string; daysLeft: number } | null) => void;
   setCommission: (c: Commission) => void;
   chooseLocation: (loc: GameLocation) => void;
   /** 退回路线选择（不消耗路段，路线不重掷） */
@@ -73,27 +85,31 @@ interface ShopState {
   consumeHandCard: (uid: number) => void;
   setLastCardType: (t: ServiceTag | null) => void;
   grantIntel: (commissionId: string) => void;
-  applyDelta: (delta: Partial<{ time: number; energy: number; money: number; trust: number; rep: number }>) => void;
+  /** 资源增减：内容数据中的 time/energy 消耗自动折算为疲劳 */
+  applyDelta: (delta: Partial<{ time: number; energy: number; fatigue: number; money: number; trust: number; rep: number }>) => void;
   markSpotDone: (locId: string, spotIndex: number) => void;
-  finishLocation: () => 'continue' | 'end_day';
+  finishLocation: () => void;
   normalAdvance: () => void;
+  /** 买咖啡缓解疲劳（同一自然日递减），返回本杯缓解量（0 = 今天喝不下了/钱不够） */
+  buyCoffee: () => number;
+  /** 热点结算后记录本次行动是否推进了委托子目标（驱动手机轻催促） */
+  noteCommissionFocus: (hit: boolean) => void;
   addLog: (text: string, cls?: LogEntry['cls']) => void;
   setGameOver: (over: boolean) => void;
   resetDay: () => void;
 }
 
 const INITIAL: Omit<ShopState, keyof { [K in keyof ShopState as ShopState[K] extends (...args: never[]) => unknown ? K : never]: unknown }> = {
-  time: 13,
-  energy: 8,
+  fatigue: 0,
   rep: 5,
   money: 20,
   trust: 0,
-  step: 1,
+  coffees: { date: '', n: 0 },
   commission: null,
+  isRevisit: false,
   loc: null,
   routes: [],
   board: [],
-  overdue: null,
   objectivesDone: [],
   sideJobs: [],
   pendingScene: null,
@@ -103,28 +119,28 @@ const INITIAL: Omit<ShopState, keyof { [K in keyof ShopState as ShopState[K] ext
   gameOver: false,
   lastCardType: null,
   intel: [],
+  offTask: 0,
 };
 
 let _uid = 1;
 
-/** 掷今日委托板：逾期单优先,其余从未完成的委托里随机补满 3 张 */
-function rollBoard(overdue: { id: string; daysLeft: number } | null, forced: string[] = []): string[] {
-  const doneFlags = usePlayerStore.getState().flags;
-  const isDone = (id: string) => doneFlags.includes(`commission_${id}_done`);
-  // Forced commissions always appear first (skip if already done)
-  const board: string[] = [
-    ...forced.filter(f => !isDone(f)),
-    ...(overdue && !forced.includes(overdue.id) ? [overdue.id] : []),
-  ];
-  const excluded = new Set([...forced, overdue?.id ?? '']);
-  const fresh = commissions.filter(c => !isDone(c.id) && !excluded.has(c.id)).map(c => c.id);
-  const fallback = commissions.filter(c => isDone(c.id) && !excluded.has(c.id)).map(c => c.id);
-  const shuffled = [...fresh].sort(() => Math.random() - 0.5);
-  for (const id of shuffled) {
+/** 掷今日委托板：未完成的委托优先随机补满 3 张，余位用已完成的回访单填充。
+ *  冷淡期角色（被放弃过委托）的单不上板——她暂时不想见你。 */
+function rollBoard(forced: string[] = []): string[] {
+  const player = usePlayerStore.getState();
+  const isDone = (id: string) => player.flags.includes(`commission_${id}_done`);
+  const today = new Date().toISOString().slice(0, 10);
+  const isCold = (c: { target: string }) => (player.coldUntil[c.target] ?? '') >= today;
+  const board: string[] = [...forced.filter(f => !isDone(f))];
+  const excluded = new Set(forced);
+  const pool = commissions.filter(c => !excluded.has(c.id) && !isCold(c));
+  const fresh = pool.filter(c => !isDone(c.id)).map(c => c.id);
+  const revisit = pool.filter(c => isDone(c.id)).map(c => c.id);
+  for (const id of [...fresh].sort(() => Math.random() - 0.5)) {
     if (board.length >= 3) break;
     board.push(id);
   }
-  for (const id of [...fallback].sort(() => Math.random() - 0.5)) {
+  for (const id of [...revisit].sort(() => Math.random() - 0.5)) {
     if (board.length >= 3) break;
     board.push(id);
   }
@@ -135,50 +151,99 @@ function rollSideJobs(): { id: string; done: boolean }[] {
   return [...allSideJobs].sort(() => Math.random() - 0.5).slice(0, 2).map(j => ({ id: j.id, done: false }));
 }
 
+/** 当前委托还差的子目标限定地点标签（路线保底掷取用） */
+function pendingLocTags(commission: Commission | null, objectivesDone: string[]): string[] {
+  if (!commission?.objectives) return [];
+  return commission.objectives
+    .filter(o => !objectivesDone.includes(o.id) && o.locTag)
+    .map(o => o.locTag!);
+}
+
 export const useShopStore = create<ShopState>()(
   persist(
     (set, get) => ({
       ...INITIAL,
 
       startDay: () => {
-        const routes = rollRoutes(allLocations);
-        // 逾期单跨天衰减:每开新一天 daysLeft-1,归零作废
-        const prevOverdue = get().overdue;
-        const overdue = prevOverdue && prevOverdue.daysLeft > 1
-          ? { ...prevOverdue, daysLeft: prevOverdue.daysLeft - 1 }
-          : prevOverdue && prevOverdue.daysLeft === 1 ? prevOverdue : null;
+        const s0 = get();
+        const routes = rollRoutes(allLocations, 3, pendingLocTags(s0.commission, s0.objectivesDone));
         // 教学模式下保证「面试」委托出现在委托板
         const ts = usePlayerStore.getState().tutorialStep;
         const forced = (ts >= 0 && ts < 4) ? ['interview'] : [];
-        const board = rollBoard(overdue, forced);
-        // 手牌跨天保留：消耗卡是持有资产（含店外抽卡页抽到的），不随开新一天清空
-        set({ ...INITIAL, routes, overdue, board, sideJobs: rollSideJobs(), done: {}, hand: get().hand, log: [], gameOver: false });
-        get().addLog('开始营业:委托板已更新,顺手单已挂出。', 'good');
+        const board = rollBoard(forced);
+        // 跨天保留：手牌（持有资产）+ 进行中委托（锁单制：进度不清零，干不完明天继续）
+        // 咖啡杯数挂真实自然日，休息不重置（防「打烊刷咖啡」）
+        set({
+          ...INITIAL, routes, board, sideJobs: rollSideJobs(), done: {},
+          hand: s0.hand, log: [], gameOver: false,
+          coffees: s0.coffees,
+          commission: s0.commission, isRevisit: s0.isRevisit,
+          trust: s0.commission ? s0.trust : 0,
+          objectivesDone: s0.commission ? s0.objectivesDone : [],
+        });
+        if (s0.commission) {
+          get().addLog(`开始营业。委托【${s0.commission.name}】进度已保留——接着为她奔走吧。`, 'good');
+        } else {
+          get().addLog('开始营业:委托板已更新,顺手单已挂出。', 'good');
+        }
       },
 
-      refreshRoutes: () => set({ routes: rollRoutes(allLocations) }),
+      refreshRoutes: () => set(s => ({ routes: rollRoutes(allLocations, 3, pendingLocTags(s.commission, s.objectivesDone)) })),
 
-      setCommission: (c) => set({ commission: c, trust: 0 }),
+      setCommission: (c) => set({ commission: c, isRevisit: false, trust: 0, objectivesDone: [] }),
 
       acceptCommission: (id) => {
         const c = commissions.find(x => x.id === id);
         if (!c) return;
         const s0 = get();
-        const isOverdue = s0.overdue?.id === id;
+        if (s0.commission) return; // 锁单制：先了结手上的委托
+        if (s0.fatigue >= FATIGUE_EXHAUSTED) {
+          get().addLog('🥴 你已经累得睁不开眼，没法对新委托负责——先休息吧。', 'bad');
+          return;
+        }
         const hasIntel = s0.intel.includes(id);
+        // 回访单：该委托已完成过——精简剧场（不播开场/子目标幕），奖励递减
+        const isRevisit = usePlayerStore.getState().flags.includes(`commission_${id}_done`);
         set({
           commission: c,
+          isRevisit,
           trust: hasIntel ? 2 : 0,
           objectivesDone: [],
           board: s0.board.filter(b => b !== id),
-          pendingScene: c.introScene ?? null,
-          rep: isOverdue ? Math.max(0, s0.rep - 1) : s0.rep,
+          pendingScene: isRevisit ? null : (c.introScene ?? null),
         });
-        get().addLog(isOverdue
-          ? `重接逾期委托【${c.name}】,口碑 -1。这次别再让她等了。`
-          : `接下委托【${c.name}】。${c.desc}`, isOverdue ? 'bad' : 'good');
+        get().addLog(isRevisit
+          ? `接下回访单【${c.name}】。她又想起了你——这次轻车熟路。`
+          : `接下委托【${c.name}】。${c.desc}`, 'good');
         if (hasIntel) get().addLog('📰 你看过今早的新闻，对情况心里有数。初始信任 +2。', 'good');
       },
+
+      abandonCommission: () => {
+        const s0 = get();
+        const c = s0.commission;
+        if (!c) return;
+        const player = usePlayerStore.getState();
+        const owned = player.ownedCharacters.some(o => o.characterId === c.target);
+        const rare = c.rarity === 'SR' || c.rarity === 'SSR';
+        set({ commission: null, isRevisit: false, trust: 0, objectivesDone: [], pendingScene: null });
+        get().addLog(`你放弃了委托【${c.name}】。`, 'bad');
+        if (owned) {
+          // 已拥有：直接打感情线，冷淡期内回访单不上板
+          player.addAffinity(c.target, -5);
+          player.setCharacterCold(c.target, COLD_DAYS);
+          get().addLog(`她知道了。好感 -5，接下来 ${COLD_DAYS} 天她不会再发委托给你。`, 'bad');
+        } else if (rare) {
+          // 未拥有的稀有角色：冷淡 DOWN——一段时间内更难在补给池遇到她
+          player.setCharacterCold(c.target, COLD_DAYS);
+          get().addLog(`消息传开了。接下来 ${COLD_DAYS} 天，你更难遇到她（出现率下降）。`, 'bad');
+        } else {
+          set(prev => ({ rep: Math.max(0, prev.rep - 1) }));
+          get().addLog('放了客人鸽子，口碑 -1。', 'bad');
+        }
+      },
+
+      clearCommission: () =>
+        set({ commission: null, isRevisit: false, trust: 0, objectivesDone: [], pendingScene: null }),
 
       completeObjective: (objectiveId) => {
         const s0 = get();
@@ -187,7 +252,8 @@ export const useShopStore = create<ShopState>()(
         set({
           objectivesDone: [...s0.objectivesDone, objectiveId],
           trust: s0.trust + obj.trust,
-          pendingScene: obj.scene,
+          // 回访单精简模式：子目标不重播剧场幕
+          pendingScene: s0.isRevisit ? s0.pendingScene : obj.scene,
         });
         get().addLog(`✅ 子目标完成:${obj.desc}。信任 +${obj.trust}。`, 'good');
       },
@@ -199,7 +265,6 @@ export const useShopStore = create<ShopState>()(
       },
 
       setPendingScene: (scene) => set({ pendingScene: scene }),
-      setOverdue: (o) => set({ overdue: o }),
 
       chooseLocation: (loc) =>
         set(s => ({
@@ -220,14 +285,23 @@ export const useShopStore = create<ShopState>()(
       grantIntel: (commissionId) =>
         set(s => ({ intel: s.intel.includes(commissionId) ? s.intel : [...s.intel, commissionId] })),
 
-      applyDelta: (delta) =>
+      applyDelta: (delta) => {
+        const before = get().fatigue;
+        const after = Math.min(FATIGUE_MAX, Math.max(0, before + fatigueFromDelta(delta)));
         set(s => ({
-          time: Math.max(0, s.time + (delta.time ?? 0)),
-          energy: Math.max(0, s.energy + (delta.energy ?? 0)),
+          fatigue: after,
           money: Math.max(0, s.money + (delta.money ?? 0)),
           trust: Math.max(0, s.trust + (delta.trust ?? 0)),
           rep: Math.max(0, s.rep + (delta.rep ?? 0)),
-        })),
+        }));
+        // 跨过疲劳阈值时给一次叙事提示（软惩罚要让玩家知道发生了什么）
+        if (before < FATIGUE_TIRED && after >= FATIGUE_TIRED) {
+          get().addLog('😮‍💨 你开始觉得累了——疲惫状态：信任收益减半。来杯咖啡，或者早点打烊。', 'bad');
+        }
+        if (before < FATIGUE_EXHAUSTED && after >= FATIGUE_EXHAUSTED) {
+          get().addLog('🥴 强弩之末——透支状态：接不了新委托了。再硬撑就要累垮。', 'bad');
+        }
+      },
 
       markSpotDone: (locId, spotIndex) =>
         set(s => ({
@@ -239,41 +313,71 @@ export const useShopStore = create<ShopState>()(
 
       finishLocation: () => {
         const s = get();
-        const newStep = s.step + 1;
-        const newTime = Math.max(0, s.time - 1);
-        const newEnergy = Math.max(0, s.energy - 1);
-        if (newStep > 5) {
-          set({ step: newStep, time: newTime, energy: newEnergy, loc: null });
-          return 'end_day';
-        }
         set({
-          step: newStep,
-          time: newTime,
-          energy: newEnergy,
           loc: null,
-          routes: rollRoutes(allLocations),
+          routes: rollRoutes(allLocations, 3, pendingLocTags(s.commission, s.objectivesDone)),
         });
-        get().addLog('离开当前地点，进入下一段路线。');
-        return 'continue';
+        get().applyDelta({ fatigue: 10 });
+        get().addLog('离开当前地点，进入下一段路线。疲劳 +10。');
       },
 
       normalAdvance: () => {
         const s = get();
         if (!s.commission) {
-          set(prev => ({
-            time: Math.max(0, prev.time - 1),
-            energy: Math.max(0, prev.energy - 1),
-            money: prev.money + 2,
-          }));
-          get().addLog('普通跑腿：资金 +2，时间 -1，精力 -1。');
+          get().applyDelta({ fatigue: 10, money: 2 });
+          get().addLog('普通跑腿：资金 +2，疲劳 +10。');
         } else {
-          set(prev => ({
-            time: Math.max(0, prev.time - 2),
-            energy: Math.max(0, prev.energy - 1),
-            trust: prev.trust + 1,
-          }));
-          get().addLog('普通推进：信任 +1，时间 -2，精力 -1。');
+          const who = getCharacterById(s.commission.client ?? s.commission.target)?.name ?? '她';
+          get().applyDelta({ fatigue: 14, trust: 1 });
+          get().addLog(`为${who}的事四处奔走打点：信任 +1，疲劳 +14。`);
         }
+      },
+
+      buyCoffee: () => {
+        const s = get();
+        const today = new Date().toISOString().slice(0, 10);
+        const n = s.coffees.date === today ? s.coffees.n : 0;
+        const relief = coffeeRelief(n);
+        if (relief === 0 || s.money < COFFEE_COST) return 0;
+        set(prev => ({
+          money: prev.money - COFFEE_COST,
+          fatigue: Math.max(0, prev.fatigue - relief),
+          coffees: { date: today, n: n + 1 },
+        }));
+        const next = coffeeRelief(n + 1);
+        get().addLog(`☕ 买咖啡：疲劳 -${relief}，资金 -${COFFEE_COST}。${next > 0 ? `（再喝效果会变差：下一杯 -${next}）` : '（今天喝到头了，再喝只剩心悸）'}`, 'good');
+        return relief;
+      },
+
+      noteCommissionFocus: (hit) => {
+        const s0 = get();
+        const c = s0.commission;
+        // 没有子目标的委托不催（任何热点都算在为她攒信任）
+        if (!c || !c.objectives?.length) return;
+        if (hit) {
+          if (s0.offTask !== 0) set({ offTask: 0 });
+          return;
+        }
+        const n = s0.offTask + 1;
+        if (n < 3) {
+          set({ offTask: n });
+          return;
+        }
+        set({ offTask: 0 });
+        // 轻催促：纯叙事提醒，不扣数值；每委托每自然日最多一次
+        const player = usePlayerStore.getState();
+        if (!player.tryDailyAction(`nudge:${c.id}`)) return;
+        const clientId = c.client ?? c.target;
+        const who = getCharacterById(clientId)?.name ?? '她';
+        player.addPhoneMessage({
+          id: `nudge_${c.id}_${Date.now()}`,
+          characterId: clientId,
+          type: 'wechat',
+          content: '那个……不着急的！就是想问问，事情还顺利吗？我在的，随时找我。',
+          timestamp: Date.now(),
+          read: false,
+        });
+        get().addLog(`📱 ${who}发来消息，小心翼翼地问起委托【${c.name}】的进展——她在等你。`, '');
       },
 
       addLog: (text, cls = '') =>
@@ -286,7 +390,7 @@ export const useShopStore = create<ShopState>()(
     }),
     {
       name: 'xiashan-shop-store',
-      version: 2,
+      version: 4,
       storage: createJSONStorage(() => safeStorage),
       // 局内存档是当天一局的断点，跨版本恢复价值低、风险高（整对象快照随内容结构漂移）。
       // 旧版本（version < 1）一律作废重开一天。
@@ -320,13 +424,13 @@ function isValidShopSnapshot(p: unknown): boolean {
     const c = s.commission as Record<string, unknown>;
     if (typeof c.need !== 'number' || typeof c.id !== 'string') return false;
   }
-  for (const key of ['time', 'energy', 'rep', 'money', 'trust', 'step'] as const) {
+  for (const key of ['fatigue', 'rep', 'money', 'trust'] as const) {
     if (s[key] !== undefined && typeof s[key] !== 'number') return false;
   }
   return true;
 }
 
-/** 检查局内资源耗尽 → 返回是否失败 */
-export function checkFail(s: Pick<ShopState, 'time' | 'energy' | 'rep'>): boolean {
-  return s.time <= 0 || s.energy <= 0 || s.rep <= 0;
+/** 检查局内资源耗尽 → 返回是否被迫打烊（疲劳爆表或口碑见底） */
+export function checkFail(s: Pick<ShopState, 'fatigue' | 'rep'>): boolean {
+  return s.fatigue >= FATIGUE_MAX || s.rep <= 0;
 }

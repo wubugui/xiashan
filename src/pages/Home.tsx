@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Store, Sparkles, Users, Smartphone, Film, Gamepad2, X } from 'lucide-react';
+import { Store, Sparkles, Users, Smartphone, Film, Gamepad2, Heart, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { characters } from '@/data/characters';
@@ -159,6 +159,18 @@ export default function Home() {
         faceClassName: 'h-[21.75rem] w-[21.75rem] -right-[7.2rem] -top-[8.6rem]',
       },
       onClick: () => navigate('/collection'),
+    },
+    {
+      id: 'bonds',
+      label: '缘分图鉴',
+      hint: '她们的终极形态之路',
+      icon: Heart,
+      color: 'from-pink-500 to-rose-700',
+      art: {
+        scene: '/bg/scene/store-night.jpg',
+        sceneOpacity: 'opacity-25',
+      },
+      onClick: () => navigate('/bonds'),
     },
     {
       id: 'phone',

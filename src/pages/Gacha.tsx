@@ -21,6 +21,8 @@ export default function Gacha() {
   const affinityMap = usePlayerStore((s) => s.affinityMap);
   const supplyPityCounter = usePlayerStore((s) => s.supplyPityCounter);
   const gachaHistory = usePlayerStore((s) => s.gachaHistory);
+  const rateUpUntil = usePlayerStore((s) => s.rateUpUntil);
+  const coldUntil = usePlayerStore((s) => s.coldUntil);
   const addCharacter = usePlayerStore((s) => s.addCharacter);
   const addSpiritStones = usePlayerStore((s) => s.addSpiritStones);
   const addGachaResult = usePlayerStore((s) => s.addGachaResult);
@@ -55,7 +57,7 @@ export default function Gacha() {
       const entries: { icon: string; name: string; sub: string; tier: 'normal' | 'rare'; desc: string }[] = [];
 
       for (let i = 0; i < (isTen ? 10 : 1); i++) {
-        const { result, newPity } = pullSupply(ownedIds, affinityMap, pity);
+        const { result, newPity } = pullSupply(ownedIds, affinityMap, pity, { rateUpUntil, coldUntil });
         pity = newPity;
         if (result.kind === 'person') {
           addCharacter(result.character.id);
@@ -111,7 +113,7 @@ export default function Gacha() {
         }
       }
     },
-    [spiritStones, ownedCharacters, affinityMap, supplyPityCounter, addCharacter, addSpiritStones, addGachaResult, setSupplyPityCounter, addHandCard, addHintTokens],
+    [spiritStones, ownedCharacters, affinityMap, supplyPityCounter, rateUpUntil, coldUntil, addCharacter, addSpiritStones, addGachaResult, setSupplyPityCounter, addHandCard, addHintTokens],
   );
 
   // 心动 UP：好感已达标但尚未入伙的角色（同稀有度内权重提升）
