@@ -166,7 +166,7 @@ export default function CharacterDetail() {
   const heroArtUrl = character.gachaBackgroundUrl || character.portraitUrl;
 
   return (
-    <div className="relative min-h-screen bg-slate-950 pb-24">
+    <div className="relative min-h-screen bg-slate-950 pb-nav">
       {/* 返回按钮 */}
       <div className="absolute left-4 top-4 z-30">
         <button

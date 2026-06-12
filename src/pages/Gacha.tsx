@@ -347,7 +347,7 @@ export default function Gacha() {
       </div>
 
       {/* 底部抽卡按钮 */}
-      <div className="relative z-10 w-full px-6 pb-24 pt-4">
+      <div className="relative z-10 w-full px-6 pb-nav pt-4">
         <div className="flex gap-4">
           {/* 单抽 */}
           <motion.button

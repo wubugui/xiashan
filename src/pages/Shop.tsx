@@ -2,7 +2,7 @@
  * 都市便利屋 · 分池抽卡 主界面
  * 移动端竖屏布局，复用 GachaAnimation。
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -22,6 +22,7 @@ import GachaAnimation from '@/components/GachaAnimation';
 import CommissionTheater from '@/components/CommissionTheater';
 import ResetSaveButton from '@/components/ResetSaveButton';
 import SupplyReveal, { type RevealItem } from '@/components/SupplyReveal';
+import { useCssVarFromHeight } from '@/hooks/useCssVarFromHeight';
 import type { Spot } from '@/data/types';
 
 /** GachaAnimation 内部格式（与 engine 的 GachaResult 不同） */
@@ -188,6 +189,9 @@ export default function Shop() {
   const [revealItem, setRevealItem] = useState<RevealItem | null>(null);
   /** 地图 NPC 闲聊气泡 */
   const [npcTalk, setNpcTalk] = useState<{ name: string; emoji: string; line: string } | null>(null);
+  /** 底部操作条实测高度 → --bar-h（浮层/内容留白据此自动适配） */
+  const actionBarRef = useRef<HTMLDivElement>(null);
+  useCssVarFromHeight('--bar-h', actionBarRef);
 
   /* ── 初始化 ── */
   const isNew = routes.length === 0 && !gameOver && commission === null && step === 1 && time === 13;
@@ -429,7 +433,7 @@ export default function Shop() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#080b12] pb-44">
+    <div className="relative min-h-screen overflow-hidden bg-[#080b12] pb-chrome">
       {/* 背景 */}
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 pointer-events-none" />
 
@@ -920,7 +924,7 @@ export default function Shop() {
       </div>
 
       {/* ── 底部操作区 ── */}
-      <div className="fixed bottom-16 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/95 backdrop-blur-xl px-3 py-2 flex flex-wrap gap-2 mb-[env(safe-area-inset-bottom)]">
+      <div ref={actionBarRef} style={{ bottom: 'var(--nav-h, 0px)' }} className="fixed left-0 right-0 z-50 border-t border-white/10 bg-slate-950/95 backdrop-blur-xl px-3 py-2 flex flex-wrap gap-2">
         {loc ? (
           <>
             {!handledThisLocation && (
@@ -1172,7 +1176,7 @@ export default function Shop() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-xl bg-slate-800 border border-white/10 px-4 py-2 text-sm text-white shadow-xl"
+            className="fixed above-chrome left-1/2 z-50 -translate-x-1/2 rounded-xl bg-slate-800 border border-white/10 px-4 py-2 text-sm text-white shadow-xl"
           >
             {toastMsg}
           </motion.div>

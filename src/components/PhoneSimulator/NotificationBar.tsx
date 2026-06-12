@@ -89,7 +89,8 @@ export default function NotificationBar({
       exit={{ y: -80, opacity: 0 }}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       onClick={onClick}
-      className="fixed left-1/2 top-4 z-[9999] w-[360px] -translate-x-1/2 cursor-pointer"
+      style={{ top: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)', width: 'min(360px, 92vw)' }}
+      className="fixed left-1/2 z-[9999] -translate-x-1/2 cursor-pointer"
     >
       <div
         className="rounded-2xl p-3 shadow-2xl"

@@ -280,7 +280,7 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 120, opacity: 0 }}
             transition={{ type: 'spring', damping: 26, stiffness: 280 }}
-            className="absolute bottom-0 left-0 right-0 z-40 max-h-[64%] overflow-y-auto rounded-t-2xl border-t border-white/10 bg-slate-900/95 backdrop-blur-xl p-4"
+            className="absolute bottom-0 left-0 right-0 z-40 max-h-[64%] overflow-y-auto rounded-t-2xl border-t border-white/10 bg-slate-900/95 backdrop-blur-xl p-4 pb-safe"
           >
             <div className="mb-3">
               <div className="flex items-center gap-2 mb-1">

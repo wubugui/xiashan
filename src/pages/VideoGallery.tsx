@@ -42,7 +42,7 @@ export default function VideoGallery() {
     !video.unlockConditions || video.unlockConditions.length === 0 || evaluateAll(video.unlockConditions, conditionState);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#101827] pb-24">
+    <div className="relative min-h-screen overflow-hidden bg-[#101827] pb-nav">
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800" />
 
       <div className="relative z-10">

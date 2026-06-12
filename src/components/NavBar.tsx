@@ -1,4 +1,6 @@
 import { motion } from 'framer-motion';
+import { useRef } from 'react';
+import { useCssVarFromHeight } from '@/hooks/useCssVarFromHeight';
 import { Store, Sparkles, Users, Smartphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,8 +18,12 @@ const tabs = [
 ] as const;
 
 export default function NavBar({ activeTab, onTabChange, unreadCount }: NavBarProps) {
+  const navRef = useRef<HTMLElement>(null);
+  useCssVarFromHeight('--nav-h', navRef);
+
   return (
     <nav
+      ref={navRef}
       className={cn(
         'fixed bottom-0 left-0 right-0 z-40',
         'bg-slate-900/90 backdrop-blur-xl',

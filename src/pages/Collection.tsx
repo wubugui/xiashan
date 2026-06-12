@@ -41,7 +41,7 @@ export default function Collection() {
   }, [ownedList]);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#101827] pb-24">
+    <div className="relative min-h-screen overflow-hidden bg-[#101827] pb-nav">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_10%,rgba(168,85,247,0.22),transparent_34%),linear-gradient(120deg,#0f172a_0%,#1f2937_48%,#cbd5e1_49%,#e5e7eb_100%)]" />
       <div className="absolute inset-0 opacity-25 [background-image:radial-gradient(circle,rgba(255,255,255,0.18)_1px,transparent_1px)] [background-size:18px_18px]" />
       <div className="absolute -right-16 top-0 h-28 w-[40vw] -skew-x-[28deg] bg-fuchsia-500/55" />

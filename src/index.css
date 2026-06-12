@@ -86,3 +86,18 @@ body {
 .particle {
   animation: float-up linear infinite;
 }
+:root {
+  /* 由 NavBar / Shop 操作条运行时测量写入（含各平台安全区），浮层与内容据此自动定位 */
+  --nav-h: 0px;
+  --bar-h: 0px;
+}
+
+/* 内容区为底部 UI 自动留白 */
+.pb-chrome { padding-bottom: calc(var(--nav-h) + var(--bar-h) + 1.5rem) !important; }
+.pb-nav    { padding-bottom: calc(var(--nav-h) + 1.5rem) !important; }
+/* 浮层自动定位在底部 UI 之上 */
+.above-chrome { bottom: calc(var(--nav-h) + var(--bar-h) + 0.75rem); }
+.above-nav    { bottom: calc(var(--nav-h) + 0.75rem); }
+/* 全屏覆盖层内贴底元素的安全区留白 */
+.pb-safe { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1.5rem); }
+.pt-safe { padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem); }
