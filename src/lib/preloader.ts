@@ -52,9 +52,9 @@ export async function preloadAllAssets(
   await Promise.all(
     urls.map(async (url) => {
       try {
-        // cache:'reload' forces a network fetch (bypasses stale cache) and
-        // writes the fresh response back to the HTTP cache for this session.
-        await fetch(url, { cache: 'reload' });
+        // cache:'no-cache' validates with the server via ETag/Last-Modified.
+        // 304 Not Modified = instant (no body); 200 = download only if changed.
+        await fetch(url, { cache: 'no-cache' });
       } catch {
         // silently skip — missing asset shouldn't block the game
       }
