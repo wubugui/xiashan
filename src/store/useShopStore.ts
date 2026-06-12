@@ -6,7 +6,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeStorage } from '@/lib/safeStorage';
 import { commissions } from '@/data/commissions';
-import type { Commission, GameLocation, ServiceCard, TheaterScene } from '@/data/types';
+import type { Commission, GameLocation, ServiceCard, ServiceTag, TheaterScene } from '@/data/types';
 import { sideJobs as allSideJobs } from '@/data/sideJobs';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { locations as allLocations } from '@/data/locations';
@@ -52,6 +52,10 @@ interface ShopState {
   hand: HandCard[];
   log: LogEntry[];
   gameOver: boolean;
+  /** 上一个热点打出的卡类型（连携判定用，跨地点保留、当日有效） */
+  lastCardType: ServiceTag | null;
+  /** 今日已读浏览器情报的委托 id：接单时初始信任 +2 */
+  intel: string[];
 
   /* ── Actions ── */
   startDay: () => void;
@@ -67,6 +71,8 @@ interface ShopState {
   leaveLocation: () => void;
   addHandCard: (card: ServiceCard) => void;
   consumeHandCard: (uid: number) => void;
+  setLastCardType: (t: ServiceTag | null) => void;
+  grantIntel: (commissionId: string) => void;
   applyDelta: (delta: Partial<{ time: number; energy: number; money: number; trust: number; rep: number }>) => void;
   markSpotDone: (locId: string, spotIndex: number) => void;
   finishLocation: () => 'continue' | 'end_day';
@@ -95,6 +101,8 @@ const INITIAL: Omit<ShopState, keyof { [K in keyof ShopState as ShopState[K] ext
   hand: [],
   log: [],
   gameOver: false,
+  lastCardType: null,
+  intel: [],
 };
 
 let _uid = 1;
@@ -149,9 +157,10 @@ export const useShopStore = create<ShopState>()(
         if (!c) return;
         const s0 = get();
         const isOverdue = s0.overdue?.id === id;
+        const hasIntel = s0.intel.includes(id);
         set({
           commission: c,
-          trust: 0,
+          trust: hasIntel ? 2 : 0,
           objectivesDone: [],
           board: s0.board.filter(b => b !== id),
           pendingScene: c.introScene ?? null,
@@ -160,6 +169,7 @@ export const useShopStore = create<ShopState>()(
         get().addLog(isOverdue
           ? `重接逾期委托【${c.name}】,口碑 -1。这次别再让她等了。`
           : `接下委托【${c.name}】。${c.desc}`, isOverdue ? 'bad' : 'good');
+        if (hasIntel) get().addLog('📰 你看过今早的新闻，对情况心里有数。初始信任 +2。', 'good');
       },
 
       completeObjective: (objectiveId) => {
@@ -196,6 +206,11 @@ export const useShopStore = create<ShopState>()(
 
       consumeHandCard: (uid) =>
         set(s => ({ hand: s.hand.filter(c => c.uid !== uid) })),
+
+      setLastCardType: (t) => set({ lastCardType: t }),
+
+      grantIntel: (commissionId) =>
+        set(s => ({ intel: s.intel.includes(commissionId) ? s.intel : [...s.intel, commissionId] })),
 
       applyDelta: (delta) =>
         set(s => ({
@@ -258,10 +273,8 @@ export const useShopStore = create<ShopState>()(
 
       setGameOver: (over) => set({ gameOver: over }),
 
-      resetDay: () => {
-        const routes = rollRoutes(allLocations);
-        set({ ...INITIAL, routes, hand: get().hand });
-      },
+      // 与 startDay 同口径：委托板/顺手单每天必须重掷，否则次日板上无单可接
+      resetDay: () => get().startDay(),
     }),
     {
       name: 'xiashan-shop-store',

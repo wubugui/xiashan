@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Film, Lock, Play } from 'lucide-react';
+import { BookOpen, ChevronLeft, Film, Lock, Play } from 'lucide-react';
 import { videos, type VideoEntry } from '@/data/videos';
 import VideoPlayer from '@/components/VideoPlayer';
+import StoryViewer from '@/components/StoryViewer';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { evaluateAll } from '@/engine/conditionEngine';
 import { cn } from '@/lib/utils';
@@ -64,7 +65,7 @@ export default function VideoGallery() {
             </button>
             <div className="min-w-0 flex-1">
               <h1 className="text-lg font-black tracking-wide text-white">影像回放</h1>
-              <p className="text-xs font-medium text-amber-300">共 {videos.length} 段视频，随时回看</p>
+              <p className="text-xs font-medium text-amber-300">共 {videos.length} 段影像与记述，随时回看</p>
             </div>
           </div>
         </div>
@@ -98,7 +99,7 @@ export default function VideoGallery() {
                       unlocked ? 'bg-gradient-to-br from-amber-500 to-amber-700' : 'bg-slate-700',
                     )}
                   >
-                    <Film size={22} className="text-white" />
+                    {video.story ? <BookOpen size={22} className="text-white" /> : <Film size={22} className="text-white" />}
                   </div>
 
                   <div className="min-w-0 flex-1">
@@ -125,14 +126,22 @@ export default function VideoGallery() {
         </div>
       </div>
 
-      {/* 播放器 */}
-      {playingVideo && (
+      {/* 播放器 / 图文记述 */}
+      {playingVideo && (playingVideo.story ? (
+        <StoryViewer
+          key={playingVideo.id}
+          title={playingVideo.title}
+          image={playingVideo.story.image}
+          paragraphs={playingVideo.story.paragraphs}
+          onClose={() => setPlayingId(null)}
+        />
+      ) : playingVideo.src ? (
         <VideoPlayer
           key={playingVideo.id}
           src={assetUrl(playingVideo.src)!}
           onEnd={() => setPlayingId(null)}
         />
-      )}
+      ) : null)}
     </div>
   );
 }

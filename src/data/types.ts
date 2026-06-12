@@ -130,6 +130,8 @@ export interface Spot {
   base: SpotDelta;
   /** characterId → 匹配时的特殊台词 */
   special?: Record<string, string>;
+  /** 冒险解法（危险热点可选）：不出牌、付出更多资源换高信任 */
+  risk?: { label: string; text: string; delta: SpotDelta };
 }
 
 /** 可选地点 */

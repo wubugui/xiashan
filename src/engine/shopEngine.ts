@@ -57,8 +57,25 @@ export type PlayedCard = (ServiceCard & { uid: number }) | PersonCard;
 /**
  * 结算一次热点事件，返回文字描述 + 日志样式 + 资源增减。
  * 纯函数，不修改任何状态。
+ * lastCardType：上一个热点打出的卡类型；同类型连打且命中时触发连携（信任+1）。
  */
 export function resolveSpot(
+  spot: Spot,
+  card: PlayedCard | null,
+  lastCardType?: ServiceTag | null,
+): { text: string; cls: 'good' | 'bad'; delta: SpotDelta; combo: boolean } {
+  const res = resolveSpotBase(spot, card);
+  if (card) {
+    const cardType = card.kind === 'person' ? card.serviceType : card.type;
+    if (lastCardType && cardType === lastCardType && isMatch(cardType, spot.need)) {
+      res.delta.trust = (res.delta.trust ?? 0) + 1;
+      return { ...res, combo: true };
+    }
+  }
+  return { ...res, combo: false };
+}
+
+function resolveSpotBase(
   spot: Spot,
   card: PlayedCard | null,
 ): { text: string; cls: 'good' | 'bad'; delta: SpotDelta } {

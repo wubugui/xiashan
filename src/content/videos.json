@@ -12,242 +12,574 @@
       "description": "角色短片",
       "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "chapter_complete", "chapterId": 1 }
+        {
+          "type": "chapter_complete",
+          "chapterId": 1
+        }
       ]
     },
     {
       "id": "linxia_s1",
       "title": "江夏 · 加班的夜晚",
       "description": "她终于等到了那次面试，也等到了你。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "flag_set", "flag": "commission_interview_done" }
-      ]
+        {
+          "type": "flag_set",
+          "flag": "commission_interview_done"
+        }
+      ],
+      "story": {
+        "image": "/characters/face/linxia/smile.png",
+        "paragraphs": [
+          "晚上九点半，写字楼的灯还亮着一半。她抱着一摞文件从电梯里出来，看见你的瞬间愣了一下，然后笑了。",
+          "「是你！」她小跑两步，又想起怀里的文件，放慢脚步走过来，「我入职了。就是那天那家公司。」",
+          "她说试用期的活很多，前辈也凶，但她把每件事都记在清单上，一条一条划掉，「划掉的时候特别爽」。",
+          "说到那天地铁站的十分钟，她低头笑了笑：「如果那天没赶上，我可能就回老家了。所以——这份工资里有你的一份功劳，请你喝杯热的吧。」",
+          "自动售货机吐出两罐咖啡。她把热的那罐塞给你，自己拿了冰的，「我还要回去加班，得清醒着」。"
+        ]
+      }
     },
     {
       "id": "linxia_s2",
       "title": "江夏 · 下班路上",
       "description": "她说，谢谢你那天帮了我。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "linxia", "minStage": 2 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "linxia",
+          "minStage": 2
+        }
+      ],
+      "story": {
+        "image": "/characters/face/linxia/shy.png",
+        "paragraphs": [
+          "下班路上她发来消息：「在便利屋吗？我顺路。」其实她家在另一个方向，你没拆穿。",
+          "她进门时手里拎着两份关东煮，「便利店最后两份，玉米被我抢到了」。",
+          "她说今天第一次独立对完了一份报表，前辈检查完只说了两个字：可以。「我在工位上偷偷攥了一下拳头。」",
+          "临走时她在门口停了一下，背对着你说：「谢谢你那天帮了我。不是地铁站那天——是后来每一天。知道这家店在，加班就没那么可怕了。」",
+          "门关上之前，她回头补了一句：「明天的关东煮我还来抢。」"
+        ]
+      }
     },
     {
       "id": "aruo_s1",
       "title": "云晓蔻 · 直播前的十秒钟",
       "description": "倒计时开始，她却只看了你一眼。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "flag_set", "flag": "commission_live_done" }
-      ]
+        {
+          "type": "flag_set",
+          "flag": "commission_live_done"
+        }
+      ],
+      "story": {
+        "image": "/characters/face/aruo/smile.png",
+        "paragraphs": [
+          "开播倒计时十秒，补光灯刚刚修好，设备指示灯一颗颗转绿。导播在喊「准备」，她却转头看了你一眼。",
+          "「别走。」她说得很快，「站在镜头外面就行。」",
+          "倒计时归零。她按下开播键的瞬间像换了个人——声音亮了三度，笑容精确到毫米，弹幕轰然刷起。",
+          "整场直播她游刃有余，只有你看得见：每次环节切换的间隙，她的视线会越过镜头，落在你站的那个角落，确认一下，再回去。",
+          "下播后她瘫在椅子上，长出一口气：「今天发挥好吧？嗯……观众给的能量是一种，知道有人兜底是另一种。后面那种比较稀有。」"
+        ]
+      }
     },
     {
       "id": "aruo_s2",
       "title": "云晓蔻 · 下播后",
       "description": "只有在你面前，她才不用扮演任何人。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "aruo", "minStage": 2 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "aruo",
+          "minStage": 2
+        }
+      ],
+      "story": {
+        "image": "/characters/face/aruo/calm.png",
+        "paragraphs": [
+          "凌晨十二点四十，直播间的灯一盏盏熄灭，只剩屏幕的余光。她卸了一半妆，把假睫毛摘下来放进盒子里。",
+          "「累不累？」你问。她想了想，给了一个直播里绝不会出现的、慢半拍的回答：「累。但刚才三万人看我，没一个人发现。」",
+          "她转着椅子晃到你面前：「你知道主播最怕什么吗？不是黑粉，是下播之后房间太安静。」",
+          "「所以你来了真好。」她说这话的时候没看你，在看桌上那杯你带来的热饮，「不用接话，我就是说说。」",
+          "你走的时候她在门口喊住你：「明天还下播这个点。我是说——如果你顺路。」"
+        ]
+      }
     },
     {
       "id": "xiaogui_s1",
       "title": "小鬼 · 走失的猫",
       "description": "它找到了，连同某个小家伙的心。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "flag_set", "flag": "commission_cat_done" }
-      ]
+        {
+          "type": "flag_set",
+          "flag": "commission_cat_done"
+        }
+      ],
+      "story": {
+        "image": "/characters/n_xiaogui.svg",
+        "paragraphs": [
+          "猫是在快递柜后面找到的。小鬼比猫还紧张，悬在半空指挥：「轻点轻点！它叫团子！它怕黑！」",
+          "团子被抱出来的时候，浑身的毛都炸着。小鬼凑过去，用只有猫能听见的声音说了句什么，团子竟然真的不抖了。",
+          "「我跟猫说得上话。」小鬼得意地转了个圈，「猫看得见我。比大部分人强。」",
+          "把团子送回家时，小主人哭着道谢。小鬼飘在旁边看了很久，小声说：「被找回来的感觉，应该很好吧。」",
+          "回去的路上它一直跟着你，说要「巡逻」。你知道它只是不想那么快回到没人看得见它的地方。"
+        ]
+      }
     },
     {
       "id": "xiaogui_s2",
       "title": "小鬼 · 深夜的约定",
       "description": "下次别告诉苏锦黎，但可以告诉你。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "xiaogui", "minStage": 2 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "xiaogui",
+          "minStage": 2
+        }
+      ],
+      "story": {
+        "image": "/characters/n_xiaogui.svg",
+        "paragraphs": [
+          "深夜两点，小鬼趴在便利屋的窗台上，下巴搁在手背上，看街上偶尔驶过的车。",
+          "「我跟你说个秘密。」它突然开口，「但你不许告诉苏锦黎。她知道了会写进报告里，我的秘密会变成『案例编号』。」",
+          "秘密其实很小：它在公寓楼顶藏了一罐猫粮，每天偷偷补满，喂那只没人要的三花。",
+          "「我碰不到活的东西。」它晃着腿，「但我可以看着别人碰。看团子吃饭的时候，我假装是我喂的。」",
+          "「所以约好了，」它伸出小拇指，虚虚地勾了一下你的，「猫粮的事，是我们俩的。就我们俩。」"
+        ]
+      }
     },
     {
       "id": "yunzhiyi_s1",
       "title": "陈小满 · 夜班的守护",
       "description": "搬货、清场、然后笑着说：我保护了你们！",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "flag_set", "flag": "commission_nightstore_done" }
-      ]
+        {
+          "type": "flag_set",
+          "flag": "commission_nightstore_done"
+        }
+      ],
+      "story": {
+        "image": "/characters/face/yunzhiyi/smile.png",
+        "paragraphs": [
+          "便利店风波平息之后，她没急着走，把歪倒的货架一排排扶正，顺手把临期的饭团挪到了最显眼的位置。",
+          "「夜班店员就一个人，咱们多干一点，他就能多歇一分钟。」她说这话的时候已经理完了第三排。",
+          "出门时醉酒的顾客还坐在路边，她蹲下去递了瓶水，用哄小孩的语气说了几句，那人居然乖乖打车走了。",
+          "「我没什么大本事。」她跨上电动车，回头冲你咧嘴一笑，「但搬货、看场子、哄人，我都行！今晚这条街，我保护了你们！」",
+          "车尾灯消失在街角之前，你听见她在哼歌。跑调，但是很响亮。"
+        ]
+      }
     },
     {
       "id": "yunzhiyi_s2",
       "title": "陈小满 · 力所能及",
       "description": "她不聪明，但她全力以赴。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "yunzhiyi", "minStage": 2 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "yunzhiyi",
+          "minStage": 2
+        }
+      ],
+      "story": {
+        "image": "/characters/face/yunzhiyi/laugh.png",
+        "paragraphs": [
+          "她送完最后一单，拐到便利屋，把头盔往桌上一放：「给我留吃的了吗！」",
+          "吃到一半她说起今天的事：六楼的奶奶又让她帮忙换灯泡，「第三次了，我都怀疑奶奶是故意拧松的」。但她还是换了，还顺便把走廊的也换了。",
+          "「站长说我傻，这些又不算单。」她扒了口饭，「可是单子算的是路程，又不算人情。人情我自己记着呢。」",
+          "她掏出手机给你看相册：奶奶塞给她的橘子、修好的灯泡、店门口冲她摇尾巴的狗。「这都是我的工资外收入！」",
+          "走的时候她把碗筷洗得干干净净。「我妈说，在哪吃饭就得在哪干活。」她挥挥手，「明天见！给我留玉米！」"
+        ]
+      }
     },
     {
       "id": "sangluo_s1",
       "title": "顾夜莺 · 失眠夜的终点",
       "description": "七十二小时后的第一觉，是你守来的。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "flag_set", "flag": "commission_insomnia_done" }
-      ]
+        {
+          "type": "flag_set",
+          "flag": "commission_insomnia_done"
+        }
+      ],
+      "story": {
+        "image": "/characters/face/sangluo/calm.png",
+        "paragraphs": [
+          "七十二小时没合眼的人终于睡着了。在她咖啡吧最里面的卡座，盖着那条常备的毯子。",
+          "她把「营业中」的牌子翻成「打烊」，给你倒了杯热的，自己抱着杯子坐下，声音压得很低：「别吵醒她。」",
+          "「失眠的人不缺助眠音乐，也不缺褪黑素。」她打了个小小的哈欠，「缺的是一个可以放心睡着的地方。放心这种东西，得有人守着才有。」",
+          "你们就这么坐着，谁都没说话。一个小时后里面传来均匀的呼吸声，她冲你举了举杯子，像庆功。",
+          "「今晚辛苦了。」她说，「守夜这种活，两个人比一个人撑得久。下次……还叫你。」"
+        ]
+      }
     },
     {
       "id": "sangluo_s2",
       "title": "顾夜莺 · 午后小睡",
       "description": "毯子是谁披的，她其实知道。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "sangluo", "minStage": 2 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "sangluo",
+          "minStage": 2
+        }
+      ],
+      "story": {
+        "image": "/characters/face/sangluo/calm.png",
+        "paragraphs": [
+          "下午三点的咖啡吧没什么客人。阳光斜进来，落在吧台上。她趴在那儿睡着了，手边的拉花缸还冒着一点热气。",
+          "你把门口的风铃按住才推门进去。轻手轻脚找了个位置坐下，没点单。",
+          "吧台下那条毯子你知道在哪。你拿出来，轻轻搭在她肩上。她的睫毛动了一下，没醒。",
+          "半小时后她睡醒，看见肩上的毯子，又看见你，揉着眼睛慢吞吞地说：「偷袭。」",
+          "她去给你做了杯咖啡，没收钱。「守夜人难得被人守一次。」她把杯子推过来，「这杯记在我账上——以后这种偷袭，多来几次也行。」"
+        ]
+      }
     },
     {
       "id": "aman_s1",
       "title": "许念 · 搬家日",
       "description": "旧的日子，也要好好搬进新家。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "flag_set", "flag": "commission_moving_done" }
-      ]
+        {
+          "type": "flag_set",
+          "flag": "commission_moving_done"
+        }
+      ],
+      "story": {
+        "image": "/characters/face/aman/smile.png",
+        "paragraphs": [
+          "搬家的纸箱终于全部进了新家。最后一箱没封口——里面是猫，全程由她抱着上的楼。",
+          "「猫到新家会应激。」她把猫安置在最安静的房间，放好带着旧家气味的毯子，动作轻得像在拆炸弹。",
+          "收拾完她瘫坐在纸箱中间，环顾这个还很陌生的房间，忽然小声说：「其实应激的不止猫。」",
+          "「旧的日子打包成十二个箱子，搬过来，还得一件件拆开，重新放好。」她笑了笑，「谢谢你帮我搬的不只是箱子。」",
+          "你走的时候，猫已经从门缝里探出了头。她蹲在旁边朝你比了个口型：它原谅这个世界了。"
+        ]
+      }
     },
     {
       "id": "aman_s2",
       "title": "许念 · 雨后的猫",
       "description": "小声点——它刚刚原谅了这个世界。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "aman", "minStage": 2 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "aman",
+          "minStage": 2
+        }
+      ],
+      "story": {
+        "image": "/characters/face/aman/calm.png",
+        "paragraphs": [
+          "雨刚停，她在便利屋门口收伞，怀里鼓鼓的——外套里裹着一只湿透的小猫。",
+          "「配电箱后面捡的。」她熟练地要了热水和毛巾，把猫擦干，检查耳朵、爪垫和肚子，「没受伤，就是吓坏了。」",
+          "小猫在她手里渐渐不抖了，开始发出小马达一样的呼噜声。她做了个「嘘」的手势：「小声点——它刚刚原谅了这个世界。」",
+          "「每次救回来一只，我都会想，」她轻轻顺着猫毛，「被好好对待过的猫，会重新相信人。人其实也一样，被好好对待过，就能再信一次。」",
+          "猫在她怀里睡着了。她抬头看你，声音放得很轻：「今晚它先住你这儿行吗？这里……让小东西安心。」"
+        ]
+      }
     },
     {
       "id": "shenzhaoning_s1",
       "title": "祁宁 · 晨会七点半",
       "description": "效率、应变、靠谱，三项全优。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "flag_set", "flag": "commission_boardroom_done" }
-      ]
+        {
+          "type": "flag_set",
+          "flag": "commission_boardroom_done"
+        }
+      ],
+      "story": {
+        "image": "/characters/face/shenzhaoning/calm.png",
+        "paragraphs": [
+          "晨会开始前十分钟，会议材料、设备、座次全部就位。她合上手里的核对清单，第一次露出今天的表情变化——眉头松开了。",
+          "「九十分钟，十一项突发，全部闭环。」她看了一眼表，「比预案快了七分钟。」",
+          "电梯里她难得说了句工作以外的话：「大多数人以为我喜欢流程。其实我只是讨厌看人手忙脚乱地着急。」",
+          "「流程是提前替人着的急。」电梯到了，她跨出去之前回头，「今天你替我着了一半。记入今日复盘，评级：靠谱。」",
+          "晨会开始时你从大厅离开。玻璃门倒影里，她站在会议室门口核对最后一项，马尾一丝不乱。"
+        ]
+      }
     },
     {
       "id": "shenzhaoning_s2",
       "title": "祁宁 · 加班后的天台",
       "description": "她解开马尾的样子，只有你见过。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "shenzhaoning", "minStage": 2 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "shenzhaoning",
+          "minStage": 2
+        }
+      ],
+      "story": {
+        "image": "/characters/face/shenzhaoning/calm.png",
+        "paragraphs": [
+          "晚上十点，她发来一条极简短信：「天台。十分钟。」你到的时候她正靠着护栏，手里两罐咖啡，分你一罐。",
+          "「加班到这个点，上来吹十分钟风，是我流程里唯一不汇报的环节。」她说。",
+          "夜风把她的刘海吹乱了。她犹豫了一下，伸手把马尾解开了。头发披下来的瞬间，整个人的轮廓忽然柔软了。",
+          "「这个样子，全楼只有天台的摄像头死角见过。」她抿了口咖啡，「现在多一个你。」",
+          "十分钟整，她重新扎好马尾，恢复成那个一丝不乱的运营专员。「时间到。」她说，「但下次的十分钟，可以提前预约。」"
+        ]
+      }
     },
     {
       "id": "suli_s1",
       "title": "苏音音 · 末班车",
       "description": "怀表还走着。她也还在。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "flag_set", "flag": "commission_lasttrain_done" }
-      ]
+        {
+          "type": "flag_set",
+          "flag": "commission_lasttrain_done"
+        }
+      ],
+      "story": {
+        "image": "/characters/face/suli/calm.png",
+        "paragraphs": [
+          "怀表物归原主的那晚，她在末班车的站台上等你。手里捧着那块表，指针正常地走着。",
+          "「修好了？」你问。她摇头：「没修。它自己走的。可能……东西也认人。」",
+          "末班车进站，车厢里只有你们两个。她靠窗坐着，怀表的滴答声混在轨道的节奏里。",
+          "「我做电台，每晚对几万人说话。」她看着窗外掠过的灯，「但下播之后，想说话的时候，找不到频段。」",
+          "到站了。她把怀表收好，下车前说了一句几乎听不见的话：「今晚的频段……谢谢你收听。」"
+        ]
+      }
     },
     {
       "id": "suli_s2",
       "title": "苏音音 · 星空下",
       "description": "她指给你看的那颗星，没有名字。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "suli", "minStage": 2 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "suli",
+          "minStage": 2
+        }
+      ],
+      "story": {
+        "image": "/characters/face/suli/calm.png",
+        "paragraphs": [
+          "她带你去了电台大楼的天台。凌晨一点，城市的光污染刚好弱下去一格，能看见星星。",
+          "「直播间隔音太好。」她说，「有时候播完，我需要确认一下世界还有声音。」",
+          "她指给你看一颗星，在天琴座旁边，不亮，要找很久。「没有名字。星图上就是一串编号。」",
+          "「我节目里收过一封信，写信的人说，自己就像没有名字的星星，亮着，但没人找。」她顿了顿，「我把这颗星读给了她。我说，有人找的。」",
+          "下楼之前她说：「这颗星的位置，我只指给过两个人。一个在信里。一个在这里。」"
+        ]
+      }
     },
     {
       "id": "murongxue_s1",
       "title": "沈疏桐 · 蹲守结束",
       "description": "笔记本最后一页，写着给搭档的评语。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "flag_set", "flag": "commission_stakeout_done" }
-      ]
+        {
+          "type": "flag_set",
+          "flag": "commission_stakeout_done"
+        }
+      ],
+      "story": {
+        "image": "/characters/face/murongxue/smile.png",
+        "paragraphs": [
+          "蹲守第七天结束，她合上笔记本，在便利店门口伸了一个很长的懒腰。",
+          "「素材够了。」她拍拍本子，「凌晨的便利店，比任何教材都真实。这篇报道会很好看。」",
+          "她翻开笔记本给你看：时间、人物、细节，密密麻麻，连店员补货时哼的歌都记了下来。",
+          "最后一页却不是素材。是一行单独的字，她没打算给你看，但你瞥见了：「搭档评语：可靠。下次蹲守，还约这位。」",
+          "她发现你看见了，飞快地合上本子，推了推并不存在的眼镜：「那是……田野调查的规范流程。对，规范流程。」"
+        ]
+      }
     },
     {
       "id": "murongxue_s2",
       "title": "沈疏桐 · 图书馆的午后",
       "description": "嘘——这本书里夹着一张便签。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "murongxue", "minStage": 2 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "murongxue",
+          "minStage": 2
+        }
+      ],
+      "story": {
+        "image": "/characters/face/murongxue/calm.png",
+        "paragraphs": [
+          "图书馆三楼最里面的位置，她占了两个座，看见你来，把书包从旁边的椅子上拿开。",
+          "「嘘。」她先做了个手势，然后从一摞参考书里抽出一本递给你，《非虚构写作十讲》，「第 142 页。」",
+          "你翻到那页，里面夹着一张便签：「这本书帮我捋清了那篇报道。也想让你看看——毕竟素材里有一半是你。」",
+          "整个下午你们没说几句话。她写她的稿子，你看你的书，阳光从西边的窗户慢慢移过桌面。",
+          "离馆铃响的时候她小声说：「我习惯一个人查资料。但今天发现，旁边坐个不打扰的人，效率高了百分之二十。数据不会说谎——下周三，还这个位置？」"
+        ]
+      }
     },
     {
       "id": "linxia_s3",
       "title": "江夏 · 第一页清单",
       "description": "她的新清单第一行，写着你的名字。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "linxia", "minStage": 5 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "linxia",
+          "minStage": 5
+        }
+      ],
+      "story": {
+        "image": "/characters/face/linxia/laugh.png",
+        "paragraphs": [
+          "她的手帐换了新的一本。旧的那本写满了待办清单，新的第一页却空了很久。",
+          "「我想了很久第一行写什么。」她把手帐递给你，「以前的清单全是『要做的事』，这本我想先写『重要的人』。」",
+          "第一行的字迹工整，像她做的每一份报表：「二十五时便利屋——有麻烦先去这里，没麻烦也可以去。」",
+          "你抬头时她正看着你，耳朵有点红，但没躲开视线：「第二行开始才是待办。第一行不许划掉，永远不许。」",
+          "那天她待到了打烊。走的时候她说，原来一天真的有第二十五个小时——只要有想待着的地方。"
+        ]
+      }
     },
     {
       "id": "aruo_s3",
       "title": "云晓蔻 · 停播日",
       "description": "今天不直播。她说，要把所有镜头都留给你。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "aruo", "minStage": 5 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "aruo",
+          "minStage": 5
+        }
+      ],
+      "story": {
+        "image": "/characters/face/aruo/shy.png",
+        "paragraphs": [
+          "她的直播间今天黑着。粉丝群炸了锅，热搜挂了一晚上，没人知道她在哪。",
+          "她在便利屋。穿着最普通的卫衣，素颜，盘腿坐在角落那把椅子上，慢吞吞地喝一碗热汤。",
+          "「停播一天掉的数据，要涨回来得熬三个通宵。」她搅着汤说，「我算得清这笔账。但今天就是不想播。」",
+          "「镜头前的云晓蔻每天营业十二个小时。」她抬起头，「今天这几个小时，我想留给不营业的那个。她话少，有点无聊，你忍一忍。」",
+          "打烊的时候她把碗洗了，放回原位，动作生疏但很认真。「下次停播，」她说，「我还来这儿。这里没有镜头，刚刚好。」"
+        ]
+      }
     },
     {
       "id": "yunzhiyi_s3",
       "title": "陈小满 · 终点线",
       "description": "她跑了那么多路，原来都是朝着你。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "yunzhiyi", "minStage": 5 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "yunzhiyi",
+          "minStage": 5
+        }
+      ],
+      "story": {
+        "image": "/characters/face/yunzhiyi/shy.png",
+        "paragraphs": [
+          "配送站办了个小仪式：她的单量破了开站纪录。站长让她说两句，她憋了半天说了句「谢谢大家」，耳朵通红。",
+          "庆功结束她溜出来，骑了二十分钟车到便利屋，进门第一句话是：「我得奖了！第一个想告诉你。」",
+          "「我跑单的时候算过。」她掰着手指头，「从站点到你这儿，五点七公里，红绿灯八个，最快十九分钟。我闭着眼都能骑。」",
+          "「以前我跑单，是想证明我不笨。」她看着自己的手心，「后来发现不是。我只是喜欢把东西送到的那一下——而你这里，是我最喜欢送到的地方。」",
+          "她说完自己先笑场了，抓起头盔扣在头上挡脸：「好了这段删掉！就当我没说！……但、但你要是记住了也行。」"
+        ]
+      }
     },
     {
       "id": "sangluo_s3",
       "title": "顾夜莺 · 打烊之后",
       "description": "今晚的最后一杯，不收钱，也不收时间。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "sangluo", "minStage": 5 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "sangluo",
+          "minStage": 5
+        }
+      ],
+      "story": {
+        "image": "/characters/face/sangluo/smile.png",
+        "paragraphs": [
+          "凌晨一点四十，最后一位客人离开。她锁了门，却没关灯，回身从柜子最深处拿出一只没有标签的罐子。",
+          "「私藏豆。」她说，「开店三年，没给人做过。一直觉得……要等个值得的时刻。」",
+          "磨豆、注水、闷蒸。她做得很慢，比平时任何一杯都慢。香气漫开来的时候，她说：「今晚这杯，不收钱，也不收时间。」",
+          "「我开深夜咖啡吧，是想接住睡不着的人。」她把杯子放到你面前，「但接住别人的人，也会有想被接住的晚上。比如今晚。」",
+          "那杯咖啡你们分着喝完。她最后说：「打烊之后的时间不算营业额，算我的。从今往后，也分你一半。」"
+        ]
+      }
     },
     {
       "id": "aman_s3",
       "title": "许念 · 三个人的家",
       "description": "它选了你。她说，她也是。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "aman", "minStage": 5 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "aman",
+          "minStage": 5
+        }
+      ],
+      "story": {
+        "image": "/characters/face/aman/shy.png",
+        "paragraphs": [
+          "那只雨夜捡回来的猫养好了，要决定去留。领养群里有三家人报名，条件都不错。",
+          "她把猫抱到便利屋，放在地上。「让它自己选。」她说，「猫不会说谎。」",
+          "猫在屋里转了一圈，闻了闻每个角落，最后跳上柜台，蜷在你常坐的位置旁边，开始洗脸。",
+          "「它选了你。」她看着猫，安静了几秒，然后像下定什么决心似的抬起头，「那……我也得常来了。它的疫苗、体检、洗护，都归我管。」",
+          "「三个人的家。」她说完自己愣了一下，急忙补救，「我是说，一人一猫一个常驻兽医！……总之就是，这样的安排，挺好的。」"
+        ]
+      }
     },
     {
       "id": "shenzhaoning_s3",
       "title": "祁宁 · 流程之外",
       "description": "这件事没有流程。她决定，即兴一次。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "shenzhaoning", "minStage": 5 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "shenzhaoning",
+          "minStage": 5
+        }
+      ],
+      "story": {
+        "image": "/characters/face/shenzhaoning/shy.png",
+        "paragraphs": [
+          "她约你的方式一如既往：日历邀请，主题「待定事项」，时长一小时，地点是城市公园。",
+          "你到了才发现，她没带工牌，没带笔记本，穿着你从没见过的休闲外套，站在树下，看起来甚至有点无措。",
+          "「我检索了『约会』的通用流程。」她坦白，「公园、散步、晚餐，置信度最高的组合。但走到第三步我就发现，流程里没写……心跳超标怎么处理。」",
+          "你们沿着湖走了一圈。她渐渐不再背流程了，开始讲她小时候的事，讲她为什么见不得别人手忙脚乱。",
+          "分别时她说：「这件事没有预案，没有复盘模板，评级标准也失效了。」她深吸一口气，「所以我决定——即兴一次。下周同一时间，我还想见你。」"
+        ]
+      }
     },
     {
       "id": "suli_s3",
       "title": "苏音音 · 第二十五时电台",
       "description": "今晚的节目没有听众，只有你。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "suli", "minStage": 5 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "suli",
+          "minStage": 5
+        }
+      ],
+      "story": {
+        "image": "/characters/face/suli/smile.png",
+        "paragraphs": [
+          "零点，《不眠城》照常开播。但今晚的直播间多了一把椅子——她提前一周邀请你来，用的是一张手写的节目单。",
+          "「今晚的节目没有听众。」她对着话筒说完这句，伸手把推流关了。On Air 的灯还亮着，信号却只留在这个房间里。",
+          "「第二十五时电台，试播第一期。」她转向你，声音和节目里一样低，却比节目里软，「收听人数：一。」",
+          "她播了那首从不在节目里放的歌，读了一封从没读出口的信。信是她自己写的，写给「每晚守着频段，却不知道为谁守」的那几年。",
+          "「节目最后，例行一句晚安。」她关掉话筒，在完全的安静里看着你，「但今晚不说晚安。今晚的频段不打烊——你想听到几点，我就播到几点。」"
+        ]
+      }
     },
     {
       "id": "murongxue_s3",
       "title": "沈疏桐 · 独家",
       "description": "这篇报道她写了很久，署名后面，还藏着一个名字。",
-      "src": "/video/lily.mp4",
       "unlockConditions": [
-        { "type": "relationship_stage", "characterId": "murongxue", "minStage": 5 }
-      ]
+        {
+          "type": "relationship_stage",
+          "characterId": "murongxue",
+          "minStage": 5
+        }
+      ],
+      "story": {
+        "image": "/characters/face/murongxue/shy.png",
+        "paragraphs": [
+          "她的毕业作品拿了奖。颁奖那天她没去现场，跑来便利屋，把获奖证书随手放在桌上，像放一张传单。",
+          "「评委说这篇报道『有体温』。」她坐下来，「他们不知道体温是哪来的。」",
+          "报道写的是这座城市深夜里互相接住的人：夜班店员、电台主播、便利屋。她调查了半年，引用了三十七个信源。",
+          "「署名只有我一个人。」她从包里拿出一份打印稿，翻到最后一页。致谢部分的最后一行，单独空了一段：「以及——给我的固定搭档。所有深夜的素材里，都有他。」",
+          "「这是独家。」她把那页纸推给你，耳朵红透了，但语气还端着记者的稳：「全城只此一份。独家的意思是，别的报道可以转载——这一行，永远不行。」"
+        ]
+      }
     }
   ]
 }

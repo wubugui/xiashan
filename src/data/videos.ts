@@ -5,7 +5,13 @@ export interface VideoEntry {
   id: string;
   title: string;
   description: string;
-  src: string;
+  /** 视频文件（与 story 二选一） */
+  src?: string;
+  /** 图文记述：视频素材到位前的正式回放形态，立绘 + 分段文字 */
+  story?: {
+    image?: string;
+    paragraphs: string[];
+  };
   unlockConditions?: Condition[];
 }
 

@@ -164,10 +164,11 @@ export default function Shop() {
 
   const {
     time, energy, rep, money, trust, step, commission, loc, routes, done, hand, log, gameOver,
-    board, overdue, objectivesDone, sideJobs, pendingScene,
+    board, overdue, objectivesDone, sideJobs, pendingScene, lastCardType,
     startDay, refreshRoutes, acceptCommission, completeObjective, completeSideJob,
     setPendingScene, setOverdue, chooseLocation, leaveLocation, addHandCard, consumeHandCard,
     applyDelta, markSpotDone, finishLocation, normalAdvance, addLog, setGameOver, resetDay,
+    setLastCardType,
   } = shopStore;
 
   const {
@@ -279,7 +280,7 @@ export default function Shop() {
     if (!currentEvent || !loc) return;
     const { spot, spotIndex, locId } = currentEvent;
 
-    const { text, cls, delta } = resolveSpot(spot, card);
+    const { text, cls, delta, combo } = resolveSpot(spot, card, lastCardType);
 
     // 消耗一次性手牌
     if (card && card.kind !== 'person') {
@@ -296,6 +297,11 @@ export default function Shop() {
     markSpotDone(locId, spotIndex);
     setHandledThisLocation(true);
     addLog(text, cls);
+    if (combo) {
+      const cardType = card!.kind === 'person' ? card!.serviceType : (card as HandCard).type;
+      addLog(`🔗 连携！连续两次打出【${cardType}】，信任额外 +1。`, 'good');
+    }
+    setLastCardType(card ? (card.kind === 'person' ? card.serviceType : (card as HandCard).type) : null);
 
     // 子目标 / 顺手单命中判定：在匹配热点上打出要求 type 的卡
     if (card) {
@@ -336,9 +342,34 @@ export default function Shop() {
       addLog('今日失败：时间、精力或口碑耗尽。', 'bad');
       setEndDayResult('fail');
     }
-  }, [currentEvent, loc, commission, objectivesDone, sideJobs, time, energy, rep,
+  }, [currentEvent, loc, commission, objectivesDone, sideJobs, time, energy, rep, lastCardType,
     consumeHandCard, applyDelta, markSpotDone, completeObjective, completeSideJob,
-    addNormalTickets, addSpiritStones, addLog, refreshRoutes, setGameOver]);
+    addNormalTickets, addSpiritStones, addLog, refreshRoutes, setGameOver, setLastCardType]);
+
+  /* ────── 冒险解法（危险热点）：不出牌，付出更多资源换高信任 ────── */
+  const handleRisk = useCallback(() => {
+    if (!currentEvent || !loc || !currentEvent.spot.risk) return;
+    const { spot, spotIndex, locId } = currentEvent;
+    const risk = spot.risk!;
+
+    applyDelta(risk.delta);
+    markSpotDone(locId, spotIndex);
+    setHandledThisLocation(true);
+    setLastCardType(null);
+    addLog(`⚡ ${spot.name}：${risk.text}`, (risk.delta.trust ?? 0) > 0 ? 'good' : 'bad');
+    setCurrentEvent(null);
+
+    const newState = {
+      time: Math.max(0, time + (risk.delta.time ?? 0)),
+      energy: Math.max(0, energy + (risk.delta.energy ?? 0)),
+      rep: Math.max(0, rep + (risk.delta.rep ?? 0)),
+    };
+    if (checkFail(newState)) {
+      setGameOver(true);
+      addLog('今日失败：时间、精力或口碑耗尽。', 'bad');
+      setEndDayResult('fail');
+    }
+  }, [currentEvent, loc, time, energy, rep, applyDelta, markSpotDone, setLastCardType, addLog, setGameOver]);
 
   /* ────── 结束当天 ────── */
   const handleEndDay = useCallback(() => {
@@ -1039,6 +1070,19 @@ export default function Shop() {
                     <p className="text-[10px] text-slate-400">关闭面板，稍后再来。</p>
                   </button>
                 </div>
+                {currentEvent.spot.risk && (
+                  <button
+                    onClick={handleRisk}
+                    className="mt-2 w-full rounded-xl border border-red-400/40 bg-red-500/10 p-3 text-left hover:bg-red-500/20 active:scale-[0.98] transition-all"
+                  >
+                    <p className="text-xs font-bold text-red-300 mb-1">⚡ {currentEvent.spot.risk.label}</p>
+                    <p className="text-[10px] text-slate-400">
+                      {Object.entries(currentEvent.spot.risk.delta)
+                        .map(([k, v]) => `${{ time: '时间', energy: '精力', trust: '信任', rep: '口碑', money: '资金' }[k]}${(v as number) > 0 ? '+' : ''}${v}`)
+                        .join('，')}
+                    </p>
+                  </button>
+                )}
               </div>
 
               {/* 卡牌分组 */}
