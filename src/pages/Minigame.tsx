@@ -21,7 +21,7 @@ type GameDef = {
 };
 
 const GAMES: GameDef[] = [
-  { id: 'link', name: '仙缘消消乐', desc: '拖动交换相邻图块，三消获得灵石', icon: Grid3x3, color: 'from-amber-500 to-amber-700', ready: true },
+  { id: 'link', name: '打烊后的理货时间', desc: '把今晚的货架理整齐，营业额换灵石；可以邀她一起', icon: Grid3x3, color: 'from-amber-500 to-amber-700', ready: true },
   { id: 'puzzle', name: '立绘拼图', desc: '拼好即可欣赏角色立绘', icon: Puzzle, color: 'from-rose-500 to-rose-700', ready: false },
   { id: 'sokoban', name: '推箱寻宝', desc: '推动机关，闯关夺灵石', icon: Boxes, color: 'from-blue-500 to-blue-700', ready: false },
 ];

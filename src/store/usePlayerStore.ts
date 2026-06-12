@@ -75,8 +75,11 @@ interface PlayerState {
   spendNormalTickets: (n: number) => boolean;
   setSupplyPityCounter: (n: number) => void;
   addHintTokens: (n: number) => void;
-  /** 消耗一次消消乐提示：优先每日免费(3次)，再扣提示券；都没有返回 'none' */
-  consumeMinigameHint: () => 'free' | 'token' | 'none';
+  /** 消耗一次消消乐提示：优先每日免费(默认3次,陪玩被动可+1)，再扣提示券；都没有返回 'none' */
+  consumeMinigameHint: (maxFree?: number) => 'free' | 'token' | 'none';
+  /** 理货陪玩搭档 */
+  minigameCompanion: string | null;
+  setMinigameCompanion: (id: string | null) => void;
   setCurrentNode: (nodeId: string) => void;
   completeNode: (nodeId: string) => void;
   setFlag: (flag: string) => void;
@@ -103,6 +106,7 @@ const initialState = {
   supplyPityCounter: 0,
   hintTokens: 0,
   freeHints: { date: '', used: 0 },
+  minigameCompanion: null as string | null,
   currentChapterId: 1,
   currentNodeId: 'ch1_01',
   completedNodes: [] as string[],
@@ -130,11 +134,12 @@ export const usePlayerStore = create<PlayerState>()(
       addNormalTickets: (n) => set(s => ({ normalTickets: s.normalTickets + n })),
       setSupplyPityCounter: (n) => set({ supplyPityCounter: n }),
       addHintTokens: (n) => set(s => ({ hintTokens: s.hintTokens + n })),
-      consumeMinigameHint: () => {
+      setMinigameCompanion: (id) => set({ minigameCompanion: id }),
+      consumeMinigameHint: (maxFree = 3) => {
         const today = new Date().toISOString().slice(0, 10);
         const s0 = get();
         const used = s0.freeHints.date === today ? s0.freeHints.used : 0;
-        if (used < 3) {
+        if (used < maxFree) {
           set({ freeHints: { date: today, used: used + 1 } });
           return 'free';
         }
