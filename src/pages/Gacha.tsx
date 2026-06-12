@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Info, History } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
-import { pullSingle, pullTen, isHeartUp, HEART_UP_WEIGHT } from '@/engine/gachaEngine';
+import { useShopStore } from '@/store/useShopStore';
+import { pullSupply, isHeartUp, HEART_UP_WEIGHT } from '@/engine/gachaEngine';
 import { GACHA_CONFIG } from '@/data/gachaConfig';
 import { characters } from '@/data/characters';
+import type { ServiceCard } from '@/data/types';
 import GachaAnimation from '@/components/GachaAnimation';
 import { cn } from '@/lib/utils';
 
@@ -14,14 +16,13 @@ export default function Gacha() {
   const spiritStones = usePlayerStore((s) => s.spiritStones);
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
   const affinityMap = usePlayerStore((s) => s.affinityMap);
-  const pityCounter = usePlayerStore((s) => s.pityCounter);
-  const totalGachaCount = usePlayerStore((s) => s.totalGachaCount);
+  const supplyPityCounter = usePlayerStore((s) => s.supplyPityCounter);
   const gachaHistory = usePlayerStore((s) => s.gachaHistory);
   const addCharacter = usePlayerStore((s) => s.addCharacter);
   const addSpiritStones = usePlayerStore((s) => s.addSpiritStones);
   const addGachaResult = usePlayerStore((s) => s.addGachaResult);
-  const setPityCounter = usePlayerStore((s) => s.setPityCounter);
-  const setTotalGachaCount = usePlayerStore((s) => s.setTotalGachaCount);
+  const setSupplyPityCounter = usePlayerStore((s) => s.setSupplyPityCounter);
+  const addHandCard = useShopStore((s) => s.addHandCard);
 
   const [showAnimation, setShowAnimation] = useState(false);
   const [gachaResults, setGachaResults] = useState<
@@ -30,8 +31,10 @@ export default function Gacha() {
   const [isTenPull, setIsTenPull] = useState(false);
   const [showRates, setShowRates] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  /** 本次抽到的消耗卡汇总（人物动画播完后展示） */
+  const [cardResults, setCardResults] = useState<ServiceCard[] | null>(null);
 
-  const pityRemaining = GACHA_CONFIG.pity.SSR - pityCounter;
+  const pityRemaining = GACHA_CONFIG.supplyPool.characterPity - supplyPityCounter;
 
   const handlePull = useCallback(
     (isTen: boolean) => {
@@ -39,52 +42,44 @@ export default function Gacha() {
       if (spiritStones < cost) return;
 
       addSpiritStones(-cost);
-      const ownedIds = ownedCharacters.map((c) => c.characterId);
+      // 与店内「便利屋补给」同一卡池、同一保底计数
+      let ownedIds = ownedCharacters.map((c) => c.characterId);
+      let pity = supplyPityCounter;
+      const persons: { characterId: string; name: string; rarity: 'N' | 'R' | 'SR' | 'SSR'; title: string; isNew: boolean }[] = [];
+      const cards: ServiceCard[] = [];
 
-      if (isTen) {
-        const result = pullTen(ownedIds, affinityMap, pityCounter, totalGachaCount);
-        const formatted = result.results.map((r) => ({
-          characterId: r.character.id,
-          name: r.character.name,
-          rarity: r.character.rarity,
-          title: r.character.title,
-          isNew: r.isNew,
-        }));
-
-        // 更新 store
-        result.results.forEach((r) => {
-          addCharacter(r.character.id);
-          addGachaResult(r.character.id, r.character.rarity);
-        });
-        setPityCounter(result.newPity);
-        setTotalGachaCount(result.newTotal);
-
-        setGachaResults(formatted);
-        setIsTenPull(true);
-      } else {
-        const result = pullSingle(ownedIds, affinityMap, pityCounter, totalGachaCount);
-        const formatted = [
-          {
-            characterId: result.result.character.id,
-            name: result.result.character.name,
-            rarity: result.result.character.rarity,
-            title: result.result.character.title,
-            isNew: result.result.isNew,
-          },
-        ];
-
-        addCharacter(result.result.character.id);
-        addGachaResult(result.result.character.id, result.result.character.rarity);
-        setPityCounter(result.newPity);
-        setTotalGachaCount(result.newTotal);
-
-        setGachaResults(formatted);
-        setIsTenPull(false);
+      for (let i = 0; i < (isTen ? 10 : 1); i++) {
+        const { result, newPity } = pullSupply(ownedIds, affinityMap, pity);
+        pity = newPity;
+        if (result.kind === 'person') {
+          addCharacter(result.character.id);
+          addGachaResult(result.character.id, result.character.rarity);
+          ownedIds = [...ownedIds, result.character.id];
+          persons.push({
+            characterId: result.character.id,
+            name: result.character.name,
+            rarity: result.character.rarity,
+            title: result.character.title,
+            isNew: result.isNew,
+          });
+        } else {
+          addHandCard(result.card);
+          cards.push(result.card);
+        }
       }
+      setSupplyPityCounter(pity);
 
-      setShowAnimation(true);
+      if (persons.length > 0) {
+        setGachaResults(persons);
+        setIsTenPull(persons.length > 1);
+        setShowAnimation(true);
+        // 卡片汇总等人物动画播完再弹
+        setCardResults(cards.length > 0 ? cards : null);
+      } else {
+        setCardResults(cards);
+      }
     },
-    [spiritStones, ownedCharacters, affinityMap, pityCounter, totalGachaCount, addCharacter, addSpiritStones, addGachaResult, setPityCounter, setTotalGachaCount],
+    [spiritStones, ownedCharacters, affinityMap, supplyPityCounter, addCharacter, addSpiritStones, addGachaResult, setSupplyPityCounter, addHandCard],
   );
 
   // 心动 UP：好感已达标但尚未入伙的角色（同稀有度内权重提升）
@@ -96,6 +91,8 @@ export default function Gacha() {
     setShowAnimation(false);
     setGachaResults([]);
   }, []);
+
+  const cardKindIcon = (kind: string) => (kind === 'skill' ? '⚡' : kind === 'tool' ? '🧰' : '📡');
 
   return (
     <motion.div
@@ -178,8 +175,8 @@ export default function Gacha() {
             >
               ✦
             </motion.div>
-            <p className="text-lg font-bold text-purple-300">常驻卡池</p>
-            <p className="mt-1 text-xs text-slate-500">缘分天注定</p>
+            <p className="text-lg font-bold text-purple-300">便利屋补给池</p>
+            <p className="mt-1 text-xs text-slate-500">人物 · 技能 · 便利 · 情报</p>
           </div>
 
           {/* 装饰环 */}
@@ -193,10 +190,10 @@ export default function Gacha() {
         {/* 保底计数 */}
         <div className="mb-4 text-center">
           <p className="text-sm text-slate-400">
-            距SSR保底: <span className="font-bold text-amber-400">{pityRemaining}</span> 抽
+            距人物保底: <span className="font-bold text-amber-400">{pityRemaining}</span> 抽
           </p>
           <p className="mt-1 text-xs text-slate-600">
-            已抽 {totalGachaCount} 次
+            人物概率 {(GACHA_CONFIG.supplyPool.characterRate * 100).toFixed(0)}% · 与店内补给池共享保底
           </p>
         </div>
 
@@ -258,10 +255,10 @@ export default function Gacha() {
                 <p className="mb-2 text-xs font-bold text-slate-400">抽取概率</p>
                 <div className="space-y-2">
                   {[
-                    { label: 'SSR', rate: `${(GACHA_CONFIG.rates.SSR * 100).toFixed(1)}%`, color: 'text-amber-400' },
-                    { label: 'SR', rate: `${(GACHA_CONFIG.rates.SR * 100).toFixed(0)}%`, color: 'text-purple-400' },
-                    { label: 'R', rate: `${(GACHA_CONFIG.rates.R * 100).toFixed(0)}%`, color: 'text-blue-400' },
-                    { label: 'N', rate: `${(GACHA_CONFIG.rates.N * 100).toFixed(0)}%`, color: 'text-slate-400' },
+                    { label: '人物卡', rate: `${(GACHA_CONFIG.supplyPool.characterRate * 100).toFixed(0)}%`, color: 'text-pink-400' },
+                    { label: '技能卡', rate: `${GACHA_CONFIG.supplyPool.cardWeights.skill}%`, color: 'text-amber-400' },
+                    { label: '便利卡', rate: `${GACHA_CONFIG.supplyPool.cardWeights.tool}%`, color: 'text-cyan-400' },
+                    { label: '情报卡', rate: `${GACHA_CONFIG.supplyPool.cardWeights.info}%`, color: 'text-emerald-400' },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center justify-between">
                       <span className={`text-sm font-bold ${item.color}`}>{item.label}</span>
@@ -270,7 +267,7 @@ export default function Gacha() {
                   ))}
                 </div>
                 <p className="mt-3 text-[10px] text-slate-600">
-                  SSR保底: {GACHA_CONFIG.pity.SSR}抽 | SR保底: {GACHA_CONFIG.pity.SR}抽
+                  人物硬保底: {GACHA_CONFIG.supplyPool.characterPity} 抽必出 · 人物稀有度 SSR {(GACHA_CONFIG.rates.SSR * 100).toFixed(0)}% / SR {(GACHA_CONFIG.rates.SR * 100).toFixed(0)}% / R {(GACHA_CONFIG.rates.R * 100).toFixed(0)}%
                 </p>
               </div>
             </motion.div>
@@ -368,6 +365,50 @@ export default function Gacha() {
           </motion.button>
         </div>
       </div>
+
+      {/* 消耗卡汇总弹窗 */}
+      <AnimatePresence>
+        {cardResults && !showAnimation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 px-5 backdrop-blur-sm"
+            onClick={() => setCardResults(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              transition={{ type: 'spring', damping: 22, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm rounded-2xl border border-white/15 bg-slate-900 p-4 shadow-2xl"
+            >
+              <p className="mb-3 text-center text-sm font-black text-white">📦 补给到货 ×{cardResults.length}</p>
+              <div className="grid max-h-[50vh] grid-cols-2 gap-2 overflow-y-auto">
+                {cardResults.map((c, i) => (
+                  <div key={i} className={cn(
+                    'rounded-xl border p-2.5',
+                    c.rarity === 'SR' ? 'border-purple-400/50 bg-purple-500/10' : 'border-white/10 bg-white/5',
+                  )}>
+                    <div className="flex items-center gap-1.5">
+                      <span>{cardKindIcon(c.kind)}</span>
+                      <p className="truncate text-xs font-bold text-white">{c.name}</p>
+                    </div>
+                    <p className="mt-0.5 text-[10px] text-slate-400">{c.type} · <span className={c.rarity === 'SR' ? 'text-purple-300' : 'text-slate-400'}>{c.rarity}</span></p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-center text-[10px] font-bold text-pink-300">💗 距人物保底还剩 {pityRemaining} 抽</p>
+              <button
+                onClick={() => setCardResults(null)}
+                className="mt-3 w-full rounded-xl bg-gradient-to-r from-purple-500 to-violet-600 py-2.5 text-sm font-black text-white"
+              >
+                收下
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 抽卡动画覆盖层 */}
       <AnimatePresence>

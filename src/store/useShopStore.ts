@@ -135,7 +135,8 @@ export const useShopStore = create<ShopState>()(
           ? { ...prevOverdue, daysLeft: prevOverdue.daysLeft - 1 }
           : prevOverdue && prevOverdue.daysLeft === 1 ? prevOverdue : null;
         const board = rollBoard(overdue);
-        set({ ...INITIAL, routes, overdue, board, sideJobs: rollSideJobs(), done: {}, hand: [], log: [], gameOver: false });
+        // 手牌跨天保留：消耗卡是持有资产（含店外抽卡页抽到的），不随开新一天清空
+        set({ ...INITIAL, routes, overdue, board, sideJobs: rollSideJobs(), done: {}, hand: get().hand, log: [], gameOver: false });
         get().addLog('开始营业:委托板已更新,顺手单已挂出。', 'good');
       },
 
@@ -259,7 +260,7 @@ export const useShopStore = create<ShopState>()(
 
       resetDay: () => {
         const routes = rollRoutes(allLocations);
-        set({ ...INITIAL, routes });
+        set({ ...INITIAL, routes, hand: get().hand });
       },
     }),
     {

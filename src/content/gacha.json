@@ -2,9 +2,9 @@
   "singleCost": 100,
   "tenCost": 900,
   "rates": {
-    "SSR": 0.08,
+    "SSR": 0.03,
     "SR": 0.32,
-    "R": 0.6,
+    "R": 0.65,
     "N": 0
   },
   "pity": {
