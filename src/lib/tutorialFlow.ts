@@ -138,6 +138,7 @@ interface ScriptStep {
 }
 
 interface ScriptShape {
+  nudges: TutorialLine[];
   home: { entry: { expression: string; lines: TutorialLine[] }; resume: { expression: string; lines: TutorialLine[] } };
   start: { expression: string; lines: TutorialLine[] };
   steps: ScriptStep[];
@@ -153,3 +154,5 @@ export const TUTORIAL_CELEBRATE_STEP = TUTORIAL_TOTAL;
 export const TUTORIAL_HOME_ENTRY = data.home.entry;
 export const TUTORIAL_HOME_RESUME = data.home.resume;
 export const TUTORIAL_START = data.start;
+/** 玩家点到引导目标之外时，江夏的提醒语（轮换播放，带 id 供配音） */
+export const TUTORIAL_NUDGES = data.nudges;

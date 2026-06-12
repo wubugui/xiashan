@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { assetUrl } from '@/lib/assets';
 import { playSound } from '@/lib/sound';
+import { TUTORIAL_NUDGES } from '@/lib/tutorialFlow';
 import type { TutorialCtx, TutorialLine, TutorialStep } from '@/lib/tutorialFlow';
 
 const PAD = 6;
@@ -33,6 +34,21 @@ export function TutorialSpotlight({
 }) {
   const [rect, setRect] = useState<DOMRect | null>(null);
   const scrolledKey = useRef<string | null>(null);
+  /** 乱点提醒：玩家点到目标之外时，江夏出声（轮换提醒语 + 气泡抖动） */
+  const [nudge, setNudge] = useState<{ line: TutorialLine; key: number } | null>(null);
+  const nudgeCount = useRef(0);
+  const nudgeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const handleStray = () => {
+    const line = TUTORIAL_NUDGES[nudgeCount.current % TUTORIAL_NUDGES.length];
+    nudgeCount.current += 1;
+    playSound('card-miss');
+    setNudge({ line, key: nudgeCount.current });
+    clearTimeout(nudgeTimer.current);
+    nudgeTimer.current = setTimeout(() => setNudge(null), 2600);
+  };
+
+  useEffect(() => () => clearTimeout(nudgeTimer.current), []);
 
   useEffect(() => {
     let raf = 0;
@@ -73,24 +89,27 @@ export function TutorialSpotlight({
 
   return (
     <>
-      {/* 遮罩：目标之外全部拦截点击 */}
+      {/* 拦截层：近乎透明——环境保持可见，目标之外的点击被拦截并触发江夏提醒 */}
       {hole ? (
         <>
-          <div className="fixed left-0 right-0 top-0 z-[160] bg-black/70" style={{ height: hole.top }} />
-          <div className="fixed left-0 right-0 bottom-0 z-[160] bg-black/70" style={{ top: hole.bottom }} />
-          <div className="fixed left-0 z-[160] bg-black/70" style={{ top: hole.top, height: hole.bottom - hole.top, width: hole.left }} />
-          <div className="fixed right-0 z-[160] bg-black/70" style={{ top: hole.top, height: hole.bottom - hole.top, left: hole.right }} />
-          {/* 高亮描边 */}
+          <div onClick={handleStray} className="fixed left-0 right-0 top-0 z-[160] bg-black/15" style={{ height: hole.top }} />
+          <div onClick={handleStray} className="fixed left-0 right-0 bottom-0 z-[160] bg-black/15" style={{ top: hole.bottom }} />
+          <div onClick={handleStray} className="fixed left-0 z-[160] bg-black/15" style={{ top: hole.top, height: hole.bottom - hole.top, width: hole.left }} />
+          <div onClick={handleStray} className="fixed right-0 z-[160] bg-black/15" style={{ top: hole.top, height: hole.bottom - hole.top, left: hole.right }} />
+          {/* 目标光圈：环境不压暗，靠它把下一步圈出来 */}
           <div
-            className="fixed z-[161] rounded-xl border-2 border-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.7)] animate-pulse pointer-events-none"
-            style={{ top: hole.top, left: hole.left, width: hole.right - hole.left, height: hole.bottom - hole.top }}
+            className="fixed z-[161] rounded-xl border-[3px] border-amber-400 animate-pulse pointer-events-none"
+            style={{
+              top: hole.top, left: hole.left, width: hole.right - hole.left, height: hole.bottom - hole.top,
+              boxShadow: '0 0 0 4px rgba(251,191,36,0.25), 0 0 28px rgba(251,191,36,0.85), inset 0 0 18px rgba(251,191,36,0.25)',
+            }}
           />
         </>
       ) : (
-        <div className="fixed inset-0 z-[160] bg-black/70" />
+        <div onClick={handleStray} className="fixed inset-0 z-[160] bg-black/15" />
       )}
 
-      {/* 江夏解说气泡 */}
+      {/* 江夏解说气泡（乱点时抖动并插一句提醒） */}
       <motion.div
         key={`${targetKey}-${bubbleOnTop}`}
         initial={{ opacity: 0, y: bubbleOnTop ? -8 : 8 }}
@@ -98,18 +117,27 @@ export function TutorialSpotlight({
         className="fixed left-3 right-3 z-[162]"
         style={bubbleOnTop ? { top: 'max(0.75rem, env(safe-area-inset-top))' } : { bottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
       >
-        <div className="mx-auto max-w-md rounded-2xl border border-amber-400/40 bg-slate-900/95 backdrop-blur-xl p-3 shadow-2xl">
+        <motion.div
+          key={nudge?.key ?? 'calm'}
+          animate={nudge ? { x: [0, -8, 8, -5, 5, 0] } : { x: 0 }}
+          transition={{ duration: 0.4 }}
+          className={`mx-auto max-w-md rounded-2xl border bg-slate-900/95 backdrop-blur-xl p-3 shadow-2xl ${nudge ? 'border-amber-400' : 'border-amber-400/40'}`}
+        >
           <div className="flex items-start gap-2.5">
             <img
-              src={assetUrl(linxiaFace(expression))}
+              src={assetUrl(linxiaFace(nudge ? 'angry' : expression))}
               alt="江夏"
               className="h-12 w-12 shrink-0 rounded-full border-2 border-amber-400/50 object-cover object-top bg-slate-800"
             />
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold tracking-wide text-amber-300 mb-0.5">江夏</p>
-              {lines.map(line => (
-                <p key={line.id} className="text-xs leading-relaxed text-slate-100 mb-1 last:mb-0">{line.text}</p>
-              ))}
+              {nudge ? (
+                <p key={nudge.line.id} className="text-xs font-bold leading-relaxed text-amber-200">{nudge.line.text}</p>
+              ) : (
+                lines.map(line => (
+                  <p key={line.id} className="text-xs leading-relaxed text-slate-100 mb-1 last:mb-0">{line.text}</p>
+                ))
+              )}
             </div>
           </div>
           {button && onButton && (
@@ -120,7 +148,7 @@ export function TutorialSpotlight({
               {button}
             </button>
           )}
-        </div>
+        </motion.div>
       </motion.div>
     </>
   );

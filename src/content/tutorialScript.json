@@ -1,5 +1,10 @@
 {
   "_comment": "新手引导剧本：全程江夏（linxia）解说。每句台词带稳定 id，供后续语音文件按 id 挂载（如 /voice/tutorial/{id}.mp3）。步骤机制（锁定目标/推进条件/奖励）在 src/lib/tutorialFlow.ts。",
+  "nudges": [
+    { "id": "nudge_1", "text": "那边现在不用管～先点我圈出来的地方！" },
+    { "id": "nudge_2", "text": "诶诶，这边这边！亮着金圈的才是下一步～" },
+    { "id": "nudge_3", "text": "别乱跑啦，跟着我走准没错……拜托了！" }
+  ],
   "home": {
     "entry": {
       "expression": "smile",
