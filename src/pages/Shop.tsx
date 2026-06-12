@@ -23,7 +23,12 @@ import { getSideJobById } from '@/data/sideJobs';
 import { checkPhoneEvents } from '@/engine/phoneScheduler';
 import GachaAnimation from '@/components/GachaAnimation';
 import CommissionTheater from '@/components/CommissionTheater';
-import TutorialOverlay from '@/components/TutorialOverlay';
+import TutorialDirector, { TutorialSpotlight } from '@/components/TutorialDirector';
+import {
+  TUTORIAL_STEPS, TUTORIAL_TOTAL, TUTORIAL_SIDE_JOB, TUTORIAL_DRAW_CARD, TUTORIAL_START,
+  type TutorialCtx,
+} from '@/lib/tutorialFlow';
+import { allServiceCards } from '@/data/serviceCards';
 import ResetSaveButton from '@/components/ResetSaveButton';
 import SupplyReveal, { type RevealItem } from '@/components/SupplyReveal';
 import { useCssVarFromHeight } from '@/hooks/useCssVarFromHeight';
@@ -224,7 +229,7 @@ export default function Shop() {
   const {
     fatigue, rep, money, trust, coffees, commission, isRevisit, loc, routes, done, hand, log, gameOver,
     board, objectivesDone, sideJobs, pendingScene, lastCardType,
-    startDay, refreshRoutes, acceptCommission, abandonCommission, clearCommission,
+    startDay, startTutorialDay, refreshRoutes, acceptCommission, abandonCommission, clearCommission,
     completeObjective, completeSideJob, noteCommissionFocus,
     setPendingScene, chooseLocation, leaveLocation, addHandCard, consumeHandCard,
     applyDelta, markSpotDone, finishLocation, normalAdvance, buyCoffee, addLog, setGameOver, resetDay,
@@ -275,28 +280,45 @@ export default function Shop() {
   /** 未完成子目标的限定地点标签（路线「委托相关」徽标用） */
   const pendingTags = objectives.filter(o => !objectivesDone.includes(o.id) && o.locTag).map(o => o.locTag!);
 
-  /* ────── 教学：步骤自动推进 ────── */
-  // Step 3 → 4: interview commission accepted
-  useEffect(() => {
-    if (tutorialStep === 3 && commission?.id === 'interview') {
-      setTutorialStep(4);
-    }
-  }, [tutorialStep, commission?.id, setTutorialStep]);
+  /* ────── 新手引导：强制锁定式流程（江夏全程解说，玩家只能点亮起的目标） ────── */
+  const tutorialActive = tutorialStep > 0 && tutorialStep <= TUTORIAL_TOTAL;
+  const tutStep = tutorialActive ? TUTORIAL_STEPS[tutorialStep - 1] : null;
+  const tutCtx: TutorialCtx = {
+    activeTab,
+    commissionId: commission?.id ?? null,
+    objectivesDone,
+    locId: loc?.id ?? null,
+    eventOpen: currentEvent !== null,
+    sideJobPetDone: sideJobs.some(j => j.id === TUTORIAL_SIDE_JOB && j.done),
+    hasPhoneCard: hand.some(c => c.id === TUTORIAL_DRAW_CARD),
+    interviewDelivered: flags.includes('commission_interview_done') && !commission,
+  };
+  /** 引导浮层让位于全屏演出（剧场分幕 / 补给开箱 / 抽卡动画 / 结算弹窗） */
+  const tutorialOverlayHidden = !!pendingScene || showTheater || !!revealItem || showGacha || !!endDayResult;
 
-  // Step 4 → 5: any hotspot resolved
-  useEffect(() => {
-    if (tutorialStep === 4) {
-      const anyDone = Object.values(done).some(loc => Object.values(loc).some(Boolean));
-      if (anyDone) setTutorialStep(5);
+  const lastAdvancedRef = useRef(0);
+  const advanceTutorial = useCallback(() => {
+    if (!tutorialActive || !tutStep) return;
+    if (lastAdvancedRef.current === tutorialStep) return; // 防同一步重复推进（StrictMode/连续渲染）
+    lastAdvancedRef.current = tutorialStep;
+    if (tutStep.reward?.stones) {
+      addSpiritStones(tutStep.reward.stones);
+      addLog(`🎁 江夏的谢礼:灵石 +${tutStep.reward.stones}。`, 'good');
     }
-  }, [tutorialStep, done, setTutorialStep]);
+    setTutorialStep(tutorialStep + 1);
+  }, [tutorialActive, tutStep, tutorialStep, addSpiritStones, addLog, setTutorialStep]);
 
-  // Handler for "继续" / "好，我来！" / "领取奖励" taps in tutorial overlay
-  const handleTutorialContinue = useCallback(() => {
-    if (tutorialStep === 1 || tutorialStep === 2) {
-      setTutorialStep(tutorialStep + 1);
-    } else if (tutorialStep === 6) {
-      // Guaranteed linxia gacha as tutorial reward
+  // 条件满足自动推进。谓词只读存档态，刷新页面后可从断点续接
+  useEffect(() => {
+    if (!tutorialActive || !tutStep?.until) return;
+    if (tutStep.until(tutCtx)) advanceTutorial();
+  });
+
+  // 引导按钮（全屏对白 / 带按钮的聚光步骤）
+  const handleTutorialButton = useCallback(() => {
+    if (!tutStep) return;
+    if (tutStep.id === 'celebrate') {
+      // 终幕：江夏正式入伙——直接发角色，跳过抽卡随机性
       const linxiaChar = getCharacterById('linxia');
       if (linxiaChar) {
         addCharacter('linxia');
@@ -315,8 +337,10 @@ export default function Shop() {
         setEndDayResult('success');
         setGameOver(true);
       }
+      return;
     }
-  }, [tutorialStep, setTutorialStep, addCharacter, addGachaResult, setGachaResults, setShowGacha, setEndDayResult, setGameOver]);
+    advanceTutorial();
+  }, [tutStep, advanceTutorial, addCharacter, addGachaResult, setTutorialStep, setGameOver]);
 
   /* ────── 抽卡 ────── */
   const handleDraw = useCallback((pool: PoolId) => {
@@ -326,6 +350,25 @@ export default function Shop() {
       setActiveTab('commission');
       return;
     } else if (pool === 'supply') {
+      // 引导教学抽卡：固定出货 SR 万能卡【临时人脉电话】，补上剧本里故意缺失的「流程」需求
+      if (tutorialActive && tutStep?.id === 'supply_draw') {
+        if (!spendNormalTickets(1)) return toast('普通券不足。');
+        const phone = allServiceCards.find(c => c.id === TUTORIAL_DRAW_CARD);
+        if (phone) {
+          addHandCard(phone);
+          playSound('gacha-item');
+          addLog(`便利屋补给：✨ 稀有出货！便利卡【${phone.name}】（${phone.type} · ${phone.rarity}）。`, 'good');
+          setRevealItem({
+            tier: 'rare',
+            icon: '🧰',
+            name: phone.name,
+            sub: `${phone.type} · ${phone.rarity}`,
+            desc: phone.desc,
+            pityRemain: GACHA_CONFIG.supplyPool.characterPity - supplyPityCounter,
+          });
+        }
+        return;
+      }
       if (!spendNormalTickets(1)) return toast('普通券不足。');
       const ownedIds = ownedCharacters.map(o => o.characterId);
       const { result, newPity } = pullSupply(ownedIds, affinityMap, supplyPityCounter, { rateUpUntil, coldUntil });
@@ -379,7 +422,7 @@ export default function Shop() {
         }
       }
     }
-  }, [gameOver, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, rateUpUntil, coldUntil, setSupplyPityCounter, addCharacter, addGachaResult, addHandCard, addHintTokens, addSpiritStones, addLog]);
+  }, [gameOver, tutorialActive, tutStep, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, rateUpUntil, coldUntil, setSupplyPityCounter, addCharacter, addGachaResult, addHandCard, addHintTokens, addSpiritStones, addLog]);
 
   /* ────── 热点点击 ────── */
   const handleSpotClick = useCallback((spot: Spot, spotIndex: number) => {
@@ -572,11 +615,8 @@ export default function Shop() {
       }
       playSound('commission-success');
       clearCommission();
-      // 教学流程：拦截「面试」委托完成，改为显示江夏入伙庆典，不直接结束当日
-      if (tutorialStep > 0 && tutorialStep < 6) {
-        setTutorialStep(6);
-        return;
-      }
+      // 引导期：不结束当天——交付完成被流程谓词捕获后，自动进入江夏入伙庆典步
+      if (tutorialActive) return;
       setEndDayResult('success');
     } else {
       addNormalTickets(1);
@@ -586,7 +626,7 @@ export default function Shop() {
       setEndDayResult('fail');
     }
     setGameOver(true);
-  }, [commission, isRevisit, setPendingScene, addNormalTickets, addReputation, addAffinity, setCharacterRateUp, applyDelta, clearCommission, addLog, setGameOver, tutorialStep, setTutorialStep]);
+  }, [commission, isRevisit, setPendingScene, addNormalTickets, addReputation, addAffinity, setCharacterRateUp, applyDelta, clearCommission, addLog, setGameOver, tutorialActive]);
 
   /* ────── Toast ────── */
   const [toastMsg, setToastMsg] = useState('');
@@ -608,8 +648,8 @@ export default function Shop() {
 
   /* ─────────────────────── RENDER ─────────────────────── */
 
-  /* 开始界面 */
-  if (isNew) {
+  /* 开始界面（tutorialStep === 0 时强制显示：无论局内残留什么状态，引导都从干净一天开始） */
+  if (isNew || tutorialStep === 0) {
     return (
       <div className="relative flex min-h-screen flex-col items-center justify-center gap-6 overflow-hidden bg-[#050914] px-6">
         <PageBackdrop
@@ -623,17 +663,30 @@ export default function Shop() {
           <p className="text-slate-400 text-sm">开在一天的第二十五小时 · 专收时间表漏掉的麻烦</p>
         </div>
         <button
+          data-tut="btn-start-day"
           onClick={() => {
-            startDay();
+            if (tutorialStep === 0) {
+              startTutorialDay();
+              setTutorialStep(1);
+            } else {
+              startDay();
+            }
             setHandledThisLocation(false);
             setActiveTab('map');
-            if (tutorialStep === 0) setTutorialStep(1);
           }}
           className="relative z-10 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 px-10 py-4 text-lg font-black text-amber-950 shadow-[0_0_30px_rgba(251,191,36,0.4)] hover:from-amber-400"
         >
           {tutorialStep === 0 ? '开始营业（新手引导）' : '开始营业'}
         </button>
         <button onClick={() => navigate('/')} className="relative z-10 text-slate-400 text-sm">返回首页</button>
+        {/* 引导未开始：锁定开始营业按钮 */}
+        {tutorialStep === 0 && (
+          <TutorialSpotlight
+            targetKey="btn-start-day"
+            lines={TUTORIAL_START.lines}
+            expression={TUTORIAL_START.expression}
+          />
+        )}
       </div>
     );
   }
@@ -683,17 +736,19 @@ export default function Shop() {
           normalTickets={normalTickets}
         />
 
-        {/* 当前目标提示 */}
-        <GoalBar
-          commission={commission}
-          trust={trust}
-          commissionNeed={commissionNeed}
-          objectives={objectives}
-          objectivesDone={objectivesDone}
-          nextObjective={nextObjective}
-          commissionReady={commissionReady}
-          gameOver={gameOver}
-        />
+        {/* 当前目标提示（引导期由江夏解说接管，避免双重指挥） */}
+        {!tutorialActive && (
+          <GoalBar
+            commission={commission}
+            trust={trust}
+            commissionNeed={commissionNeed}
+            objectives={objectives}
+            objectivesDone={objectivesDone}
+            nextObjective={nextObjective}
+            commissionReady={commissionReady}
+            gameOver={gameOver}
+          />
+        )}
 
         {/* 今日待办 + 便利屋补给 */}
         <div className="px-3 pt-2 pb-2">
@@ -705,6 +760,7 @@ export default function Shop() {
               return (
                 <button
                   key={pool.id}
+                  data-tut={pool.id === 'supply' ? 'btn-supply' : 'btn-board'}
                   onClick={() => handleDraw(pool.id)}
                   disabled={gameOver}
                   className={cn(
@@ -745,6 +801,7 @@ export default function Shop() {
           ] as const).map(({ id, label, icon: Icon }) => (
             <button
               key={id}
+              data-tut={`tab-${id}`}
               onClick={() => { playSound('tab-switch'); setActiveTab(id); }}
               className={cn(
                 'flex-1 flex items-center justify-center gap-1 py-2 text-xs font-bold transition-colors',
@@ -771,6 +828,7 @@ export default function Shop() {
                     return (
                       <button
                         key={l.id}
+                        data-tut={`route-${l.id}`}
                         onClick={() => { if (!gameOver) { playSound('route-select'); chooseLocation(l); setHandledThisLocation(false); } }}
                         disabled={gameOver}
                         className={cn(
@@ -875,6 +933,7 @@ export default function Shop() {
                       return (
                         <button
                           key={i}
+                          data-tut={`spot-${loc.id}-${i}`}
                           onClick={() => handleSpotClick(spot, i)}
                           disabled={isDone || gameOver}
                           className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5"
@@ -964,6 +1023,7 @@ export default function Shop() {
                         </div>
                         <p className="text-xs text-slate-400 mb-2">{c.desc}</p>
                         <button
+                          data-tut={`btn-accept-${id}`}
                           onClick={() => { if (!gameOver) { playSound('commission-accept'); acceptCommission(id); } }}
                           disabled={gameOver || fatigue >= FATIGUE_EXHAUSTED}
                           className={cn(
@@ -1019,7 +1079,7 @@ export default function Shop() {
 
                   {/* 子目标清单 */}
                   {objectives.length > 0 && (
-                    <div className="mt-3 space-y-1.5">
+                    <div data-tut="objectives-list" className="mt-3 space-y-1.5">
                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">子目标 {objectivesDone.length}/{objectives.length}</p>
                       {objectives.map(o => {
                         const isDone = objectivesDone.includes(o.id);
@@ -1046,6 +1106,7 @@ export default function Shop() {
                   {/* 交付 CTA */}
                   {commission.graph && commission.graph.nodes.length > 0 ? (
                     <button
+                      data-tut="btn-deliver"
                       onClick={() => {
                         // 回访单无回访幕时不进剧场，直接结算交付
                         if (isRevisit && !commission.replayScene) handleTheaterComplete(true);
@@ -1065,7 +1126,7 @@ export default function Shop() {
                     提示：信任影响交付结局的好坏（{trust}/{gateGoal}），子目标决定能否交付。委托永不过期，进度跨天保留。
                   </p>
                   {/* 放弃委托：唯一的失败途径（教学期隐藏，防卡新手引导） */}
-                  {!gameOver && !(tutorialStep > 0 && tutorialStep <= 6) && (
+                  {!gameOver && !tutorialActive && (
                     <button
                       onClick={() => setShowAbandonConfirm(true)}
                       className="mt-2 w-full rounded-lg border border-white/10 bg-slate-800/60 py-2 text-[11px] font-bold text-slate-400 hover:bg-slate-700/60 active:scale-[0.99] transition-all"
@@ -1208,6 +1269,7 @@ export default function Shop() {
               </button>
             )}
             <button
+              data-tut="btn-finish-location"
               onClick={handleFinishLocation}
               disabled={gameOver}
               className="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-2.5 text-sm font-black text-amber-950 disabled:opacity-40"
@@ -1353,6 +1415,7 @@ export default function Shop() {
                         return (
                           <button
                             key={isPerson ? (card as PersonCard).id : (card as HandCard).uid}
+                            data-tut={isPerson ? undefined : `card-${(card as HandCard).id}`}
                             onClick={() => {
                               if (isPerson) handleResolve(card as PersonCard);
                               else handleResolve(card as HandCard & { kind: 'skill' | 'tool' | 'info' });
@@ -1509,8 +1572,8 @@ export default function Shop() {
           onComplete={() => {
             setShowGacha(false);
             setGachaResults([]);
-            // Tutorial reward gacha → mark complete and end day
-            if (tutorialStep === 6) {
+            // 引导终幕：江夏入伙演出结束 → 引导完成，结算当日
+            if (tutorialActive) {
               setTutorialStep(-1);
               setEndDayResult('success');
               setGameOver(true);
@@ -1530,6 +1593,7 @@ export default function Shop() {
           onSceneEnd={() => setPendingScene(null)}
           onComplete={handleTheaterComplete}
           onExit={() => { setPendingScene(null); setShowTheater(false); }}
+          tutorialLock={tutorialActive}
         />
       )}
 
@@ -1547,16 +1611,10 @@ export default function Shop() {
         )}
       </AnimatePresence>
 
-      {/* ── 教学引导覆盖层 ── */}
-      <AnimatePresence>
-        {tutorialStep > 0 && tutorialStep <= 6 && (
-          <TutorialOverlay
-            key={tutorialStep}
-            step={tutorialStep}
-            onContinue={handleTutorialContinue}
-          />
-        )}
-      </AnimatePresence>
+      {/* ── 新手引导导演（全屏演出期间让位） ── */}
+      {tutorialActive && tutStep && !tutorialOverlayHidden && (
+        <TutorialDirector step={tutStep} ctx={tutCtx} onButton={handleTutorialButton} />
+      )}
     </div>
   );
 

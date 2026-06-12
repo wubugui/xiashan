@@ -41,7 +41,7 @@ function dateAfterDays(days: number): string {
 
 interface PlayerState {
   // Tutorial
-  /** -1 = completed, 0 = not yet started, 1–6 = in progress */
+  /** -1 = 已完成，0 = 未开始，1..N = 进行中（N 见 tutorialFlow.TUTORIAL_TOTAL，强制锁定式引导） */
   tutorialStep: number;
   setTutorialStep: (n: number) => void;
 
@@ -285,7 +285,7 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'xiashan-player-store',
-      version: 5,
+      version: 6,
       storage: createJSONStorage(() => safeStorage),
       // 旧版本存档可能缺字段、字段为 null 或类型不符（项目从 AVG 改版而来），
       // 合并时丢弃所有与默认值类型不符的项，避免启动即崩、全页空白。
@@ -310,6 +310,14 @@ export const usePlayerStore = create<PlayerState>()(
           personTickets?: number;
           commissionTickets?: number;
         };
+        if (version < 6) {
+          // 引导系统改版（强制锁定式 19 步）：旧版进行中的引导（1-6）无法续接，重新开始；
+          // 已完成（-1）和未开始（0）的存档不受影响
+          const s6 = state as typeof state & { tutorialStep?: number };
+          if (typeof s6.tutorialStep === 'number' && s6.tutorialStep > 0) {
+            s6.tutorialStep = 0;
+          }
+        }
         if (version < 5) {
           // 重复卡计数从抽卡历史回放统计（老玩家不亏）；已拥有但无历史记录的保底 1 张
           const s5 = state as typeof state & {

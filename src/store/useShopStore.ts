@@ -16,6 +16,10 @@ import {
   FATIGUE_MAX, FATIGUE_TIRED, FATIGUE_EXHAUSTED, COFFEE_COST,
 } from '@/engine/shopEngine';
 import { COLD_DAYS } from '@/engine/gachaEngine';
+import { allServiceCards } from '@/data/serviceCards';
+import {
+  TUTORIAL_DECK, TUTORIAL_SIDE_JOB, TUTORIAL_ROUTES_EARLY, TUTORIAL_ROUTES_LATE,
+} from '@/lib/tutorialFlow';
 
 export interface HandCard extends ServiceCard {
   /** 唯一实例 id，用于消耗时精准移除 */
@@ -68,6 +72,8 @@ interface ShopState {
 
   /* ── Actions ── */
   startDay: () => void;
+  /** 新手引导开局：清空局内状态 + 固定路线/委托板/顺手单/卡组（确定性流程，禁止随机） */
+  startTutorialDay: () => void;
   refreshRoutes: () => void;
   acceptCommission: (id: string) => void;
   /** 主动放弃当前委托：唯一的委托失败途径，按目标角色稀有度/持有分层惩罚 */
@@ -159,6 +165,19 @@ function pendingLocTags(commission: Commission | null, objectivesDone: string[])
     .map(o => o.locTag!);
 }
 
+/** 新手引导是否进行中（引导期内路线/委托板/顺手单全部固定） */
+function isTutorialActive(): boolean {
+  return usePlayerStore.getState().tutorialStep > 0;
+}
+
+/** 教学固定路线：补登记完成前后两套（后半段把她等你的天台掷出来） */
+function tutorialRoutes(objectivesDone: string[]): GameLocation[] {
+  const ids = objectivesDone.includes('register') ? TUTORIAL_ROUTES_LATE : TUTORIAL_ROUTES_EARLY;
+  return ids
+    .map(id => allLocations.find(l => l.id === id))
+    .filter((l): l is GameLocation => !!l);
+}
+
 export const useShopStore = create<ShopState>()(
   persist(
     (set, get) => ({
@@ -166,15 +185,19 @@ export const useShopStore = create<ShopState>()(
 
       startDay: () => {
         const s0 = get();
-        const routes = rollRoutes(allLocations, 3, pendingLocTags(s0.commission, s0.objectivesDone));
-        // 教学模式下保证「面试」委托出现在委托板
-        const ts = usePlayerStore.getState().tutorialStep;
-        const forced = (ts >= 0 && ts < 4) ? ['interview'] : [];
-        const board = rollBoard(forced);
+        const tutorial = isTutorialActive();
+        const routes = tutorial
+          ? tutorialRoutes(s0.objectivesDone)
+          : rollRoutes(allLocations, 3, pendingLocTags(s0.commission, s0.objectivesDone));
+        // 引导期委托板只挂「面试」一单，顺手单只挂教学单（流程确定性）
+        const board = tutorial ? (s0.commission ? [] : ['interview']) : rollBoard();
+        const sideJobs = tutorial
+          ? (s0.sideJobs.length ? s0.sideJobs : [{ id: TUTORIAL_SIDE_JOB, done: false }])
+          : rollSideJobs();
         // 跨天保留：手牌（持有资产）+ 进行中委托（锁单制：进度不清零，干不完明天继续）
         // 咖啡杯数挂真实自然日，休息不重置（防「打烊刷咖啡」）
         set({
-          ...INITIAL, routes, board, sideJobs: rollSideJobs(), done: {},
+          ...INITIAL, routes, board, sideJobs, done: {},
           hand: s0.hand, log: [], gameOver: false,
           coffees: s0.coffees,
           commission: s0.commission, isRevisit: s0.isRevisit,
@@ -188,7 +211,26 @@ export const useShopStore = create<ShopState>()(
         }
       },
 
-      refreshRoutes: () => set(s => ({ routes: rollRoutes(allLocations, 3, pendingLocTags(s.commission, s.objectivesDone)) })),
+      startTutorialDay: () => {
+        const hand = TUTORIAL_DECK
+          .map(id => allServiceCards.find(c => c.id === id))
+          .filter((c): c is ServiceCard => !!c)
+          .map(c => ({ ...c, uid: _uid++ }));
+        set({
+          ...INITIAL,
+          routes: tutorialRoutes([]),
+          board: ['interview'],
+          sideJobs: [{ id: TUTORIAL_SIDE_JOB, done: false }],
+          hand,
+        });
+        get().addLog('深夜开张:江夏会全程带你跑完第一单。', 'good');
+      },
+
+      refreshRoutes: () => set(s => ({
+        routes: isTutorialActive()
+          ? tutorialRoutes(s.objectivesDone)
+          : rollRoutes(allLocations, 3, pendingLocTags(s.commission, s.objectivesDone)),
+      })),
 
       setCommission: (c) => set({ commission: c, isRevisit: false, trust: 0, objectivesDone: [] }),
 
@@ -315,7 +357,9 @@ export const useShopStore = create<ShopState>()(
         const s = get();
         set({
           loc: null,
-          routes: rollRoutes(allLocations, 3, pendingLocTags(s.commission, s.objectivesDone)),
+          routes: isTutorialActive()
+            ? tutorialRoutes(s.objectivesDone)
+            : rollRoutes(allLocations, 3, pendingLocTags(s.commission, s.objectivesDone)),
         });
         get().applyDelta({ fatigue: 10 });
         get().addLog('离开当前地点，进入下一段路线。疲劳 +10。');

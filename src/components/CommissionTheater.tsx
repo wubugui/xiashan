@@ -40,9 +40,11 @@ interface Props {
   onSceneEnd?: () => void;
   onComplete: (success: boolean) => void;
   onExit: () => void;
+  /** 新手引导锁定：挑战只能打匹配卡（✨），禁用其余卡与「凭本事顶上」 */
+  tutorialLock?: boolean;
 }
 
-export default function CommissionTheater({ commission, scene, initialTrust, trustGoal, onSceneEnd, onComplete, onExit }: Props) {
+export default function CommissionTheater({ commission, scene, initialTrust, trustGoal, onSceneEnd, onComplete, onExit, tutorialLock }: Props) {
   const graph = commission.graph!;
   const nodesById = useMemo(() => {
     const m = new Map<string, CommissionNode>();
@@ -231,13 +233,16 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
           <span className="text-[10px] text-white/50">
             进度 {Math.min(challengesDone, totalChallenges)}/{totalChallenges}
           </span>
-          <button
-            onClick={onExit}
-            className="ml-auto flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20"
-            aria-label="退出委托"
-          >
-            <X size={15} />
-          </button>
+          {/* 引导期不可中途退场：必须看完整幕，保证流程不脱轨 */}
+          {!tutorialLock && (
+            <button
+              onClick={onExit}
+              className="ml-auto flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20"
+              aria-label="退出委托"
+            >
+              <X size={15} />
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-bold text-rose-200 shrink-0">信任 {trust}/{goal}</span>
@@ -313,14 +318,31 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
               <p className="text-sm font-bold text-white">{node.prompt}</p>
             </div>
 
-            <CardTray need={node.need} personCards={personCards} hand={hand} onPlay={playChoice} />
-
-            <button
-              onClick={() => playChoice(null)}
-              className="mt-2 w-full rounded-xl border border-white/10 bg-slate-800 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 active:scale-[0.99] transition-all"
-            >
-              凭本事顶上（不使用卡 · 反馈平平）
-            </button>
+            {(() => {
+              const matchedExists =
+                personCards.some((p) => isMatch(p.serviceType, node.need)) ||
+                hand.some((c) => isMatch(c.type, node.need));
+              const locked = !!tutorialLock && matchedExists;
+              return (
+                <>
+                  {locked && (
+                    <div className="mb-2 flex items-center gap-2 rounded-lg border border-amber-400/40 bg-amber-500/10 px-2.5 py-1.5">
+                      <img src={assetUrl('/characters/face/linxia/avatar.png')} alt="江夏" className="h-6 w-6 rounded-full object-cover border border-amber-400/40" />
+                      <p className="text-[10px] font-bold text-amber-200">江夏：打出带 ✨ 的卡——类型对上，判定才是「完美」！</p>
+                    </div>
+                  )}
+                  <CardTray need={node.need} personCards={personCards} hand={hand} onPlay={playChoice} lockToMatched={locked} />
+                  {!locked && (
+                    <button
+                      onClick={() => playChoice(null)}
+                      className="mt-2 w-full rounded-xl border border-white/10 bg-slate-800 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 active:scale-[0.99] transition-all"
+                    >
+                      凭本事顶上（不使用卡 · 反馈平平）
+                    </button>
+                  )}
+                </>
+              );
+            })()}
           </motion.div>
         )}
       </AnimatePresence>
@@ -342,12 +364,14 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
 
 /* ────── 卡牌托盘 ────── */
 function CardTray({
-  need, personCards, hand, onPlay,
+  need, personCards, hand, onPlay, lockToMatched,
 }: {
   need: ServiceTag[];
   personCards: { kind: 'person'; id: string; name: string; serviceType: ServiceTag; level: number }[];
   hand: HandCard[];
   onPlay: (card: { kind: 'person'; serviceType: ServiceTag; id: string } | HandCard) => void;
+  /** 引导锁定：非匹配卡禁用 */
+  lockToMatched?: boolean;
 }) {
   const sortedPersons = [...personCards].sort(
     (a, b) => scoreCard(b.serviceType, need) - scoreCard(a.serviceType, need),
@@ -376,9 +400,11 @@ function CardTray({
                 <button
                   key={p.id}
                   onClick={() => onPlay(p)}
+                  disabled={lockToMatched && !matched}
                   className={cn(
                     'flex items-center gap-2 rounded-xl border p-2 text-left active:scale-[0.98] transition-all',
                     matched ? 'border-amber-400/60 bg-amber-500/10' : 'border-white/10 bg-slate-800',
+                    lockToMatched && !matched && 'opacity-40',
                   )}
                 >
                   {c && <img src={assetUrl(c.avatarUrl)} alt={c.name} className="h-8 w-8 rounded-full object-cover shrink-0" />}
@@ -402,9 +428,11 @@ function CardTray({
                 <button
                   key={c.uid}
                   onClick={() => onPlay(c)}
+                  disabled={lockToMatched && !matched}
                   className={cn(
                     'rounded-xl border p-2 text-left active:scale-[0.98] transition-all',
                     matched ? 'border-amber-400/60 bg-amber-500/10' : 'border-white/10 bg-slate-800',
+                    lockToMatched && !matched && 'opacity-40',
                   )}
                 >
                   <p className="text-xs font-bold text-white truncate">{matched ? '✨' : ''}{c.name}</p>
