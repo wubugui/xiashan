@@ -13,6 +13,7 @@ import { getLocationById } from '@/data/locations';
 import { isMatch, scoreCard } from '@/engine/shopEngine';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useShopStore } from '@/store/useShopStore';
+import { playSound } from '@/lib/sound';
 import type { Commission, CommissionNode, Line, Mood, ServiceTag, TheaterScene } from '@/data/types';
 import type { HandCard } from '@/store/useShopStore';
 import { cn } from '@/lib/utils';
@@ -127,8 +128,18 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
     setNodeId(next);
   }, [scene, onSceneEnd]);
 
+  /* ── 信任/挑战音效 ── */
+  useEffect(() => {
+    if (floatTrust !== null && floatTrust > 0) playSound('trust-gain');
+  }, [floatTrust]);
+
+  useEffect(() => {
+    if (inChallenge) playSound('challenge-appear');
+  }, [inChallenge]);
+
   /* ── 对白推进 ── */
   const handleNext = useCallback(() => {
+    playSound('dialog-next');
     if (lineIndex < currentLines.length - 1) {
       setLineIndex((i) => i + 1);
       return;
@@ -162,6 +173,7 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
         const cardType = card.kind === 'person' ? card.serviceType : card.type;
         tier = isMatch(cardType, node.need) ? 'perfect' : 'ok';
       }
+      playSound(tier === 'perfect' ? 'card-hit' : tier === 'ok' ? 'btn-confirm' : 'card-miss');
       const outcome = node.outcomes[tier];
 
       if (card && card.kind !== 'person') consumeHandCard(card.uid);

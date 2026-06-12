@@ -6,6 +6,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
 import { getRelationshipStages, getStageInfo, getNextStage } from '@/data/relationship';
 import { cn } from '@/lib/utils';
+import { playSound } from '@/lib/sound';
 import { assetUrl } from '@/lib/assets';
 import PageBackdrop from '@/components/PageBackdrop';
 import { backdropForCharacter } from '@/lib/pageBackdrops';
@@ -107,6 +108,7 @@ export default function CharacterDetail() {
   }, [character, level]);
 
   const handleInteract = (type: 'touch' | 'talk' | 'gift') => {
+    playSound('btn-confirm');
     if (!character || !owned) return;
     const interaction = availableInteractions.find((i) => i.type === type);
     if (!interaction) return;
@@ -132,6 +134,7 @@ export default function CharacterDetail() {
   };
 
   const handleAdvanceStage = () => {
+    playSound('stage-up');
     if (!character || !owned || !nextStage) return;
     if (affinity < nextStage.threshold) return;
     // 每角色每日最多推进一阶，保住养成节奏（设计文档 6.3）

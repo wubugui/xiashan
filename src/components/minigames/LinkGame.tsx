@@ -6,6 +6,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
 import type { ServiceTag } from '@/data/types';
 import { cn } from '@/lib/utils';
+import { playSound } from '@/lib/sound';
 import { assetUrl } from '@/lib/assets';
 import PageBackdrop from '@/components/PageBackdrop';
 import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
@@ -202,6 +203,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
   /** 死局检测：无可消除一步时自动洗牌（安抚型陪玩有补偿） */
   const ensurePlayable = useCallback((g: Tile[][]) => {
     if (findHint(g)) return;
+    playSound('reshuffle');
     setReshuffled(true);
     if (passive?.key === 'soothe') {
       addSpiritStones(40);
@@ -239,6 +241,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
       setCombo(depth);
 
       try { navigator.vibrate?.(depth >= 2 ? 60 : 25); } catch { /* 不支持则忽略 */ }
+      playSound(depth >= 2 ? 'match-combo' : 'match');
       confetti({
         particleCount: Math.min(80, matches.size * 6 + depth * 10),
         spread: 60,
@@ -279,6 +282,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
         }, 180);
         return;
       }
+      playSound('swap');
       setGrid(next);
       window.setTimeout(() => cascade(next, 1), 80);
     },

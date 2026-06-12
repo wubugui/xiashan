@@ -40,6 +40,7 @@ import type { HandCard } from '@/store/useShopStore';
 import type { PersonCard } from '@/engine/shopEngine';
 import { cn } from '@/lib/utils';
 import { assetCssBackground, assetUrl } from '@/lib/assets';
+import { playSound, isSoundEnabled, setSoundEnabled } from '@/lib/sound';
 
 /* ────── 常量 ────── */
 const POOL_CONFIG = [
@@ -220,6 +221,7 @@ export default function Shop() {
 
   /* ── 本地 UI 状态 ── */
   const [activeTab, setActiveTab] = useState<ActiveTab>('map');
+  const [soundOn, setSoundOn] = useState(isSoundEnabled);
   const [currentEvent, setCurrentEvent] = useState<{ spot: Spot; spotIndex: number; locId: string } | null>(null);
   const [gachaResults, setGachaResults] = useState<AnimGachaResult[]>([]);
   const [showGacha, setShowGacha] = useState(false);
@@ -317,6 +319,7 @@ export default function Shop() {
         addLog(`便利屋补给：✨ ${result.isNew ? '人物出货' : '重复人物'}【${result.character.name}】！`, 'good');
       } else {
         const remain = GACHA_CONFIG.supplyPool.characterPity - newPity;
+        playSound('gacha-item');
         if (result.kind === 'hint') {
           addHintTokens(1);
           addLog(`便利屋补给：抽到【消消乐提示券】×1。距人物保底还剩 ${remain} 抽。`, 'draw');
@@ -352,6 +355,7 @@ export default function Shop() {
   const handleSpotClick = useCallback((spot: Spot, spotIndex: number) => {
     if (!loc) return;
     if (done[loc.id]?.[spotIndex]) return toast('这个热点已经处理过了。');
+    playSound('spot-open');
     setCurrentEvent({ spot, spotIndex, locId: loc.id });
     setActiveTab('map'); // 确保弹窗在地图 tab 上显示
   }, [loc, done]);
@@ -362,6 +366,14 @@ export default function Shop() {
     const { spot, spotIndex, locId } = currentEvent;
 
     const { text, cls, delta, combo } = resolveSpot(spot, card, lastCardType);
+
+    // 音效反馈
+    if (!card) playSound('card-miss');
+    else if (combo) playSound('combo');
+    else {
+      const cType = card.kind === 'person' ? card.serviceType : (card as HandCard).type;
+      playSound(spot.need.includes(cType) ? 'card-hit' : 'card-miss');
+    }
 
     // 消耗一次性手牌
     if (card && card.kind !== 'person') {
@@ -433,6 +445,7 @@ export default function Shop() {
     const { spot, spotIndex, locId } = currentEvent;
     const risk = spot.risk!;
 
+    playSound('risk');
     applyDelta(risk.delta);
     markSpotDone(locId, spotIndex);
     setHandledThisLocation(true);
@@ -482,6 +495,7 @@ export default function Shop() {
     // 全部热点已处理过（含此前来过这个地点的情况）时允许直接离开，避免卡死
     const allSpotsDone = loc.spots.every((_, i) => done[loc.id]?.[i]);
     if (!handledThisLocation && !allSpotsDone) return toast('至少处理一个热点，或点「换地点」退回路线选择。');
+    playSound('location-done');
     const result = finishLocation();
     setHandledThisLocation(false);
     if (result === 'end_day') handleEndDay();
@@ -500,6 +514,7 @@ export default function Shop() {
       addReputation(1);
       dispatchAvailablePhoneEvents(addLog);
       addLog(`委托交付：【${commission.name}】。奖励：普通券+4，口碑+1，相关影像已解锁。`, 'good');
+      playSound('commission-success');
       // 教学流程：拦截「面试」委托完成，改为显示江夏入伙庆典，不直接结束当日
       if (tutorialStep > 0 && tutorialStep < 6) {
         setTutorialStep(6);
@@ -508,6 +523,7 @@ export default function Shop() {
       setEndDayResult('success');
     } else {
       addNormalTickets(1);
+      playSound('commission-fail');
       addLog(`委托收尾不顺：【${commission.name}】。她还是谢了你，但结局差了点意思。补偿普通券 +1。`, 'bad');
       setEndDayResult('fail');
     }
@@ -517,6 +533,7 @@ export default function Shop() {
   /* ────── Toast ────── */
   const [toastMsg, setToastMsg] = useState('');
   function toast(msg: string) {
+    playSound('toast');
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 1800);
   }
@@ -582,6 +599,13 @@ export default function Shop() {
             <ChevronLeft size={18} />
           </button>
           <h1 className="flex-1 font-black text-white text-base">二十五时便利屋</h1>
+          <button
+            onClick={() => { const n = !soundOn; setSoundOn(n); setSoundEnabled(n); }}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 text-sm"
+            aria-label={soundOn ? '静音' : '开启音效'}
+          >
+            {soundOn ? '🔊' : '🔇'}
+          </button>
           <ResetSaveButton compact />
           {gameOver && (
             <button
@@ -662,7 +686,7 @@ export default function Shop() {
           ] as const).map(({ id, label, icon: Icon }) => (
             <button
               key={id}
-              onClick={() => setActiveTab(id)}
+              onClick={() => { playSound('tab-switch'); setActiveTab(id); }}
               className={cn(
                 'flex-1 flex items-center justify-center gap-1 py-2 text-xs font-bold transition-colors',
                 activeTab === id ? 'text-amber-300 border-b-2 border-amber-400' : 'text-slate-500 hover:text-slate-300',
@@ -686,7 +710,7 @@ export default function Shop() {
                   {routes.map(l => (
                     <button
                       key={l.id}
-                      onClick={() => { if (!gameOver) { chooseLocation(l); setHandledThisLocation(false); } }}
+                      onClick={() => { if (!gameOver) { playSound('route-select'); chooseLocation(l); setHandledThisLocation(false); } }}
                       disabled={gameOver}
                       className={cn(
                         'w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-left',
@@ -858,7 +882,7 @@ export default function Shop() {
                         </div>
                         <p className="text-xs text-slate-400 mb-2">{c.desc}</p>
                         <button
-                          onClick={() => { if (!gameOver) acceptCommission(id); }}
+                          onClick={() => { if (!gameOver) { playSound('commission-accept'); acceptCommission(id); } }}
                           disabled={gameOver}
                           className="w-full rounded-lg bg-gradient-to-r from-rose-500 to-pink-600 py-2 text-xs font-black text-white disabled:opacity-40 active:scale-[0.99] transition-all"
                         >

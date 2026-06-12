@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getCharacterById } from '@/data/characters';
+import { playSound } from '@/lib/sound';
 import type { Character } from '@/data/types';
 import { cn } from '@/lib/utils';
 import { assetUrl } from '@/lib/assets';
@@ -146,9 +147,13 @@ function GachaCard({
   const hasWideSceneArt = Boolean(character?.gachaBackgroundUrl);
 
   useEffect(() => {
-    if (isRevealed && isSSR) {
-      fireSSRConfetti();
-    }
+    if (!isRevealed) return;
+    playSound('card-flip');
+    const t = window.setTimeout(() => {
+      if (isSSR) { fireSSRConfetti(); playSound('gacha-ssr'); }
+      else playSound('gacha-char');
+    }, 300);
+    return () => window.clearTimeout(t);
   }, [isRevealed, isSSR]);
 
   return (

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { assetUrl } from '@/lib/assets';
+import { playSound } from '@/lib/sound';
 
 type FullStep = {
   kind: 'full';
@@ -95,7 +96,7 @@ export default function TutorialOverlay({ step, onContinue }: TutorialOverlayPro
             <p key={i} className="text-sm leading-relaxed text-slate-100 mb-1.5">{line}</p>
           ))}
           <button
-            onClick={onContinue}
+            onClick={() => { playSound('tutorial-next'); onContinue(); }}
             className="mt-4 w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-3 text-sm font-black text-amber-950 shadow-[0_0_20px_rgba(251,191,36,0.3)]"
           >
             {data.btnText}

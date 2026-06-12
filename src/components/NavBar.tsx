@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useCssVarFromHeight } from '@/hooks/useCssVarFromHeight';
 import { Store, Sparkles, Users, Smartphone } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { playSound } from '@/lib/sound';
 
 interface NavBarProps {
   activeTab: string;
@@ -20,6 +21,12 @@ const tabs = [
 export default function NavBar({ activeTab, onTabChange, unreadCount }: NavBarProps) {
   const navRef = useRef<HTMLElement>(null);
   useCssVarFromHeight('--nav-h', navRef);
+
+  const prevUnread = useRef(unreadCount);
+  useEffect(() => {
+    if (unreadCount > prevUnread.current) playSound('phone-notify');
+    prevUnread.current = unreadCount;
+  }, [unreadCount]);
 
   return (
     <nav
