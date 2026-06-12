@@ -5,6 +5,7 @@ import { ChevronLeft, Hand, MessageCircle, Gift, TrendingUp, Heart } from 'lucid
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
 import { getRelationshipStages, getStageInfo, getNextStage } from '@/data/relationship';
+import { dupesNeededForStage } from '@/engine/bondEngine';
 import { cn } from '@/lib/utils';
 import { playSound } from '@/lib/sound';
 import { assetUrl } from '@/lib/assets';
@@ -62,6 +63,7 @@ export default function CharacterDetail() {
   const addAffinity = usePlayerStore((s) => s.addAffinity);
   const advanceRelationshipStage = usePlayerStore((s) => s.advanceRelationshipStage);
   const tryDailyAction = usePlayerStore((s) => s.tryDailyAction);
+  const dupeCount = usePlayerStore((s) => s.dupeCount);
 
   const [activeTab, setActiveTab] = useState<TabType>('info');
   const [interactionResponse, setInteractionResponse] = useState<string | null>(null);
@@ -77,6 +79,10 @@ export default function CharacterDetail() {
   const stageInfo = id ? getStageInfo(id, stage) : undefined;
   const nextStage = id ? getNextStage(id, stage) : undefined;
   const maxStage = id ? getRelationshipStages(id).length : 0;
+  /** 卡数 + 好感双门槛：第 N 阶需要累计 N 张她的信物卡（重复卡是关系钥匙） */
+  const dupes = id ? dupeCount[id] ?? 0 : 0;
+  const dupesNeeded = nextStage ? dupesNeededForStage(nextStage.stage) : 0;
+  const hasDupesForNext = dupes >= dupesNeeded;
   const expToLevel = level * 100;
   const expPercent = Math.min((exp / expToLevel) * 100, 100);
 
@@ -137,6 +143,7 @@ export default function CharacterDetail() {
     playSound('stage-up');
     if (!character || !owned || !nextStage) return;
     if (affinity < nextStage.threshold) return;
+    if (!hasDupesForNext) return;
     // 每角色每日最多推进一阶，保住养成节奏（设计文档 6.3）
     if (!tryDailyAction(`stage:${character.id}`)) {
       setInteractionResponse('（今天的相处已经够多了，关系的事……明天再继续吧。）');
@@ -380,22 +387,31 @@ export default function CharacterDetail() {
                         className="h-full rounded-full bg-gradient-to-r from-rose-500 to-pink-400"
                       />
                     </div>
+                    {/* 信物门槛：好感是温度，信物是钥匙，缺一不可 */}
+                    <div className="mt-1.5 flex items-center justify-between text-xs">
+                      <span className="text-slate-500">信物（她的卡）</span>
+                      <span className={hasDupesForNext ? 'text-emerald-300' : 'text-amber-300'}>
+                        {'💌'.repeat(Math.min(dupes, dupesNeeded))}{'🖤'.repeat(Math.max(0, dupesNeeded - dupes))} {Math.min(dupes, dupesNeeded)}/{dupesNeeded}
+                      </span>
+                    </div>
                   </div>
                   <button
                     onClick={handleAdvanceStage}
-                    disabled={!owned || affinity < nextStage.threshold}
+                    disabled={!owned || affinity < nextStage.threshold || !hasDupesForNext}
                     className={cn(
                       'mt-3 w-full rounded-lg py-2 text-sm font-bold transition-colors',
-                      owned && affinity >= nextStage.threshold
+                      owned && affinity >= nextStage.threshold && hasDupesForNext
                         ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white'
                         : 'cursor-not-allowed bg-slate-700/40 text-slate-500',
                     )}
                   >
                     {!owned
                       ? '抽到她后才能加深关系'
-                      : affinity >= nextStage.threshold
-                        ? '加深关系'
-                        : '好感不足'}
+                      : affinity < nextStage.threshold
+                        ? '好感不足'
+                        : !hasDupesForNext
+                          ? `还差 ${dupesNeeded - dupes} 张她的信物卡（抽卡/引荐获得）`
+                          : '加深关系'}
                   </button>
                 </>
               ) : (

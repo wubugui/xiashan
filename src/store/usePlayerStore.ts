@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeStorage } from '@/lib/safeStorage';
+import { getCharacterById } from '@/data/characters';
+import { surplusCards, SHARD_VALUE, MAX_STAGE, type Rarity } from '@/engine/bondEngine';
 
 interface OwnedCharacter {
   characterId: string;
@@ -106,6 +108,8 @@ interface PlayerState {
   addCharacter: (characterId: string) => void;
   addAffinity: (characterId: string, amount: number) => void;
   addBondShards: (amount: number) => void;
+  /** 把所有角色超出满阶所需（5 张）的溢出信物折算成缘分碎片，返回折得数量 */
+  convertSurplusToShards: () => number;
   /** 完成她的委托：缘分 UP 若干自然日（同时解除冷淡） */
   setCharacterRateUp: (characterId: string, days: number) => void;
   /** 放弃她的委托：冷淡若干自然日 */
@@ -206,6 +210,21 @@ export const usePlayerStore = create<PlayerState>()(
         },
       })),
       addBondShards: (amount) => set(s => ({ bondShards: Math.max(0, s.bondShards + amount) })),
+      convertSurplusToShards: () => {
+        const s0 = get();
+        let gained = 0;
+        const dupeCount = { ...s0.dupeCount };
+        for (const [id, n] of Object.entries(dupeCount)) {
+          const surplus = surplusCards(n);
+          if (surplus <= 0) continue;
+          const rarity = getCharacterById(id)?.rarity as Rarity | undefined;
+          if (!rarity) continue;
+          gained += surplus * SHARD_VALUE[rarity];
+          dupeCount[id] = MAX_STAGE;
+        }
+        if (gained > 0) set(s => ({ dupeCount, bondShards: s.bondShards + gained }));
+        return gained;
+      },
       setCharacterRateUp: (characterId, days) => set(s => {
         const coldUntil = { ...s.coldUntil };
         delete coldUntil[characterId];

@@ -4,6 +4,7 @@ export type Condition =
   | { type: 'reputation'; minValue: number }
   | { type: 'affinity'; characterId: string; minValue: number }
   | { type: 'relationship_stage'; characterId: string; minStage: number }
+  | { type: 'dupes_at_least'; characterId: string; minCount: number }
   | { type: 'chapter_complete'; chapterId: number }
   | { type: 'node_complete'; nodeId: string }
   | { type: 'flag_set'; flag: string }

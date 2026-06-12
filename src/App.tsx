@@ -14,6 +14,7 @@ import Phone from '@/pages/Phone';
 import VideoGallery from '@/pages/VideoGallery';
 import Minigame from '@/pages/Minigame';
 import Shop from '@/pages/Shop';
+import BondGallery from '@/pages/BondGallery';
 
 function AppContent() {
   const location = useLocation();
@@ -62,6 +63,7 @@ function AppContent() {
         <Route path="/story" element={<Story />} />
         <Route path="/gacha" element={<Gacha />} />
         <Route path="/collection" element={<Collection />} />
+        <Route path="/bonds" element={<BondGallery />} />
         <Route path="/character/:id" element={<CharacterDetail />} />
         <Route path="/phone" element={<Phone />} />
         <Route path="/videos" element={<VideoGallery />} />

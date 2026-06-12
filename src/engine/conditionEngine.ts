@@ -8,6 +8,8 @@ interface PlayerStateForCondition {
   relationshipStages: Record<string, number>;
   completedNodes: string[];
   flags: string[];
+  /** 累计信物卡数（可选：旧调用方不传时该条件按 0 计） */
+  dupeCount?: Record<string, number>;
 }
 
 export function evaluateCondition(condition: Condition, state: PlayerStateForCondition): boolean {
@@ -24,6 +26,8 @@ export function evaluateCondition(condition: Condition, state: PlayerStateForCon
       return (state.affinityMap[condition.characterId] ?? 0) >= condition.minValue;
     case 'relationship_stage':
       return (state.relationshipStages[condition.characterId] ?? 0) >= condition.minStage;
+    case 'dupes_at_least':
+      return (state.dupeCount?.[condition.characterId] ?? 0) >= condition.minCount;
     case 'chapter_complete':
       return state.completedNodes.some(n => n.startsWith(`ch${condition.chapterId}_`));
     case 'node_complete':
