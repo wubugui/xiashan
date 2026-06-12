@@ -31,6 +31,11 @@ interface GachaHistoryEntry {
 }
 
 interface PlayerState {
+  // Tutorial
+  /** -1 = completed, 0 = not yet started, 1–6 = in progress */
+  tutorialStep: number;
+  setTutorialStep: (n: number) => void;
+
   // Resources
   spiritStones: number;
   reputation: number;
@@ -100,6 +105,7 @@ interface PlayerState {
 }
 
 const initialState = {
+  tutorialStep: 0,
   spiritStones: 500,
   reputation: 0,
   normalTickets: 7,
@@ -129,6 +135,7 @@ export const usePlayerStore = create<PlayerState>()(
     (set, get) => ({
       ...initialState,
 
+      setTutorialStep: (n) => set({ tutorialStep: n }),
       addSpiritStones: (amount) => set(s => ({ spiritStones: s.spiritStones + amount })),
       addReputation: (amount) => set(s => ({ reputation: s.reputation + amount })),
       addNormalTickets: (n) => set(s => ({ normalTickets: s.normalTickets + n })),
@@ -222,7 +229,7 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'xiashan-player-store',
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => safeStorage),
       // 旧版本存档可能缺字段、字段为 null 或类型不符（项目从 AVG 改版而来），
       // 合并时丢弃所有与默认值类型不符的项，避免启动即崩、全页空白。
@@ -247,6 +254,18 @@ export const usePlayerStore = create<PlayerState>()(
           personTickets?: number;
           commissionTickets?: number;
         };
+        if (version < 4) {
+          // Existing players skip the tutorial; brand-new saves start it
+          const s4 = state as typeof state & { tutorialStep?: number };
+          if (typeof s4.tutorialStep !== 'number') {
+            const hasProgress =
+              (Array.isArray(s4.ownedCharacters) && s4.ownedCharacters.length > 0) ||
+              (typeof s4.reputation === 'number' && s4.reputation > 0) ||
+              (Array.isArray((s4 as { flags?: unknown[] }).flags) && ((s4 as { flags?: unknown[] }).flags ?? []).length > 0) ||
+              (Array.isArray((s4 as { completedNodes?: unknown[] }).completedNodes) && ((s4 as { completedNodes?: unknown[] }).completedNodes ?? []).length > 0);
+            s4.tutorialStep = hasProgress ? -1 : 0;
+          }
+        }
         if (version < 3 && typeof state.commissionTickets === 'number') {
           // 委托券货币已删除（v1.4 委托板取代抽委托），1:1 折成普通券
           state.normalTickets = (state.normalTickets ?? 0) + state.commissionTickets;
