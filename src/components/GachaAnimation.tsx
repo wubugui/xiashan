@@ -132,6 +132,7 @@ function GachaCard({
   const isSSR = result.rarity === 'SSR';
   const character = getCharacterById(result.characterId) as GachaCharacter | undefined;
   const cardArtUrl = character?.gachaBackgroundUrl || character?.gachaPortraitUrl || character?.portraitUrl;
+  const hasWideSceneArt = Boolean(character?.gachaBackgroundUrl);
 
   useEffect(() => {
     if (isRevealed && isSSR) {
@@ -188,9 +189,26 @@ function GachaCard({
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className={cn('absolute inset-0 z-10', rarityFlash[result.rarity])}
               />
-              <div className={cn('relative flex-1 bg-gradient-to-b', rarityGradient[result.rarity])}>
+              <div className={cn('relative flex-1 overflow-hidden bg-gradient-to-b', rarityGradient[result.rarity])}>
                 {cardArtUrl ? (
-                  <img src={assetUrl(cardArtUrl)} alt={result.name} className="h-full w-full object-cover object-top opacity-90" />
+                  <>
+                    {hasWideSceneArt && (
+                      <img
+                        src={assetUrl(cardArtUrl)}
+                        alt=""
+                        className="absolute inset-0 h-full w-full scale-125 object-cover object-center opacity-45 blur-sm"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <img
+                      src={assetUrl(cardArtUrl)}
+                      alt={result.name}
+                      className={cn(
+                        'relative z-[1] h-full w-full opacity-95',
+                        hasWideSceneArt ? 'object-contain object-center p-1.5' : 'object-cover object-top',
+                      )}
+                    />
+                  </>
                 ) : (
                   <div className="flex h-full items-center justify-center">
                     <span className="text-3xl text-white/20">人</span>
@@ -261,6 +279,8 @@ function GachaShowcase({
   const character = getCharacterById(result.characterId) as GachaCharacter | undefined;
   const portraitUrl = character?.gachaPortraitUrl || character?.portraitUrl;
   const backgroundUrl = character?.gachaBackgroundUrl;
+  const resolvedBackgroundUrl = assetUrl(backgroundUrl);
+  const resolvedPortraitUrl = assetUrl(portraitUrl);
   const hasSceneArt = Boolean(backgroundUrl);
   const quote = character?.gachaQuote || character?.dialogues?.[0]?.text || '你抽到了新的羁绊。';
   const tags = character?.gachaTags || [character?.element, result.title].filter(Boolean);
@@ -273,15 +293,21 @@ function GachaShowcase({
       animate={{ opacity: 1 }}
       className="relative h-full w-full overflow-hidden bg-[#071126]"
     >
-      <div
-        className={cn('absolute inset-0 bg-cover bg-center', hasSceneArt ? 'opacity-95' : 'opacity-70')}
-        style={backgroundUrl ? { backgroundImage: `url(${assetUrl(backgroundUrl)})` } : undefined}
-      />
+      {resolvedBackgroundUrl ? (
+        <img
+          src={resolvedBackgroundUrl}
+          alt=""
+          className="absolute inset-0 h-full w-full scale-110 object-cover object-center opacity-45 blur-md"
+          aria-hidden="true"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_58%_42%,rgba(148,163,184,0.24),transparent_34%),linear-gradient(90deg,rgba(7,17,38,0.96)_0%,rgba(15,23,42,0.74)_42%,rgba(15,23,42,0.24)_72%,rgba(49,46,129,0.42)_100%)]" />
+      )}
       <div
         className={cn(
           'absolute inset-0',
           hasSceneArt
-            ? 'bg-[linear-gradient(90deg,rgba(7,17,38,0.94)_0%,rgba(15,23,42,0.68)_42%,rgba(15,23,42,0.18)_74%,rgba(7,17,38,0.16)_100%)]'
+            ? 'bg-[linear-gradient(180deg,rgba(7,17,38,0.42)_0%,rgba(7,17,38,0.16)_33%,rgba(7,17,38,0.72)_72%,rgba(7,17,38,0.98)_100%)] md:bg-[linear-gradient(90deg,rgba(7,17,38,0.97)_0%,rgba(15,23,42,0.78)_35%,rgba(15,23,42,0.2)_72%,rgba(7,17,38,0.34)_100%)]'
             : 'bg-[radial-gradient(circle_at_58%_42%,rgba(148,163,184,0.24),transparent_34%),linear-gradient(90deg,rgba(7,17,38,0.96)_0%,rgba(15,23,42,0.74)_42%,rgba(15,23,42,0.24)_72%,rgba(49,46,129,0.42)_100%)]',
         )}
       />
@@ -300,10 +326,24 @@ function GachaShowcase({
         <div className="absolute inset-24 rounded-full border border-amber-100/25" />
       </motion.div>
 
-      {!hasSceneArt && portraitUrl ? (
+      {hasSceneArt && resolvedBackgroundUrl ? (
+        <motion.div
+          key={resolvedBackgroundUrl}
+          initial={{ y: 36, opacity: 0, scale: 0.96 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', damping: 24, stiffness: 120 }}
+          className="absolute inset-x-3 top-[6vh] z-10 h-[34vh] md:inset-y-8 md:left-[35%] md:right-8 md:top-8 md:h-auto"
+        >
+          <img
+            src={resolvedBackgroundUrl}
+            alt={result.name}
+            className="h-full w-full object-contain object-center drop-shadow-[0_22px_55px_rgba(0,0,0,0.58)]"
+          />
+        </motion.div>
+      ) : resolvedPortraitUrl ? (
         <motion.img
-          key={portraitUrl}
-          src={assetUrl(portraitUrl)}
+          key={resolvedPortraitUrl}
+          src={resolvedPortraitUrl}
           alt={result.name}
           initial={{ x: 90, opacity: 0, scale: 0.92 }}
           animate={{ x: 0, opacity: 1, scale: 1 }}
@@ -316,7 +356,7 @@ function GachaShowcase({
         </div>
       ) : null}
 
-      <div className="absolute left-10 top-[56%] z-20 w-[38%] max-w-lg -translate-y-1/2">
+      <div className="absolute inset-x-5 bottom-24 z-20 md:left-10 md:right-auto md:top-[56%] md:w-[31%] md:max-w-lg md:-translate-y-1/2">
         <div className="mb-3 flex items-center gap-1">
           {Array.from({ length: rarityStars[result.rarity] }).map((_, i) => (
             <motion.span
@@ -324,33 +364,33 @@ function GachaShowcase({
               initial={{ y: 12, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: i * 0.06 }}
-              className="text-4xl text-amber-200 drop-shadow-[0_0_10px_rgba(251,191,36,0.7)]"
+              className="text-2xl text-amber-200 drop-shadow-[0_0_10px_rgba(251,191,36,0.7)] md:text-4xl"
             >
               ★
             </motion.span>
           ))}
         </div>
-        <div className="rounded-r-2xl bg-slate-950/45 py-2 pr-6 backdrop-blur-sm">
-          <div className={cn('bg-gradient-to-r bg-clip-text text-5xl font-black text-transparent drop-shadow-lg', rarityAccent[result.rarity])}>
+        <div className="rounded-r-2xl bg-slate-950/55 py-2 pr-4 backdrop-blur-sm md:pr-6">
+          <div className={cn('bg-gradient-to-r bg-clip-text text-4xl font-black text-transparent drop-shadow-lg md:text-5xl', rarityAccent[result.rarity])}>
             {result.name}
           </div>
         </div>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <span className="rounded-full bg-amber-300/75 px-6 py-2 text-base font-bold text-slate-950 shadow-lg">
+        <div className="mt-4 flex flex-wrap gap-2 md:mt-5 md:gap-3">
+          <span className="rounded-full bg-amber-300/75 px-4 py-1.5 text-sm font-bold text-slate-950 shadow-lg md:px-6 md:py-2 md:text-base">
             {result.rarity}
           </span>
           {tags.map((tag) => (
-            <span key={tag} className="rounded-full border border-white/25 bg-slate-950/45 px-6 py-2 text-base font-semibold text-white shadow-lg backdrop-blur-sm">
+            <span key={tag} className="rounded-full border border-white/25 bg-slate-950/50 px-4 py-1.5 text-sm font-semibold text-white shadow-lg backdrop-blur-sm md:px-6 md:py-2 md:text-base">
               {tag}
             </span>
           ))}
           {result.isNew && (
-            <span className="rounded-full bg-red-500 px-5 py-2 text-base font-bold text-white shadow-lg">
+            <span className="rounded-full bg-red-500 px-4 py-1.5 text-sm font-bold text-white shadow-lg md:px-5 md:py-2 md:text-base">
               NEW
             </span>
           )}
         </div>
-        <p className="mt-9 text-2xl font-semibold leading-relaxed text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+        <p className="mt-5 max-h-[18vh] overflow-hidden text-base font-semibold leading-relaxed text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] md:mt-9 md:max-h-none md:text-2xl">
           {quote}
         </p>
       </div>
