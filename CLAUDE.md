@@ -12,10 +12,10 @@
 
 | 变量 | 含义 | 写入方 |
 |------|------|--------|
-| `--nav-h` | 底部导航栏实际渲染高度（含系统 safe area） | `NavBar.tsx` |
+| `--nav-h` | （历史保留）底部导航栏高度。导航栏组件已删除，恒为 `:root` 默认 `0px`，相关工具类继续可用 | 无（`index.css :root` 默认值） |
 | `--bar-h` | 页面内底部操作条实际渲染高度 | 各页面用 `useCssVarFromHeight` hook 写入 |
 
-这两个变量由 `useCssVarFromHeight(varName, ref)` 通过 `ResizeObserver` 实时测量元素高度后写入 `document.documentElement`，**随设备、旋转、键盘弹出自动更新**。
+`--bar-h` 由 `useCssVarFromHeight(varName, ref)` 通过 `ResizeObserver` 实时测量元素高度后写入 `document.documentElement`，**随设备、旋转、键盘弹出自动更新**。
 
 ### 内置 Tailwind 工具类（优先使用）
 
@@ -71,7 +71,7 @@ className="pb-chrome"
 |----|------|
 | `z-10` ~ `z-20` | 场景内元素（热点标记、装饰层） |
 | `z-30` | sticky 顶栏 |
-| `z-40` | 固定底部导航栏 |
+| `z-40` | 页面级弹窗（热点事件面板等） |
 | `z-50` | Toast、底部操作条 |
 | `z-[60]` | 全页委托剧场（CommissionTheater） |
 | `z-[100]` | 抽卡动画、FaceSlap 特效 |

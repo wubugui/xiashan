@@ -98,6 +98,8 @@ export default function Home() {
   const normalTickets = usePlayerStore((s) => s.normalTickets);
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
   const addSpiritStones = usePlayerStore((s) => s.addSpiritStones);
+  const unreadCounts = usePlayerStore((s) => s.unreadCounts);
+  const totalUnread = unreadCounts.wechat + unreadCounts.sms + unreadCounts.call;
 
   const [showDailyReward, setShowDailyReward] = useState(false);
 
@@ -381,6 +383,13 @@ export default function Home() {
                       {action.hint}
                     </span>
                   </div>
+
+                  {/* 手机未读角标（底部导航栏已移除，未读提醒落在这里） */}
+                  {action.id === 'phone' && totalUnread > 0 && (
+                    <span className="absolute right-2 top-2 z-20 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white shadow-lg">
+                      {totalUnread > 99 ? '99+' : totalUnread}
+                    </span>
+                  )}
                 </motion.button>
               );
             })}
