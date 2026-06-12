@@ -1,8 +1,10 @@
 import { HashRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import NavBar from '@/components/NavBar';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import LoadingScreen from '@/components/LoadingScreen';
 import Home from '@/pages/Home';
 import Story from '@/pages/Story';
 import Gacha from '@/pages/Gacha';
@@ -80,11 +82,18 @@ function AppContent() {
 }
 
 export default function App() {
+  const [assetsReady, setAssetsReady] = useState(false);
+
   return (
     <ErrorBoundary>
       <Router>
         <AppContent />
       </Router>
+      <AnimatePresence>
+        {!assetsReady && (
+          <LoadingScreen onComplete={() => setAssetsReady(true)} />
+        )}
+      </AnimatePresence>
     </ErrorBoundary>
   );
 }
