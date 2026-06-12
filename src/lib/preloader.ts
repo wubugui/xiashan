@@ -10,6 +10,8 @@ const BG_FILES = [
 
 const FACE_EXPRESSIONS = ['avatar', 'smile', 'shy', 'laugh', 'angry', 'cry', 'calm'];
 
+const STORAGE_KEY = 'xsAssetVersion';
+
 function gatherUrls(): string[] {
   const urls = new Set<string>();
 
@@ -45,6 +47,36 @@ function gatherUrls(): string[] {
 export async function preloadAllAssets(
   onProgress: (loaded: number, total: number) => void,
 ): Promise<void> {
+  // Dev mode: skip preloading, instant pass-through
+  if (import.meta.env.DEV) {
+    onProgress(1, 1);
+    return;
+  }
+
+  // Step 1: fetch server manifest (always validate, never use cache)
+  let serverVersion = '';
+  try {
+    const manifestUrl = assetUrl('/asset-manifest.json');
+    const res = await fetch(manifestUrl!, { cache: 'no-cache' });
+    if (res.ok) {
+      const data = await res.json() as { version: string };
+      serverVersion = data.version;
+    }
+  } catch {
+    // manifest missing or network error: fall through to full download
+  }
+
+  // Step 2: compare to locally stored version
+  let storedVersion = '';
+  try { storedVersion = localStorage.getItem(STORAGE_KEY) ?? ''; } catch {}
+
+  if (serverVersion && storedVersion === serverVersion) {
+    // Assets unchanged — browser HTTP cache is still valid, skip downloads
+    onProgress(1, 1);
+    return;
+  }
+
+  // Step 3: version mismatch (or no manifest) — force-download all assets
   const urls = gatherUrls();
   let loaded = 0;
   onProgress(0, urls.length);
@@ -52,13 +84,17 @@ export async function preloadAllAssets(
   await Promise.all(
     urls.map(async (url) => {
       try {
-        // cache:'no-cache' validates with the server via ETag/Last-Modified.
-        // 304 Not Modified = instant (no body); 200 = download only if changed.
-        await fetch(url, { cache: 'no-cache' });
+        // cache:'reload' bypasses stale cache and writes fresh copy back
+        await fetch(url, { cache: 'reload' });
       } catch {
         // silently skip — missing asset shouldn't block the game
       }
       onProgress(++loaded, urls.length);
     }),
   );
+
+  // Step 4: persist new version so next launch skips downloads
+  if (serverVersion) {
+    try { localStorage.setItem(STORAGE_KEY, serverVersion); } catch {}
+  }
 }

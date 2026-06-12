@@ -7,11 +7,14 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
+    let cacheHit = false;
     preloadAllAssets((l, t) => {
+      if (l === 1 && t === 1) cacheHit = true; // instant pass-through signal
       setLoaded(l);
       setTotal(t);
     }).then(() => {
-      setTimeout(onComplete, 350);
+      // Cache hit (version matched or dev mode): short flash, no need to linger
+      setTimeout(onComplete, cacheHit ? 120 : 350);
     });
   }, [onComplete]);
 
@@ -23,7 +26,7 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#101827]"
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.5, ease: 'easeInOut' }}
+      transition={{ duration: 0.45, ease: 'easeInOut' }}
     >
       {/* 背景装饰 */}
       <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle,rgba(255,255,255,0.18)_1px,transparent_1px)] [background-size:18px_18px]" />
@@ -40,10 +43,9 @@ export default function LoadingScreen({ onComplete }: { onComplete: () => void }
 
         <div className="w-full">
           <div className="mb-2 flex justify-between text-xs text-slate-500">
-            <span>加载中</span>
+            <span>{indeterminate ? '检查版本' : '加载中'}</span>
             <span>{loaded} / {total}</span>
           </div>
-
           <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
             {indeterminate ? (
               <motion.div
