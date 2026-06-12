@@ -1,15 +1,96 @@
 import { useState, useEffect } from 'react';
+import type { CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Store, Sparkles, Users, Smartphone, Film, Gamepad2, X } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { characters } from '@/data/characters';
 import { REWARDS } from '@/data/rewards';
 import { cn } from '@/lib/utils';
+import { assetUrl } from '@/lib/assets';
 import { safeStorage } from '@/lib/safeStorage';
 import ResetSaveButton from '@/components/ResetSaveButton';
 import PageBackdrop from '@/components/PageBackdrop';
 import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
+
+type HomeAction = {
+  id: string;
+  label: string;
+  hint: string;
+  icon: LucideIcon;
+  color: string;
+  onClick: () => void;
+  full?: boolean;
+  art?: {
+    scene?: string;
+    sceneOpacity?: string;
+    face?: string;
+    faceOpacity?: string;
+    faceClassName?: string;
+  };
+};
+
+const artworkMask: CSSProperties = {
+  clipPath: 'polygon(34% 0, 100% 0, 100% 100%, 22% 100%, 30% 73%, 20% 49%, 31% 23%)',
+  maskImage: 'linear-gradient(103deg, transparent 0%, rgba(0,0,0,0.14) 28%, rgba(0,0,0,0.75) 54%, #000 100%)',
+  WebkitMaskImage: 'linear-gradient(103deg, transparent 0%, rgba(0,0,0,0.14) 28%, rgba(0,0,0,0.75) 54%, #000 100%)',
+};
+
+const faceMask: CSSProperties = {
+  maskImage: 'linear-gradient(102deg, transparent 0%, rgba(0,0,0,0.18) 29%, rgba(0,0,0,0.82) 55%, #000 100%)',
+  WebkitMaskImage: 'linear-gradient(102deg, transparent 0%, rgba(0,0,0,0.18) 29%, rgba(0,0,0,0.82) 55%, #000 100%)',
+};
+
+function ArtworkLayer({ art, primary = false }: { art?: HomeAction['art']; primary?: boolean }) {
+  if (!art) return null;
+
+  return (
+    <>
+      {art.scene && (
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-y-0 right-0 bg-cover bg-center',
+            primary ? 'w-[58%]' : 'w-[72%]',
+            art.sceneOpacity ?? (primary ? 'opacity-45' : 'opacity-30'),
+          )}
+          style={{
+            ...artworkMask,
+            backgroundImage: `url("${assetUrl(art.scene)}")`,
+          }}
+        />
+      )}
+
+      {art.face && (
+        <div
+          className="pointer-events-none absolute inset-y-0 right-0 w-[74%] overflow-hidden"
+          style={faceMask}
+        >
+          <img
+            src={assetUrl(art.face)}
+            alt=""
+            aria-hidden="true"
+            className={cn(
+              'absolute max-w-none object-contain -scale-x-100',
+              art.faceOpacity ?? 'opacity-[0.66]',
+              art.faceClassName,
+            )}
+          />
+        </div>
+      )}
+
+      <div
+        className={cn(
+          'pointer-events-none absolute inset-y-0 left-0',
+          primary
+            ? 'w-[62%] bg-gradient-to-r from-amber-500/45 via-amber-400/18 to-transparent'
+            : 'w-[62%] bg-gradient-to-r from-slate-950/75 via-slate-950/35 to-transparent',
+        )}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-white/[0.03]" />
+    </>
+  );
+}
 
 export default function Home() {
   const navigate = useNavigate();
@@ -23,7 +104,6 @@ export default function Home() {
   const ownedCount = ownedCharacters.length;
   const totalCharacters = characters.length;
 
-  // 每日登录检测
   useEffect(() => {
     const lastClaimDate = safeStorage.getItem('xiashan_daily_claim');
     const today = new Date().toDateString();
@@ -38,53 +118,83 @@ export default function Home() {
     setShowDailyReward(false);
   };
 
-  const quickActions = [
-    {
-      id: 'shop',
-      label: '开始营业',
-      icon: Store,
-      color: 'from-amber-500 to-amber-700',
-      glow: 'shadow-[0_0_20px_rgba(251,191,36,0.3)]',
-      onClick: () => navigate('/shop'),
+  const primaryAction: HomeAction = {
+    id: 'shop',
+    label: '月光开店',
+    hint: '推开第25小时的门',
+    icon: Store,
+    color: 'from-amber-500 to-orange-500',
+    art: {
+      scene: '/bg/scene/street-storefront.jpg',
+      sceneOpacity: 'opacity-50',
     },
+    onClick: () => navigate('/shop'),
+  };
+
+  const quickActions: HomeAction[] = [
     {
       id: 'gacha',
-      label: '抽卡',
+      label: '星愿邂逅',
+      hint: '遇见未命名的心事',
       icon: Sparkles,
       color: 'from-purple-500 to-purple-700',
-      glow: 'shadow-[0_0_20px_rgba(147,51,234,0.3)]',
+      art: {
+        face: '/characters/face/suli/avatar.png',
+        faceOpacity: 'opacity-[0.66]',
+        faceClassName: 'h-[20.5rem] w-[20.5rem] -right-[8.4rem] -top-[7.7rem]',
+      },
       onClick: () => navigate('/gacha'),
     },
     {
       id: 'collection',
-      label: '角色图鉴',
+      label: '心动名册',
+      hint: '翻看羁绊与档案',
       icon: Users,
       color: 'from-blue-500 to-blue-700',
-      glow: 'shadow-[0_0_20px_rgba(59,130,246,0.3)]',
+      art: {
+        scene: '/bg/scene/studio-room.jpg',
+        sceneOpacity: 'opacity-25',
+        face: '/characters/face/sangluo/avatar.png',
+        faceOpacity: 'opacity-[0.66]',
+        faceClassName: 'h-[21.75rem] w-[21.75rem] -right-[7.2rem] -top-[8.6rem]',
+      },
       onClick: () => navigate('/collection'),
     },
     {
       id: 'phone',
-      label: '手机',
+      label: '月下来信',
+      hint: '收取消息与来电',
       icon: Smartphone,
       color: 'from-green-500 to-green-700',
-      glow: 'shadow-[0_0_20px_rgba(34,197,94,0.3)]',
+      art: {
+        scene: '/bg/mobile/office-lobby-portrait.jpg',
+        sceneOpacity: 'opacity-25',
+      },
       onClick: () => navigate('/phone'),
     },
     {
       id: 'videos',
-      label: '影像回放',
+      label: '回忆放映',
+      hint: '重看故事片段',
       icon: Film,
       color: 'from-rose-500 to-rose-700',
-      glow: 'shadow-[0_0_20px_rgba(244,63,94,0.3)]',
+      art: {
+        scene: '/bg/scene/store-night.jpg',
+        sceneOpacity: 'opacity-30',
+      },
       onClick: () => navigate('/videos'),
     },
     {
       id: 'minigame',
-      label: '小游戏',
+      label: '星夜小憩',
+      hint: '夜班里的小消遣',
       icon: Gamepad2,
       color: 'from-emerald-500 to-teal-700',
-      glow: 'shadow-[0_0_20px_rgba(16,185,129,0.3)]',
+      full: true,
+      art: {
+        scene: '/bg/scene/studio-room.jpg',
+        sceneOpacity: 'opacity-30',
+      },
       onClick: () => navigate('/minigame'),
     },
   ];
@@ -103,29 +213,33 @@ export default function Home() {
         overlayClassName="from-slate-950/30 via-slate-950/50 to-slate-950/80"
       />
 
-      {/* 测试清档 */}
       <div className="absolute right-4 top-4 z-20">
         <ResetSaveButton compact />
       </div>
 
-      {/* 主内容 */}
-      <div className="relative z-10 flex w-full max-w-lg flex-col items-center px-6 pb-8">
-        {/* 游戏标题 */}
+      <div className="relative z-10 flex w-full max-w-lg flex-col items-center px-5 py-16 sm:px-6">
         <motion.div
           initial={{ y: -40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.8, type: 'spring', damping: 20 }}
-          className="mb-8 text-center"
+          className="mb-6 text-center"
         >
           <h1
             className={cn(
-              'text-5xl font-black tracking-[0.2em] sm:text-6xl',
-              'bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400',
-              'bg-clip-text text-transparent',
-              'drop-shadow-[0_0_30px_rgba(251,191,36,0.4)]',
+              'leading-none',
+              'bg-gradient-to-r from-amber-200 via-rose-100 to-fuchsia-200',
+              'bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(251,191,36,0.38)]',
             )}
           >
-            二十五时便利屋
+            <span
+              className="block text-[4.8rem] font-black tracking-normal sm:text-[5.75rem]"
+              style={{ fontFamily: '"Didot","Bodoni 72","Times New Roman",serif' }}
+            >
+              25
+            </span>
+            <span className="-mt-2 block text-4xl font-black tracking-[0.22em] sm:text-5xl">
+              时便利屋
+            </span>
           </h1>
           <motion.p
             initial={{ opacity: 0 }}
@@ -133,17 +247,16 @@ export default function Home() {
             transition={{ delay: 0.8 }}
             className="mt-2 text-sm tracking-widest text-slate-400"
           >
-            开在第二十五小时的都市便利屋
+            开在第25小时的都市便利屋
           </motion.p>
         </motion.div>
 
-        {/* 当前进度 */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.6 }}
           className={cn(
-            'mb-8 w-full rounded-xl',
+            'mb-6 w-full rounded-xl',
             'bg-slate-950/60 backdrop-blur-xl',
             'border border-white/10 shadow-[0_18px_45px_rgba(0,0,0,0.28)]',
             'px-5 py-4',
@@ -171,73 +284,98 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* 快捷操作按钮 */}
-        <div className="grid w-full grid-cols-2 gap-4">
-          {quickActions.map((action, index) => {
-            const Icon = action.icon;
-            return (
-              <motion.button
-                key={action.id}
-                initial={{ y: 30, opacity: 0, scale: 0.9 }}
-                animate={{ y: 0, opacity: 1, scale: 1 }}
-                transition={{
-                  delay: 0.7 + index * 0.1,
-                  type: 'spring',
-                  damping: 20,
-                  stiffness: 200,
-                }}
-                whileHover={{ scale: 1.03, y: -2 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={action.onClick}
-                className={cn(
-                  'group relative overflow-hidden rounded-xl',
-                  'bg-slate-950/60 backdrop-blur-xl',
-                  'border border-white/10',
-                  'px-5 py-6',
-                  'transition-shadow duration-300',
-                  `hover:${action.glow}`,
-                )}
-              >
-                {/* 背景光效 */}
-                <div
-                  className={cn(
-                    'absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100',
-                    'bg-gradient-to-br',
-                    action.color,
-                  )}
-                  style={{ opacity: 0.08 }}
-                />
+        <div className="w-full space-y-3">
+          <motion.button
+            initial={{ y: 30, opacity: 0, scale: 0.96 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            transition={{
+              delay: 0.7,
+              type: 'spring',
+              damping: 20,
+              stiffness: 200,
+            }}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={primaryAction.onClick}
+            className={cn(
+              'group relative flex h-24 w-full items-center overflow-hidden rounded-[1.6rem] px-6 text-left',
+              'border border-amber-200/35 bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500',
+              'shadow-[0_20px_45px_rgba(245,158,11,0.28),0_14px_36px_rgba(0,0,0,0.35)]',
+              'transition-shadow duration-300 hover:shadow-[0_24px_55px_rgba(245,158,11,0.36),0_16px_42px_rgba(0,0,0,0.42)]',
+            )}
+          >
+            <ArtworkLayer art={primaryAction.art} primary />
+            <div className="relative z-10 mr-5 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/22 shadow-inner">
+              <Store size={30} className="text-amber-950" strokeWidth={1.9} />
+            </div>
+            <div className="relative z-10 min-w-0">
+              <div className="text-2xl font-black tracking-wide text-amber-950">{primaryAction.label}</div>
+              <div className="mt-1 text-xs font-bold tracking-wider text-amber-950/65">{primaryAction.hint}</div>
+            </div>
+            <div className="relative z-10 ml-auto text-4xl font-black text-amber-950/75">›</div>
+          </motion.button>
 
-                {/* 图标 */}
-                <div
+          <div className="grid w-full grid-cols-2 gap-3">
+            {quickActions.map((action, index) => {
+              const Icon = action.icon;
+              return (
+                <motion.button
+                  key={action.id}
+                  initial={{ y: 30, opacity: 0, scale: 0.9 }}
+                  animate={{ y: 0, opacity: 1, scale: 1 }}
+                  transition={{
+                    delay: 0.78 + index * 0.08,
+                    type: 'spring',
+                    damping: 20,
+                    stiffness: 200,
+                  }}
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={action.onClick}
                   className={cn(
-                    'mb-3 flex h-10 w-10 items-center justify-center rounded-lg',
-                    'bg-gradient-to-br',
-                    action.color,
-                    'shadow-lg',
+                    'group relative flex h-[5.35rem] items-center overflow-hidden rounded-2xl px-3 text-left',
+                    'border border-white/10 bg-slate-950/60 backdrop-blur-xl',
+                    'shadow-[0_18px_42px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.06)]',
+                    'transition-all duration-300 hover:border-white/18',
+                    action.full && 'col-span-2',
                   )}
                 >
-                  <Icon size={20} className="text-white" />
-                </div>
+                  <ArtworkLayer art={action.art} />
 
-                {/* 文字 */}
-                <span className="text-base font-bold text-white">{action.label}</span>
+                  <div
+                    className={cn(
+                      'pointer-events-none absolute -left-8 -top-8 h-28 w-28 rounded-full opacity-25 blur-xl',
+                      'bg-gradient-to-br',
+                      action.color,
+                    )}
+                  />
 
-                {/* 悬停光晕 */}
-                <div
-                  className={cn(
-                    'absolute -right-4 -top-4 h-20 w-20 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-30',
-                    'bg-gradient-to-br blur-2xl',
-                    action.color,
-                  )}
-                />
-              </motion.button>
-            );
-          })}
+                  <div
+                    className={cn(
+                      'relative z-10 mr-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl',
+                      'bg-gradient-to-br',
+                      action.color,
+                      'shadow-[0_12px_24px_rgba(0,0,0,0.28)]',
+                    )}
+                  >
+                    <Icon size={23} className="text-white" strokeWidth={1.9} />
+                  </div>
+
+                  <div className="relative z-10 min-w-0">
+                    <span className="block truncate text-base font-black tracking-wide text-white min-[440px]:text-lg">
+                      {action.label}
+                    </span>
+                    <span className="mt-0.5 block truncate text-[0.68rem] font-bold tracking-wider text-slate-300/75">
+                      {action.hint}
+                    </span>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* 每日登录奖励弹窗 */}
       <AnimatePresence>
         {showDailyReward && (
           <motion.div
@@ -261,7 +399,6 @@ export default function Home() {
                 'shadow-[0_0_60px_rgba(251,191,36,0.2)]',
               )}
             >
-              {/* 关闭按钮 */}
               <button
                 onClick={() => setShowDailyReward(false)}
                 className="absolute right-3 top-3 text-slate-500 hover:text-white"
@@ -269,7 +406,6 @@ export default function Home() {
                 <X size={18} />
               </button>
 
-              {/* 标题 */}
               <div className="mb-5 text-center">
                 <motion.div
                   animate={{
@@ -287,7 +423,6 @@ export default function Home() {
                 <p className="mt-1 text-xs text-slate-500">每日签到领取灵石</p>
               </div>
 
-              {/* 奖励内容 */}
               <div className="mb-6 flex items-center justify-center gap-3">
                 <div
                   className={cn(
@@ -299,12 +434,11 @@ export default function Home() {
                   <span className="text-3xl">💎</span>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-amber-300">灵石 × {REWARDS.daily_login}</p>
+                  <p className="text-lg font-bold text-amber-300">灵石 x {REWARDS.daily_login}</p>
                   <p className="text-xs text-slate-500">可用于抽卡和角色升级</p>
                 </div>
               </div>
 
-              {/* 领取按钮 */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
