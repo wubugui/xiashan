@@ -32,12 +32,38 @@ function rollRarity(pityCounter: number, totalGachaCount: number): 'SSR' | 'SR' 
 export const HEART_UP_AFFINITY = 40;
 export const HEART_UP_WEIGHT = 4;
 
+/* ── 缘分 UP / 冷淡 DOWN：委托行为对出现概率的限时影响 ──
+ * 完成她的委托 → 缘分 UP（更容易遇到她）；放弃她的委托 → 冷淡 DOWN（她躲着你）。
+ * 计时挂自然日（与 tryDailyAction 同口径），到期自动失效。
+ */
+export const RATE_UP_WEIGHT = 4;
+export const COLD_WEIGHT = 0.25;
+export const RATE_UP_DAYS = 3;
+export const COLD_DAYS = 4;
+
+/** 角色与玩家之间的限时关系状态：characterId → 'YYYY-MM-DD'（含当日有效） */
+export interface BondState {
+  rateUpUntil?: Record<string, string>;
+  coldUntil?: Record<string, string>;
+}
+
 export function isHeartUp(characterId: string, ownedIds: string[], affinityMap: Record<string, number>): boolean {
   return !ownedIds.includes(characterId) && (affinityMap[characterId] ?? 0) >= HEART_UP_AFFINITY;
 }
 
-function pickWeighted(pool: Character[], ownedIds: string[], affinityMap: Record<string, number>): Character {
-  const weights = pool.map(c => (isHeartUp(c.id, ownedIds, affinityMap) ? HEART_UP_WEIGHT : 1));
+/** 缘分 UP / 冷淡 DOWN 的权重倍率（同时存在时相乘） */
+export function bondWeight(characterId: string, bond?: BondState, today = new Date().toISOString().slice(0, 10)): number {
+  if (!bond) return 1;
+  let w = 1;
+  if ((bond.rateUpUntil?.[characterId] ?? '') >= today) w *= RATE_UP_WEIGHT;
+  if ((bond.coldUntil?.[characterId] ?? '') >= today) w *= COLD_WEIGHT;
+  return w;
+}
+
+function pickWeighted(pool: Character[], ownedIds: string[], affinityMap: Record<string, number>, bond?: BondState): Character {
+  const weights = pool.map(c =>
+    (isHeartUp(c.id, ownedIds, affinityMap) ? HEART_UP_WEIGHT : 1) * bondWeight(c.id, bond),
+  );
   const total = weights.reduce((a, b) => a + b, 0);
   let roll = Math.random() * total;
   for (let i = 0; i < pool.length; i++) {
@@ -47,7 +73,7 @@ function pickWeighted(pool: Character[], ownedIds: string[], affinityMap: Record
   return pool[pool.length - 1];
 }
 
-function pickCharacter(rarity: 'SSR' | 'SR' | 'R' | 'N', ownedIds: string[], affinityMap: Record<string, number>): Character {
+function pickCharacter(rarity: 'SSR' | 'SR' | 'R' | 'N', ownedIds: string[], affinityMap: Record<string, number>, bond?: BondState): Character {
   const rarityPool = characters.filter(c => c.rarity === rarity);
   const pool = rarityPool.length > 0 ? rarityPool : characters;
   if (pool.length === 0) {
@@ -56,23 +82,23 @@ function pickCharacter(rarity: 'SSR' | 'SR' | 'R' | 'N', ownedIds: string[], aff
   // Prefer new characters
   const newOnes = pool.filter(c => !ownedIds.includes(c.id));
   const poolToPick = newOnes.length > 0 ? newOnes : pool;
-  return pickWeighted(poolToPick, ownedIds, affinityMap);
+  return pickWeighted(poolToPick, ownedIds, affinityMap, bond);
 }
 
-export function pullSingle(ownedIds: string[], affinityMap: Record<string, number>, pityCounter: number, totalGachaCount: number): { result: GachaResult; newPity: number; newTotal: number } {
+export function pullSingle(ownedIds: string[], affinityMap: Record<string, number>, pityCounter: number, totalGachaCount: number, bond?: BondState): { result: GachaResult; newPity: number; newTotal: number } {
   const rarity = rollRarity(pityCounter, totalGachaCount);
-  const character = pickCharacter(rarity, ownedIds, affinityMap);
+  const character = pickCharacter(rarity, ownedIds, affinityMap, bond);
   const isNew = !ownedIds.includes(character.id);
   const newPity = rarity === 'SSR' ? 0 : pityCounter + 1;
   return { result: { character, isNew }, newPity, newTotal: totalGachaCount + 1 };
 }
 
-export function pullTen(ownedIds: string[], affinityMap: Record<string, number>, pityCounter: number, totalGachaCount: number): { results: GachaResult[]; newPity: number; newTotal: number } {
+export function pullTen(ownedIds: string[], affinityMap: Record<string, number>, pityCounter: number, totalGachaCount: number, bond?: BondState): { results: GachaResult[]; newPity: number; newTotal: number } {
   const results: GachaResult[] = [];
   let currentPity = pityCounter;
   let currentTotal = totalGachaCount;
   for (let i = 0; i < 10; i++) {
-    const pull = pullSingle(ownedIds, affinityMap, currentPity, currentTotal);
+    const pull = pullSingle(ownedIds, affinityMap, currentPity, currentTotal, bond);
     results.push(pull.result);
     currentPity = pull.newPity;
     currentTotal = pull.newTotal;
@@ -107,12 +133,13 @@ export function pullSupply(
   ownedIds: string[],
   affinityMap: Record<string, number>,
   pityCounter: number,
+  bond?: BondState,
 ): { result: SupplyPullResult; newPity: number } {
   const cfg = GACHA_CONFIG.supplyPool;
   const hitCharacter = pityCounter >= cfg.characterPity - 1 || Math.random() < cfg.characterRate;
   if (hitCharacter) {
     const rarity = rollCharacterRarity();
-    const character = pickCharacter(rarity, ownedIds, affinityMap);
+    const character = pickCharacter(rarity, ownedIds, affinityMap, bond);
     return {
       result: { kind: 'person', character, isNew: !ownedIds.includes(character.id) },
       newPity: 0,

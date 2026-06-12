@@ -263,6 +263,8 @@ export interface Commission {
   introScene?: TheaterScene;
   /** 交付时播放的结局幕（跑到 ending 为止） */
   finalScene?: TheaterScene;
+  /** 回访单交付时播放的简短回访幕；缺省则回访交付不进剧场、直接结算 */
+  replayScene?: TheaterScene;
 }
 
 /** 剧场分幕：从 start 播到即将进入 stopBefore 时落幕；无 stopBefore 则播到结局 */

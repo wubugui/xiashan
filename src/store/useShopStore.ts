@@ -11,6 +11,7 @@ import { sideJobs as allSideJobs } from '@/data/sideJobs';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { locations as allLocations } from '@/data/locations';
 import { rollRoutes } from '@/engine/shopEngine';
+import { COLD_DAYS } from '@/engine/gachaEngine';
 
 export interface HandCard extends ServiceCard {
   /** 唯一实例 id，用于消耗时精准移除 */
@@ -32,14 +33,15 @@ interface ShopState {
   step: number;
 
   /* ── 进程 ── */
+  /** 当前接取的委托：锁单制——永不过期、进度跨天保留，只能交付或主动放弃 */
   commission: Commission | null;
+  /** 是否为回访单（该委托已完成过且重接）：剧场走精简模式、奖励递减 */
+  isRevisit: boolean;
   loc: GameLocation | null;
   routes: GameLocation[];
   /* ── 委托板（v1.4）── */
-  /** 今日可接委托 id（含逾期单） */
+  /** 今日可接委托 id */
   board: string[];
-  /** 逾期委托：失败后次日可重接，最多拖 2 天 */
-  overdue: { id: string; daysLeft: number } | null;
   /** 已完成子目标 id */
   objectivesDone: string[];
   /** 今日顺手单 */
@@ -61,10 +63,13 @@ interface ShopState {
   startDay: () => void;
   refreshRoutes: () => void;
   acceptCommission: (id: string) => void;
+  /** 主动放弃当前委托：唯一的委托失败途径，按目标角色稀有度/持有分层惩罚 */
+  abandonCommission: () => void;
+  /** 委托了结（交付成功或收尾失败后）：清空委托槽位 */
+  clearCommission: () => void;
   completeObjective: (objectiveId: string) => void;
   completeSideJob: (id: string) => void;
   setPendingScene: (scene: TheaterScene | null) => void;
-  setOverdue: (o: { id: string; daysLeft: number } | null) => void;
   setCommission: (c: Commission) => void;
   chooseLocation: (loc: GameLocation) => void;
   /** 退回路线选择（不消耗路段，路线不重掷） */
@@ -90,10 +95,10 @@ const INITIAL: Omit<ShopState, keyof { [K in keyof ShopState as ShopState[K] ext
   trust: 0,
   step: 1,
   commission: null,
+  isRevisit: false,
   loc: null,
   routes: [],
   board: [],
-  overdue: null,
   objectivesDone: [],
   sideJobs: [],
   pendingScene: null,
@@ -107,24 +112,23 @@ const INITIAL: Omit<ShopState, keyof { [K in keyof ShopState as ShopState[K] ext
 
 let _uid = 1;
 
-/** 掷今日委托板：逾期单优先,其余从未完成的委托里随机补满 3 张 */
-function rollBoard(overdue: { id: string; daysLeft: number } | null, forced: string[] = []): string[] {
-  const doneFlags = usePlayerStore.getState().flags;
-  const isDone = (id: string) => doneFlags.includes(`commission_${id}_done`);
-  // Forced commissions always appear first (skip if already done)
-  const board: string[] = [
-    ...forced.filter(f => !isDone(f)),
-    ...(overdue && !forced.includes(overdue.id) ? [overdue.id] : []),
-  ];
-  const excluded = new Set([...forced, overdue?.id ?? '']);
-  const fresh = commissions.filter(c => !isDone(c.id) && !excluded.has(c.id)).map(c => c.id);
-  const fallback = commissions.filter(c => isDone(c.id) && !excluded.has(c.id)).map(c => c.id);
-  const shuffled = [...fresh].sort(() => Math.random() - 0.5);
-  for (const id of shuffled) {
+/** 掷今日委托板：未完成的委托优先随机补满 3 张，余位用已完成的回访单填充。
+ *  冷淡期角色（被放弃过委托）的单不上板——她暂时不想见你。 */
+function rollBoard(forced: string[] = []): string[] {
+  const player = usePlayerStore.getState();
+  const isDone = (id: string) => player.flags.includes(`commission_${id}_done`);
+  const today = new Date().toISOString().slice(0, 10);
+  const isCold = (c: { target: string }) => (player.coldUntil[c.target] ?? '') >= today;
+  const board: string[] = [...forced.filter(f => !isDone(f))];
+  const excluded = new Set(forced);
+  const pool = commissions.filter(c => !excluded.has(c.id) && !isCold(c));
+  const fresh = pool.filter(c => !isDone(c.id)).map(c => c.id);
+  const revisit = pool.filter(c => isDone(c.id)).map(c => c.id);
+  for (const id of [...fresh].sort(() => Math.random() - 0.5)) {
     if (board.length >= 3) break;
     board.push(id);
   }
-  for (const id of [...fallback].sort(() => Math.random() - 0.5)) {
+  for (const id of [...revisit].sort(() => Math.random() - 0.5)) {
     if (board.length >= 3) break;
     board.push(id);
   }
@@ -141,44 +145,79 @@ export const useShopStore = create<ShopState>()(
       ...INITIAL,
 
       startDay: () => {
+        const s0 = get();
         const routes = rollRoutes(allLocations);
-        // 逾期单跨天衰减:每开新一天 daysLeft-1,归零作废
-        const prevOverdue = get().overdue;
-        const overdue = prevOverdue && prevOverdue.daysLeft > 1
-          ? { ...prevOverdue, daysLeft: prevOverdue.daysLeft - 1 }
-          : prevOverdue && prevOverdue.daysLeft === 1 ? prevOverdue : null;
         // 教学模式下保证「面试」委托出现在委托板
         const ts = usePlayerStore.getState().tutorialStep;
         const forced = (ts >= 0 && ts < 4) ? ['interview'] : [];
-        const board = rollBoard(overdue, forced);
-        // 手牌跨天保留：消耗卡是持有资产（含店外抽卡页抽到的），不随开新一天清空
-        set({ ...INITIAL, routes, overdue, board, sideJobs: rollSideJobs(), done: {}, hand: get().hand, log: [], gameOver: false });
-        get().addLog('开始营业:委托板已更新,顺手单已挂出。', 'good');
+        const board = rollBoard(forced);
+        // 跨天保留：手牌（持有资产）+ 进行中委托（锁单制：进度不清零，干不完明天继续）
+        set({
+          ...INITIAL, routes, board, sideJobs: rollSideJobs(), done: {},
+          hand: s0.hand, log: [], gameOver: false,
+          commission: s0.commission, isRevisit: s0.isRevisit,
+          trust: s0.commission ? s0.trust : 0,
+          objectivesDone: s0.commission ? s0.objectivesDone : [],
+        });
+        if (s0.commission) {
+          get().addLog(`开始营业。委托【${s0.commission.name}】进度已保留——接着为她奔走吧。`, 'good');
+        } else {
+          get().addLog('开始营业:委托板已更新,顺手单已挂出。', 'good');
+        }
       },
 
       refreshRoutes: () => set({ routes: rollRoutes(allLocations) }),
 
-      setCommission: (c) => set({ commission: c, trust: 0 }),
+      setCommission: (c) => set({ commission: c, isRevisit: false, trust: 0, objectivesDone: [] }),
 
       acceptCommission: (id) => {
         const c = commissions.find(x => x.id === id);
         if (!c) return;
         const s0 = get();
-        const isOverdue = s0.overdue?.id === id;
+        if (s0.commission) return; // 锁单制：先了结手上的委托
         const hasIntel = s0.intel.includes(id);
+        // 回访单：该委托已完成过——精简剧场（不播开场/子目标幕），奖励递减
+        const isRevisit = usePlayerStore.getState().flags.includes(`commission_${id}_done`);
         set({
           commission: c,
+          isRevisit,
           trust: hasIntel ? 2 : 0,
           objectivesDone: [],
           board: s0.board.filter(b => b !== id),
-          pendingScene: c.introScene ?? null,
-          rep: isOverdue ? Math.max(0, s0.rep - 1) : s0.rep,
+          pendingScene: isRevisit ? null : (c.introScene ?? null),
         });
-        get().addLog(isOverdue
-          ? `重接逾期委托【${c.name}】,口碑 -1。这次别再让她等了。`
-          : `接下委托【${c.name}】。${c.desc}`, isOverdue ? 'bad' : 'good');
+        get().addLog(isRevisit
+          ? `接下回访单【${c.name}】。她又想起了你——这次轻车熟路。`
+          : `接下委托【${c.name}】。${c.desc}`, 'good');
         if (hasIntel) get().addLog('📰 你看过今早的新闻，对情况心里有数。初始信任 +2。', 'good');
       },
+
+      abandonCommission: () => {
+        const s0 = get();
+        const c = s0.commission;
+        if (!c) return;
+        const player = usePlayerStore.getState();
+        const owned = player.ownedCharacters.some(o => o.characterId === c.target);
+        const rare = c.rarity === 'SR' || c.rarity === 'SSR';
+        set({ commission: null, isRevisit: false, trust: 0, objectivesDone: [], pendingScene: null });
+        get().addLog(`你放弃了委托【${c.name}】。`, 'bad');
+        if (owned) {
+          // 已拥有：直接打感情线，冷淡期内回访单不上板
+          player.addAffinity(c.target, -5);
+          player.setCharacterCold(c.target, COLD_DAYS);
+          get().addLog(`她知道了。好感 -5，接下来 ${COLD_DAYS} 天她不会再发委托给你。`, 'bad');
+        } else if (rare) {
+          // 未拥有的稀有角色：冷淡 DOWN——一段时间内更难在补给池遇到她
+          player.setCharacterCold(c.target, COLD_DAYS);
+          get().addLog(`消息传开了。接下来 ${COLD_DAYS} 天，你更难遇到她（出现率下降）。`, 'bad');
+        } else {
+          set(prev => ({ rep: Math.max(0, prev.rep - 1) }));
+          get().addLog('放了客人鸽子，口碑 -1。', 'bad');
+        }
+      },
+
+      clearCommission: () =>
+        set({ commission: null, isRevisit: false, trust: 0, objectivesDone: [], pendingScene: null }),
 
       completeObjective: (objectiveId) => {
         const s0 = get();
@@ -187,7 +226,8 @@ export const useShopStore = create<ShopState>()(
         set({
           objectivesDone: [...s0.objectivesDone, objectiveId],
           trust: s0.trust + obj.trust,
-          pendingScene: obj.scene,
+          // 回访单精简模式：子目标不重播剧场幕
+          pendingScene: s0.isRevisit ? s0.pendingScene : obj.scene,
         });
         get().addLog(`✅ 子目标完成:${obj.desc}。信任 +${obj.trust}。`, 'good');
       },
@@ -199,7 +239,6 @@ export const useShopStore = create<ShopState>()(
       },
 
       setPendingScene: (scene) => set({ pendingScene: scene }),
-      setOverdue: (o) => set({ overdue: o }),
 
       chooseLocation: (loc) =>
         set(s => ({
@@ -286,7 +325,7 @@ export const useShopStore = create<ShopState>()(
     }),
     {
       name: 'xiashan-shop-store',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => safeStorage),
       // 局内存档是当天一局的断点，跨版本恢复价值低、风险高（整对象快照随内容结构漂移）。
       // 旧版本（version < 1）一律作废重开一天。
