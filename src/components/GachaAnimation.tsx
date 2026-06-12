@@ -1,11 +1,7 @@
 /**
- * 抽卡演出 — 三段式情绪曲线：蓄力（光束坠落）→ 揭晓（冲击帧，按稀有度分管线）→ 余韵（结算展示）。
+ * 抽卡演出 — N/R 走卡面揭晓，SR/SSR 走全屏剪影 → 星星暂停 → 最终背景图。
  *
- * 参考主流抽卡游戏的套路：
- * - 光束色暗示本次最高稀有度（蓝 R / 紫 SR / 金 SSR），SSR 有 30% 概率「紫变金」升变彩蛋
- * - N/R 砸牌、SR 紫闪震屏、SSR 黑屏静默拍 → 金色星爆 → 全屏立绘急刹变焦
- * - 十连按稀有度从低到高揭晓，最高的压轴；跳过改长按防误触
- * 全部用 framer-motion + canvas-confetti + Web Audio 合成音 + 震动 API 实现，无视频资源。
+ * 高稀有不再砸卡面，直接用角色抽卡背景图做主视觉；普通角色保留快速翻卡反馈。
  */
 import { useState, useEffect, useCallback, useMemo, useRef, type CSSProperties } from 'react';
 import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
@@ -13,7 +9,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getCharacterById } from '@/data/characters';
 import { playSound } from '@/lib/sound';
 import {
-  vibrate, VIBE, shakeKeyframes, dustAt, burstPurpleSides, burstGoldCelebration, goldRain,
+  vibrate, VIBE, shakeKeyframes, dustAt, burstPurpleSides, burstGoldCelebration,
 } from '@/lib/fx';
 import type { Character } from '@/data/types';
 import { cn } from '@/lib/utils';
@@ -73,23 +69,7 @@ const rarityNameColor = {
 const rarityStars = { N: 2, R: 3, SR: 4, SSR: 5 };
 const rarityRank = { N: 0, R: 1, SR: 2, SSR: 3 };
 
-/** 揭晓瞬间的全屏色闪（SR 以上才闪，N/R 靠震屏+尘爆） */
-const FLASH_BG: Record<Rarity, string> = {
-  N: 'bg-white',
-  R: 'bg-blue-200',
-  SR: 'bg-purple-300',
-  SSR: 'bg-amber-100',
-};
-
 const SHAKE_MAG: Record<Rarity, number> = { N: 4, R: 5, SR: 9, SSR: 15 };
-
-/** 蓄力光束配色 */
-const BEAM_STYLE: Record<Rarity, { core: string; glow: string }> = {
-  N: { core: '#e2e8f0', glow: 'rgba(148,163,184,0.55)' },
-  R: { core: '#bfdbfe', glow: 'rgba(59,130,246,0.6)' },
-  SR: { core: '#e9d5ff', glow: 'rgba(147,51,234,0.65)' },
-  SSR: { core: '#fde68a', glow: 'rgba(251,191,36,0.7)' },
-};
 
 const gachaSceneComposition: Record<string, { mobileFocus: string; desktopFocus: string; panel: 'left' | 'right'; mobilePanel?: 'top' | 'bottom' }> = {
   suli: { mobileFocus: '48% 50%', desktopFocus: '50% 50%', panel: 'left' },
@@ -102,142 +82,189 @@ const gachaSceneComposition: Record<string, { mobileFocus: string; desktopFocus:
   linxia: { mobileFocus: '42% 50%', desktopFocus: '50% 50%', panel: 'right' },
 };
 
-/* ────── 蓄力：光束坠落（色 = 本次最高稀有度；SSR 可能先伪装成紫再升变） ────── */
-function BeamIntro({
-  tease, finalTease, onShake, onDone,
+/* ────── 高稀有揭晓：角色背景图剪影 → 星星暂停 → 最终背景图 ────── */
+function HighRarityReveal({
+  result, onShake, onDone,
 }: {
-  tease: Rarity;
-  /** 升变后的真实色（与 tease 不同时触发紫变金演出） */
-  finalTease: Rarity;
+  result: GachaResult;
   onShake: (mag: number) => void;
   onDone: () => void;
 }) {
-  const upgraded = tease !== finalTease;
-  const [stage, setStage] = useState<'drop' | 'impact' | 'upgrade'>('drop');
-  const colorKey = stage === 'upgrade' ? finalTease : tease;
-  const c = BEAM_STYLE[colorKey];
+  const [stage, setStage] = useState<'silhouette' | 'stars' | 'flash' | 'final'>('silhouette');
+  const character = getCharacterById(result.characterId) as GachaCharacter | undefined;
+  const sceneUrl = character?.gachaBackgroundUrl || character?.gachaPortraitUrl || character?.portraitUrl;
+  const resolvedSceneUrl = assetUrl(sceneUrl);
+  const composition = gachaSceneComposition[result.characterId] ?? {
+    mobileFocus: '50% 50%',
+    desktopFocus: '50% 50%',
+    panel: 'left' as const,
+  };
+  const sceneStyle = {
+    '--intro-focus-mobile': composition.mobileFocus,
+    '--intro-focus-desktop': composition.desktopFocus,
+  } as CSSProperties;
+  const isSSR = result.rarity === 'SSR';
+  const starCount = rarityStars[result.rarity];
+  const accent = isSSR ? '#fbbf24' : '#c084fc';
+  const softAccent = isSSR ? 'rgba(251,191,36,0.42)' : 'rgba(192,132,252,0.38)';
 
   useEffect(() => {
     playSound('gacha-riser');
-    vibrate(15);
-    const ts: ReturnType<typeof setTimeout>[] = [];
-    ts.push(setTimeout(() => {
-      setStage('impact');
+    vibrate(18);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    timers.push(setTimeout(() => {
+      setStage('stars');
       playSound('gacha-impact');
-      onShake(tease === 'SSR' ? 14 : 9);
-      vibrate(VIBE.mid);
-    }, 520));
-    if (upgraded) {
-      ts.push(setTimeout(() => {
-        setStage('upgrade');
-        playSound('gacha-upgrade');
-        onShake(18);
-        vibrate(VIBE.heavy);
-      }, 1250));
-      ts.push(setTimeout(onDone, 2050));
-    } else {
-      ts.push(setTimeout(onDone, 1500));
-    }
-    return () => ts.forEach(clearTimeout);
+      onShake(isSSR ? 13 : 9);
+      vibrate(isSSR ? VIBE.mid : VIBE.light);
+    }, 680));
+    timers.push(setTimeout(() => {
+      setStage('flash');
+      playSound(isSSR ? 'gacha-ssr' : 'gacha-upgrade');
+      onShake(isSSR ? 16 : 11);
+      vibrate(isSSR ? VIBE.heavy : VIBE.mid);
+    }, 1450));
+    timers.push(setTimeout(() => setStage('final'), 1580));
+    timers.push(setTimeout(onDone, 2380));
+    return () => timers.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [result.characterId]);
 
   return (
-    <div className="absolute inset-0 overflow-hidden">
-      {/* 光束本体：从顶部砸向中央 */}
-      <motion.div
-        key={`beam-${colorKey}`}
-        initial={{ scaleY: 0, opacity: 0.9 }}
-        animate={{ scaleY: 1, opacity: stage === 'drop' ? 0.9 : 1 }}
-        transition={{ duration: 0.45, ease: [0.7, 0, 0.84, 0] }}
-        className="absolute left-1/2 top-0 h-[52vh] w-16 -translate-x-1/2 origin-top sm:w-24"
-        style={{ background: `linear-gradient(to bottom, transparent, ${c.glow} 35%, ${c.core})`, filter: 'blur(2px)' }}
-      />
-      <motion.div
-        key={`core-${colorKey}`}
-        initial={{ scaleY: 0 }}
-        animate={{ scaleY: 1 }}
-        transition={{ duration: 0.45, ease: [0.7, 0, 0.84, 0] }}
-        className="absolute left-1/2 top-0 h-[52vh] w-3 -translate-x-1/2 origin-top"
-        style={{ background: `linear-gradient(to bottom, transparent, ${c.core})` }}
-      />
-
-      {/* 落点冲击：辉光 + 扩散环 */}
-      {stage !== 'drop' && (
-        <div className="absolute left-1/2 top-[52vh] -translate-x-1/2 -translate-y-1/2">
-          <motion.div
-            key={`glow-${colorKey}`}
-            initial={{ scale: 0.4, opacity: 1 }}
-            animate={{ scale: stage === 'upgrade' ? 2.2 : 1.4, opacity: 0.85 }}
-            transition={{ duration: 0.4 }}
-            className="h-36 w-36 rounded-full blur-xl"
-            style={{ background: `radial-gradient(circle, ${c.core}, ${c.glow} 55%, transparent 75%)` }}
-          />
-          {[0, 0.18].map((d, i) => (
-            <motion.div
-              key={`ring-${colorKey}-${i}`}
-              initial={{ scale: 0.3, opacity: 0.9 }}
-              animate={{ scale: 4.6, opacity: 0 }}
-              transition={{ duration: 0.85, delay: d, ease: 'easeOut' }}
-              className="absolute inset-0 rounded-full border-[3px]"
-              style={{ borderColor: c.core }}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* 升变白闪（紫变金的瞬间） */}
-      {stage === 'upgrade' && (
-        <motion.div
-          initial={{ opacity: 0.95 }}
-          animate={{ opacity: 0 }}
-          transition={{ duration: 0.55 }}
-          className="absolute inset-0 bg-amber-50"
-        />
-      )}
-    </div>
-  );
-}
-
-/* ────── 单抽 SSR 专属：黑屏静默拍 → 金色星爆 ────── */
-function SSRCinematic({ onShake, onDone }: { onShake: (mag: number) => void; onDone: () => void }) {
-  const [burst, setBurst] = useState(false);
-
-  useEffect(() => {
-    const t1 = setTimeout(() => {
-      setBurst(true);
-      playSound('gacha-ssr');
-      burstGoldCelebration(2400);
-      onShake(18);
-      vibrate(VIBE.heavy);
-    }, 380);
-    const t2 = setTimeout(onDone, 1100);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.12 }} className="absolute inset-0 z-20 overflow-hidden bg-black">
-      {burst && (
+    <motion.div
+      key={`${result.characterId}-${result.rarity}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
+      style={sceneStyle}
+      className="absolute inset-0 overflow-hidden bg-[#02050d]"
+    >
+      {resolvedSceneUrl ? (
         <>
-          {/* 金色射线星爆 */}
-          <motion.div
-            initial={{ scale: 0, rotate: -40, opacity: 1 }}
-            animate={{ scale: 1.6, rotate: 12, opacity: 0.95 }}
+          <motion.img
+            src={resolvedSceneUrl}
+            alt=""
+            aria-hidden={stage !== 'final'}
+            initial={{ scale: 1.08, opacity: 0 }}
+            animate={{
+              scale: stage === 'final' ? 1.02 : 1.1,
+              opacity: stage === 'final' ? 1 : 0,
+            }}
+            transition={{ duration: stage === 'final' ? 0.46 : 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute inset-0 h-full w-full object-cover [object-position:var(--intro-focus-mobile)] md:[object-position:var(--intro-focus-desktop)]"
+          />
+          <motion.img
+            src={resolvedSceneUrl}
+            alt=""
+            aria-hidden="true"
+            initial={{ scale: 1.06, opacity: 0 }}
+            animate={{
+              scale: stage === 'stars' ? 1.03 : 1.06,
+              opacity: stage === 'final' ? 0 : 1,
+            }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute left-1/2 top-1/2 h-[160vmax] w-[160vmax] -translate-x-1/2 -translate-y-1/2 rounded-full mix-blend-screen"
+            className="absolute inset-0 h-full w-full object-cover [object-position:var(--intro-focus-mobile)] md:[object-position:var(--intro-focus-desktop)]"
+            style={{ filter: 'brightness(0.03) grayscale(1) contrast(1.5) saturate(0)' }}
+          />
+          <motion.img
+            src={resolvedSceneUrl}
+            alt=""
+            aria-hidden="true"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: stage === 'final' ? 0 : 0.46 }}
+            transition={{ duration: 0.45 }}
+            className="absolute inset-0 h-full w-full object-cover blur-[2px] [object-position:var(--intro-focus-mobile)] md:[object-position:var(--intro-focus-desktop)]"
             style={{
-              background:
-                'repeating-conic-gradient(from 0deg, rgba(251,191,36,0.85) 0deg 7deg, transparent 7deg 24deg), radial-gradient(circle, #fff7d6 0%, rgba(251,191,36,0.5) 26%, transparent 62%)',
+              filter: `brightness(0) grayscale(1) contrast(1.6) drop-shadow(0 0 18px ${accent})`,
             }}
           />
-          <motion.div
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 0 }}
-            transition={{ duration: 0.6, delay: 0.08 }}
-            className="absolute inset-0 bg-amber-50"
-          />
         </>
+      ) : (
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(255,255,255,0.1),transparent_28%),linear-gradient(180deg,#02050d,#0f172a)]" />
+      )}
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: stage === 'final' ? 0 : 1 }}
+        transition={{ duration: 0.35 }}
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,5,13,0.25)_0%,rgba(2,5,13,0.05)_46%,rgba(2,5,13,0.78)_100%)]"
+      />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: stage === 'silhouette' ? 0.5 : stage === 'stars' ? 0.78 : 0 }}
+        transition={{ duration: 0.35 }}
+        className="absolute left-1/2 top-[52%] h-[42vmin] w-[64vmin] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+        style={{ background: `radial-gradient(circle, ${softAccent} 0%, transparent 66%)` }}
+      />
+
+      <motion.div
+        initial={{ scaleX: 0, opacity: 0 }}
+        animate={{
+          scaleX: stage === 'silhouette' ? 0.35 : stage === 'stars' ? 1 : 0.25,
+          opacity: stage === 'final' ? 0 : 0.9,
+        }}
+        transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute left-1/2 top-1/2 h-px w-[82vw] max-w-[760px] -translate-x-1/2 bg-gradient-to-r from-transparent via-white to-transparent"
+      />
+      <motion.div
+        initial={{ x: '-52vw', opacity: 0 }}
+        animate={{
+          x: stage === 'silhouette' ? '-12vw' : '58vw',
+          opacity: stage === 'final' ? 0 : stage === 'silhouette' ? 0.38 : 0.85,
+        }}
+        transition={{ duration: stage === 'silhouette' ? 0.62 : 0.32, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute top-[16%] h-[72vh] w-[2px] rotate-[18deg] bg-white/95 shadow-[0_0_26px_rgba(255,255,255,0.85)]"
+      />
+
+      <AnimatePresence>
+        {(stage === 'stars' || stage === 'flash') && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 1.12 }}
+            transition={{ duration: 0.22 }}
+            className="absolute inset-x-0 top-[44%] z-20 flex -translate-y-1/2 items-center justify-center gap-2 px-6 md:gap-4"
+          >
+            {Array.from({ length: starCount }).map((_, i) => (
+              <motion.span
+                key={i}
+                initial={{ scale: 2.3, opacity: 0, y: -18 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.09, type: 'spring', damping: 13, stiffness: 430 }}
+                className={cn(
+                  'text-5xl font-black leading-none md:text-7xl',
+                  isSSR ? 'text-amber-200' : 'text-purple-200',
+                )}
+                style={{
+                  textShadow: isSSR
+                    ? '0 0 18px rgba(251,191,36,0.9), 0 0 34px rgba(255,255,255,0.38)'
+                    : '0 0 18px rgba(192,132,252,0.9), 0 0 34px rgba(255,255,255,0.3)',
+                }}
+              >
+                ★
+              </motion.span>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {stage === 'flash' && (
+        <motion.div
+          initial={{ opacity: 0.92 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 0.32 }}
+          className="absolute inset-0 z-30 bg-white"
+        />
+      )}
+
+      {stage === 'final' && (
+        <motion.div
+          initial={{ opacity: 0.76 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 0.42 }}
+          className={cn('absolute inset-0 z-20', isSSR ? 'bg-amber-50' : 'bg-purple-50')}
+        />
       )}
     </motion.div>
   );
@@ -259,7 +286,7 @@ function GachaCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const character = getCharacterById(result.characterId) as GachaCharacter | undefined;
   const cardArtUrl = character?.gachaBackgroundUrl || character?.gachaPortraitUrl || character?.portraitUrl;
-  const hasWideSceneArt = Boolean(character?.gachaBackgroundUrl);
+  const hasSceneCardArt = Boolean(character?.gachaBackgroundUrl);
 
   useEffect(() => {
     if (!isRevealed || quiet) return;
@@ -287,7 +314,7 @@ function GachaCard({
     >
       <div
         className={cn(
-          'relative h-44 w-28 overflow-hidden rounded-lg sm:h-52 sm:w-32',
+          'relative h-44 w-28 overflow-hidden rounded-lg bg-slate-950 sm:h-52 sm:w-32',
           'border-2',
           isRevealed ? rarityBorder[result.rarity] : 'border-slate-600/50',
         )}
@@ -308,64 +335,53 @@ function GachaCard({
               initial={{ scale: 1.9, y: -60, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
               transition={{ duration: 0.18, ease: 'easeIn' }}
-              className="absolute inset-0 flex flex-col"
+              className="absolute inset-0"
             >
-              <div className={cn('relative flex-1 overflow-hidden bg-gradient-to-b', rarityGradient[result.rarity])}>
-                {cardArtUrl ? (
-                  <>
-                    {hasWideSceneArt && (
-                      <img
-                        src={assetUrl(cardArtUrl)}
-                        alt=""
-                        className="absolute inset-0 h-full w-full scale-125 object-cover object-center opacity-45 blur-sm"
-                        aria-hidden="true"
-                      />
-                    )}
-                    <img
-                      src={assetUrl(cardArtUrl)}
-                      alt={result.name}
-                      className={cn(
-                        'relative z-[1] h-full w-full opacity-95',
-                        hasWideSceneArt ? 'object-contain object-center p-1.5' : 'object-cover object-top',
-                      )}
-                    />
-                  </>
-                ) : (
-                  <div className="flex h-full items-center justify-center">
-                    <span className="text-3xl text-white/20">人</span>
-                  </div>
-                )}
-
-                <div className="absolute right-1 top-1">
-                  <span
-                    className={cn(
-                      'rounded-sm px-1 py-0.5 text-[10px] font-bold',
-                      result.rarity === 'SSR'
-                        ? 'bg-amber-500/90 text-amber-950'
-                        : result.rarity === 'SR'
-                          ? 'bg-purple-500/80 text-purple-100'
-                          : result.rarity === 'R'
-                            ? 'bg-blue-500/80 text-blue-100'
-                            : 'bg-slate-500/80 text-slate-100',
-                    )}
-                  >
-                    {result.rarity}
-                  </span>
+              <div className={cn('absolute inset-0 bg-gradient-to-b', rarityGradient[result.rarity])} />
+              {cardArtUrl ? (
+                <img
+                  src={assetUrl(cardArtUrl)}
+                  alt={result.name}
+                  className={cn(
+                    'absolute inset-0 h-full w-full transition-transform duration-300',
+                    hasSceneCardArt ? 'scale-[1.18] object-cover object-center' : 'object-cover object-top',
+                  )}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-3xl text-white/20">人</span>
                 </div>
+              )}
 
-                {result.isNew && (
-                  <div className="absolute left-1 top-1">
-                    <span className="rounded-sm bg-red-500/90 px-1 py-0.5 text-[10px] font-bold text-white">
-                      NEW
-                    </span>
-                  </div>
-                )}
-                <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-slate-900 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/26 via-transparent to-black/88" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.18),transparent_42%)]" />
+              <div className="pointer-events-none absolute inset-[3px] rounded-md border border-white/18" />
+
+              <div className="absolute left-1.5 right-1.5 top-1.5 z-10 flex items-start justify-between gap-1">
+                {result.isNew ? (
+                  <span className="rounded-sm bg-red-500 px-1.5 py-0.5 text-[10px] font-black leading-none text-white shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                    NEW
+                  </span>
+                ) : <span />}
+                <span
+                  className={cn(
+                    'rounded-sm px-1.5 py-0.5 text-[10px] font-black leading-none shadow-[0_2px_8px_rgba(0,0,0,0.35)]',
+                    result.rarity === 'SSR'
+                      ? 'bg-amber-400 text-amber-950'
+                      : result.rarity === 'SR'
+                        ? 'bg-purple-500 text-purple-50'
+                        : result.rarity === 'R'
+                          ? 'bg-blue-500 text-blue-50'
+                          : 'bg-slate-500 text-slate-50',
+                  )}
+                >
+                  {result.rarity}
+                </span>
               </div>
 
-              <div className="bg-slate-900/90 px-2 py-1.5">
-                <p className={cn('truncate text-xs font-bold', rarityNameColor[result.rarity])}>{result.name}</p>
-                <p className="truncate text-[10px] text-gray-500">{result.title}</p>
+              <div className="absolute inset-x-2 bottom-2 z-10">
+                <p className={cn('truncate text-xs font-black drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]', rarityNameColor[result.rarity])}>{result.name}</p>
+                <p className="mt-0.5 truncate text-[10px] font-medium text-white/70 drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)]">{result.title}</p>
               </div>
             </motion.div>
           )}
@@ -454,7 +470,7 @@ function GachaShowcase({
     return () => clearTimeout(start);
   }, [quote, activeIndex]);
 
-  /* 入场音效编排：星星逐颗钉入；SSR 名字逐字砸出 + 金粒瀑布 */
+  /* 入场音效编排：星星逐颗钉入；SSR 名字逐字砸出 */
   useEffect(() => {
     const ts: ReturnType<typeof setTimeout>[] = [];
     const starCount = rarityStars[result.rarity];
@@ -462,7 +478,6 @@ function GachaShowcase({
       ts.push(setTimeout(() => { playSound('star-pin'); if (isSSR) vibrate(10); }, 280 + i * 140));
     }
     if (isSSR) {
-      goldRain(2000);
       vibrate(VIBE.mid);
       for (let i = 0; i < result.name.length; i++) {
         ts.push(setTimeout(() => { playSound('name-hit'); onShake(3); }, 620 + i * 85));
@@ -471,18 +486,6 @@ function GachaShowcase({
     return () => ts.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIndex]);
-
-  /* SSR 漂浮金粒（结算页氛围） */
-  const motes = useMemo(
-    () => Array.from({ length: 14 }, (_, i) => ({
-      left: `${(i * 37 + 11) % 100}%`,
-      top: `${(i * 53 + 23) % 90}%`,
-      size: 2 + (i % 3) * 1.5,
-      dur: 3.2 + (i % 5) * 0.7,
-      delay: (i % 7) * 0.45,
-    })),
-    [],
-  );
 
   return (
     <motion.div
@@ -551,30 +554,6 @@ function GachaShowcase({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_16%,rgba(255,255,255,0.16),transparent_24%),radial-gradient(circle_at_52%_58%,rgba(251,191,36,0.16),transparent_34%)] opacity-80" />
       <div className="absolute inset-0 opacity-[0.13] [background-image:radial-gradient(circle,rgba(255,255,255,0.55)_1px,transparent_1px)] [background-size:18px_18px]" />
       <div className="absolute inset-0 shadow-[inset_0_0_120px_rgba(0,0,0,0.72)]" />
-
-      {/* 法阵环：SSR 缓慢旋转 */}
-      <motion.div
-        initial={{ rotate: -8, scale: 0.9, opacity: 0 }}
-        animate={{ rotate: isSSR ? 352 : 0, scale: 1, opacity: 0.28 }}
-        transition={isSSR
-          ? { rotate: { duration: 26, repeat: Infinity, ease: 'linear' }, scale: { duration: 0.7 }, opacity: { duration: 0.7 } }
-          : { duration: 0.7 }}
-        className="pointer-events-none absolute left-1/2 top-[8%] h-[74vh] w-[74vh] -translate-x-1/2 rounded-full border-[5px] border-amber-100/45 mix-blend-screen"
-      >
-        <div className="absolute inset-12 rounded-full border border-amber-100/35" />
-        <div className="absolute inset-24 rounded-full border border-amber-100/25" />
-      </motion.div>
-
-      {/* SSR 漂浮金粒 */}
-      {isSSR && motes.map((m, i) => (
-        <motion.span
-          key={i}
-          animate={{ y: [-8, 8, -8], opacity: [0.25, 0.85, 0.25] }}
-          transition={{ duration: m.dur, repeat: Infinity, delay: m.delay, ease: 'easeInOut' }}
-          className="pointer-events-none absolute rounded-full bg-amber-200"
-          style={{ left: m.left, top: m.top, width: m.size, height: m.size, boxShadow: '0 0 8px rgba(251,191,36,0.9)' }}
-        />
-      ))}
 
       <motion.div
         initial={{ y: 28, opacity: 0 }}
@@ -701,22 +680,50 @@ function GachaShowcase({
 
 /* ────── 主组件 ────── */
 export default function GachaAnimation({ results, isTenPull, onComplete }: GachaAnimationProps) {
+  const indexedResults = useMemo(
+    () => results.map((result, index) => ({ result, index })),
+    [results],
+  );
+  const highRevealOrder = useMemo(
+    () => indexedResults
+      .filter(({ result }) => result.rarity === 'SR' || result.rarity === 'SSR')
+      .sort((a, b) => {
+        const byRarity = rarityRank[a.result.rarity] - rarityRank[b.result.rarity];
+        return byRarity === 0 ? a.index - b.index : byRarity;
+      })
+      .map(({ index }) => index),
+    [indexedResults],
+  );
+  const normalRevealOrder = useMemo(
+    () => indexedResults
+      .filter(({ result }) => result.rarity === 'N' || result.rarity === 'R')
+      .sort((a, b) => {
+        const byRarity = rarityRank[a.result.rarity] - rarityRank[b.result.rarity];
+        return byRarity === 0 ? a.index - b.index : byRarity;
+      })
+      .map(({ index }) => index),
+    [indexedResults],
+  );
+  const featuredIndex = useMemo(() => {
+    if (results.length === 0) return 0;
+    return results.reduce((bestIndex, result, index) => (
+      rarityRank[result.rarity] > rarityRank[results[bestIndex].rarity] ? index : bestIndex
+    ), 0);
+  }, [results]);
+  const initialPhase = highRevealOrder.length > 0
+    ? 'highReveal'
+    : normalRevealOrder.length > 0
+      ? 'reveal'
+      : 'done';
+
   const [revealedIndices, setRevealedIndices] = useState<Set<number>>(new Set());
-  const [phase, setPhase] = useState<'beam' | 'cinematic' | 'reveal' | 'done'>('beam');
-  const [activeResultIndex, setActiveResultIndex] = useState(0);
+  const [phase, setPhase] = useState<'highReveal' | 'reveal' | 'done'>(initialPhase);
+  const [activeHighRevealIndex, setActiveHighRevealIndex] = useState(0);
+  const [activeResultIndex, setActiveResultIndex] = useState(featuredIndex);
   const [skipped, setSkipped] = useState(false);
-  const [flash, setFlash] = useState<{ k: number; rarity: Rarity } | null>(null);
   const revealTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const skipTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const shakeControls = useAnimationControls();
-
-  const maxRarity = useMemo(
-    () => results.reduce<Rarity>((best, r) => (rarityRank[r.rarity] > rarityRank[best] ? r.rarity : best), 'N'),
-    [results],
-  );
-  /** 紫变金假出金：仅当真出 SSR 时 30% 概率先伪装成紫光 */
-  const [fakeOut] = useState(() => maxRarity === 'SSR' && Math.random() < 0.3);
-  const isSingleSSR = results.length === 1 && results[0].rarity === 'SSR';
 
   const doShake = useCallback((mag: number) => {
     void shakeControls.start(shakeKeyframes(mag), { duration: 0.38 });
@@ -724,9 +731,6 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
 
   const handleRevealFx = useCallback((rarity: Rarity) => {
     doShake(SHAKE_MAG[rarity]);
-    if (rarity === 'SR' || rarity === 'SSR') {
-      setFlash(f => ({ k: (f?.k ?? 0) + 1, rarity }));
-    }
   }, [doShake]);
 
   const handleReveal = useCallback((index: number) => {
@@ -737,50 +741,70 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
     });
   }, []);
 
-  /* 蓄力结束 → 单抽 SSR 走专属 cinematic，其余进入揭晓 */
-  const handleBeamDone = useCallback(() => {
-    setPhase(isSingleSSR ? 'cinematic' : 'reveal');
-  }, [isSingleSSR]);
+  useEffect(() => {
+    revealTimersRef.current.forEach(clearTimeout);
+    clearTimeout(skipTimerRef.current);
+    setRevealedIndices(new Set());
+    setActiveHighRevealIndex(0);
+    setActiveResultIndex(featuredIndex);
+    setSkipped(false);
+    setPhase(initialPhase);
+  }, [featuredIndex, initialPhase, results]);
 
-  /* 揭晓排程：按稀有度从低到高，最高的压轴（揭晓前多停 0.7s 吊胃口） */
+  const finishHighReveal = useCallback(() => {
+    const nextHighRevealIndex = activeHighRevealIndex + 1;
+    if (nextHighRevealIndex < highRevealOrder.length) {
+      setActiveHighRevealIndex(nextHighRevealIndex);
+      return;
+    }
+
+    setActiveResultIndex(featuredIndex);
+    setPhase(normalRevealOrder.length > 0 ? 'reveal' : 'done');
+  }, [activeHighRevealIndex, featuredIndex, highRevealOrder.length, normalRevealOrder.length]);
+
+  /* 普通卡揭晓排程：N/R 直接砸卡面；SR/SSR 已经在高稀有流程里揭晓。 */
   useEffect(() => {
     if (phase !== 'reveal' || skipped) return;
-    const order = results
-      .map((_, i) => i)
-      .sort((a, b) => rarityRank[results[a].rarity] - rarityRank[results[b].rarity]);
-    let t = 350;
+    if (normalRevealOrder.length === 0) return;
+    let t = 260;
     const timers: ReturnType<typeof setTimeout>[] = [];
-    order.forEach((idx, pos) => {
-      if (pos === order.length - 1 && order.length > 1) t += 700;
+    normalRevealOrder.forEach((idx) => {
       timers.push(setTimeout(() => handleReveal(idx), t));
-      t += 430;
+      t += 330;
     });
     revealTimersRef.current = timers;
     return () => timers.forEach(clearTimeout);
-  }, [phase, skipped, results, handleReveal]);
+  }, [phase, skipped, normalRevealOrder, handleReveal]);
 
-  /* 全部揭晓 → 进入结算展示（压轴/最高稀有度优先展示） */
+  /* 普通卡全部揭晓 → 进入结算展示；高稀有优先展示最终背景图。 */
   useEffect(() => {
     if (phase !== 'reveal') return;
-    if (revealedIndices.size === results.length && results.length > 0) {
+    if (normalRevealOrder.length === 0) {
+      setActiveResultIndex(featuredIndex);
+      setPhase('done');
+      return;
+    }
+    const allNormalsRevealed = normalRevealOrder.every((index) => revealedIndices.has(index));
+    if (allNormalsRevealed) {
       const timer = setTimeout(() => {
-        const featuredIndex = results.reduce((bestIndex, result, index) => {
-          return rarityRank[result.rarity] > rarityRank[results[bestIndex].rarity] ? index : bestIndex;
-        }, 0);
         setActiveResultIndex(featuredIndex);
         setPhase('done');
-      }, skipped ? 250 : 1000);
+      }, skipped ? 250 : 760);
       return () => clearTimeout(timer);
     }
-  }, [phase, revealedIndices, results, skipped]);
+  }, [featuredIndex, normalRevealOrder, phase, revealedIndices, skipped]);
 
   /* 长按跳过（防误触） */
   const doSkip = useCallback(() => {
     setSkipped(true);
     revealTimersRef.current.forEach(clearTimeout);
-    setRevealedIndices(new Set(results.map((_, i) => i)));
-    setPhase(p => (p === 'beam' || p === 'cinematic') ? 'reveal' : p);
-  }, [results]);
+    setRevealedIndices(new Set(normalRevealOrder));
+    setActiveResultIndex(featuredIndex);
+    setPhase((currentPhase) => {
+      if (currentPhase === 'done') return currentPhase;
+      return normalRevealOrder.length > 0 ? 'reveal' : 'done';
+    });
+  }, [featuredIndex, normalRevealOrder]);
 
   const startSkipHold = useCallback(() => {
     skipTimerRef.current = setTimeout(doSkip, 600);
@@ -798,6 +822,9 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
     setActiveResultIndex((index) => (index + 1) % results.length);
   }, [results.length]);
 
+  const activeHighResultIndex = highRevealOrder[activeHighRevealIndex];
+  const activeHighResult = activeHighResultIndex === undefined ? undefined : results[activeHighResultIndex];
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -808,23 +835,21 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
       {/* 震屏容器：所有演出内容都在里面晃 */}
       <motion.div animate={shakeControls} className="relative flex h-full w-full flex-col">
 
-        {phase === 'beam' && (
-          <BeamIntro
-            tease={fakeOut ? 'SR' : maxRarity}
-            finalTease={maxRarity}
+        {phase === 'highReveal' && activeHighResult && (
+          <HighRarityReveal
+            key={`${activeHighResult.characterId}-${activeHighResultIndex}`}
+            result={activeHighResult}
             onShake={doShake}
-            onDone={handleBeamDone}
+            onDone={finishHighReveal}
           />
-        )}
-
-        {phase === 'cinematic' && (
-          <SSRCinematic onShake={doShake} onDone={() => setPhase('done')} />
         )}
 
         {phase === 'reveal' && (
           <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-4 py-6">
             <div className={cn('flex flex-wrap items-center justify-center gap-3', isTenPull ? 'max-w-md' : '')}>
-              {results.map((result, index) => (
+              {normalRevealOrder.map((index) => {
+                const result = results[index];
+                return (
                 <GachaCard
                   key={`${result.characterId}-${index}`}
                   result={result}
@@ -834,12 +859,13 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
                   onReveal={handleReveal}
                   onRevealFx={handleRevealFx}
                 />
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
 
-        {phase === 'done' && (
+        {phase === 'done' && results.length > 0 && (
           <GachaShowcase
             results={results}
             activeIndex={activeResultIndex}
@@ -851,20 +877,8 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
         )}
       </motion.div>
 
-      {/* 揭晓瞬间的全屏色闪（SR 紫 / SSR 金） */}
-      {flash && (
-        <motion.div
-          key={flash.k}
-          initial={{ opacity: flash.rarity === 'SSR' ? 0.85 : 0.55 }}
-          animate={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
-          onAnimationComplete={() => setFlash(null)}
-          className={cn('pointer-events-none fixed inset-0 z-40', FLASH_BG[flash.rarity])}
-        />
-      )}
-
       {/* 长按跳过 */}
-      {(phase === 'beam' || phase === 'reveal') && !skipped && (
+      {(phase === 'highReveal' || phase === 'reveal') && !skipped && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

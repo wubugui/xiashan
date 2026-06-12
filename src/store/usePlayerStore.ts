@@ -32,6 +32,9 @@ interface GachaHistoryEntry {
   timestamp: number;
 }
 
+const DEFAULT_TUTORIAL_STEP = import.meta.env.DEV ? -1 : 0;
+const DEV_SPIRIT_STONES = 999_999_999;
+
 /** N 个自然日后的日期（'YYYY-MM-DD'），用于缘分 UP / 冷淡的限时计时 */
 function dateAfterDays(days: number): string {
   const d = new Date();
@@ -129,8 +132,8 @@ interface PlayerState {
 }
 
 const initialState = {
-  tutorialStep: 0,
-  spiritStones: 500,
+  tutorialStep: DEFAULT_TUTORIAL_STEP,
+  spiritStones: import.meta.env.DEV ? DEV_SPIRIT_STONES : 500,
   reputation: 0,
   normalTickets: 7,
   supplyPityCounter: 0,
@@ -302,6 +305,10 @@ export const usePlayerStore = create<PlayerState>()(
           if (typeof def === 'string' && typeof v !== 'string') continue;
           out[k] = v;
         }
+        if (import.meta.env.DEV) out.tutorialStep = -1;
+        if (import.meta.env.DEV && typeof out.spiritStones === 'number') {
+          out.spiritStones = Math.max(out.spiritStones, DEV_SPIRIT_STONES);
+        }
         return out as unknown as PlayerState;
       },
       migrate: (persisted, version) => {
@@ -315,7 +322,7 @@ export const usePlayerStore = create<PlayerState>()(
           // 已完成（-1）和未开始（0）的存档不受影响
           const s6 = state as typeof state & { tutorialStep?: number };
           if (typeof s6.tutorialStep === 'number' && s6.tutorialStep > 0) {
-            s6.tutorialStep = 0;
+            s6.tutorialStep = DEFAULT_TUTORIAL_STEP;
           }
         }
         if (version < 5) {
@@ -345,7 +352,7 @@ export const usePlayerStore = create<PlayerState>()(
               (typeof s4.reputation === 'number' && s4.reputation > 0) ||
               (Array.isArray((s4 as { flags?: unknown[] }).flags) && ((s4 as { flags?: unknown[] }).flags ?? []).length > 0) ||
               (Array.isArray((s4 as { completedNodes?: unknown[] }).completedNodes) && ((s4 as { completedNodes?: unknown[] }).completedNodes ?? []).length > 0);
-            s4.tutorialStep = hasProgress ? -1 : 0;
+            s4.tutorialStep = hasProgress ? -1 : DEFAULT_TUTORIAL_STEP;
           }
         }
         if (version < 3 && typeof state.commissionTickets === 'number') {
@@ -370,6 +377,10 @@ export const usePlayerStore = create<PlayerState>()(
           state.affinityMap = affinityMap;
           state.relationshipStages = state.relationshipStages ?? {};
           state.dailyActions = state.dailyActions ?? {};
+        }
+        if (import.meta.env.DEV) {
+          state.tutorialStep = -1;
+          state.spiritStones = Math.max(state.spiritStones ?? 0, DEV_SPIRIT_STONES);
         }
         return state as PlayerState;
       },

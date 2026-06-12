@@ -63,6 +63,7 @@ export default function CharacterCard({
   const sizeConf = sizeConfig[size];
   const character = getCharacterById(characterId);
   const artUrl = character?.gachaBackgroundUrl || character?.portraitUrl;
+  const hasSceneArt = Boolean(character?.gachaBackgroundUrl);
 
   return (
     <motion.button
@@ -71,44 +72,47 @@ export default function CharacterCard({
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={cn(
-        'group relative w-full overflow-hidden rounded-[4px] text-left',
+        'group relative w-full overflow-hidden rounded-md text-left',
         sizeConf.card,
-        'border-2 bg-slate-900 shadow-[0_8px_18px_rgba(0,0,0,0.38)]',
+        'border-2 bg-slate-950 shadow-[0_8px_18px_rgba(0,0,0,0.38)]',
         config.frame,
       )}
     >
       <div className={cn('absolute inset-0 bg-gradient-to-br', config.bg)} />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_45%_18%,rgba(255,255,255,0.38),transparent_38%)]" />
-      <div className="absolute inset-[3px] border border-white/30" />
 
       {artUrl ? (
         <img
           src={assetUrl(artUrl)}
           alt={name}
-          className="absolute inset-x-0 top-0 h-[72%] w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+          className={cn(
+            'absolute inset-0 h-full w-full transition-transform duration-300 group-hover:scale-[1.08]',
+            hasSceneArt ? 'scale-[1.14] object-cover object-center' : 'object-cover object-top',
+          )}
           loading="lazy"
         />
       ) : (
-        <div className="absolute inset-x-0 top-0 flex h-[72%] items-center justify-center text-4xl text-white/25">
+        <div className="absolute inset-0 flex items-center justify-center text-4xl text-white/25">
           人
         </div>
       )}
 
-      <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-black/86 via-black/50 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/22 via-transparent to-black/88" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_45%_16%,rgba(255,255,255,0.18),transparent_42%)]" />
+      <div className="pointer-events-none absolute inset-[3px] rounded-[4px] border border-white/18" />
 
-      <div className="absolute left-2 top-2">
+      <div className="absolute right-2 top-2 z-10">
         <span className={cn('rounded-sm px-2 py-0.5 font-black shadow', sizeConf.badge, config.badge)}>
           {rarity}
         </span>
       </div>
 
       {level && (
-        <div className="absolute right-2 top-2 rounded-sm bg-black/55 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+        <div className="absolute left-2 top-2 z-10 rounded-sm bg-black/55 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow">
           Lv.{level}
         </div>
       )}
 
-      <div className="absolute inset-x-2 bottom-2">
+      <div className="absolute inset-x-2 bottom-2 z-10">
         <div className="mb-1 flex items-center gap-0.5 text-amber-200 drop-shadow-[0_0_5px_rgba(251,191,36,0.75)]">
           {Array.from({ length: config.stars }).map((_, i) => (
             <span key={i} className={sizeConf.stars}>

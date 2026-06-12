@@ -10,23 +10,13 @@ interface IncomingCallProps {
 
 const avatarColors: Record<string, string> = {
   suli: '#4FC3F7',
-  chujinghong: '#AB47BC',
-  sujinli: '#7E57C2',
   aruo: '#66BB6A',
-  huapi: '#EC407A',
   sangluo: '#5C6BC0',
   aman: '#FF7043',
   shenzhaoning: '#FFA726',
-  peiyanzhi: '#26A69A',
-  zhoulei: '#EF5350',
   murongxue: '#42A5F5',
   yunzhiyi: '#8D6E63',
   linxia: '#FFCA28',
-  jinmantang: '#FFD54F',
-  wanjia: '#78909C',
-  youhun: '#B0BEC5',
-  lurenjia: '#90A4AE',
-  xiaogui: '#CE93D8',
 };
 
 export default function IncomingCall({ characterId, onAnswer, onReject }: IncomingCallProps) {
