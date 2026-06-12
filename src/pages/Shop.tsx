@@ -25,7 +25,7 @@ import ResetSaveButton from '@/components/ResetSaveButton';
 import SupplyReveal, { type RevealItem } from '@/components/SupplyReveal';
 import { useCssVarFromHeight } from '@/hooks/useCssVarFromHeight';
 import PageBackdrop from '@/components/PageBackdrop';
-import type { Commission, Spot } from '@/data/types';
+import type { Commission, CommissionObjective, Spot } from '@/data/types';
 import { backdropForLocation, SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 
 /** GachaAnimation 内部格式（与 engine 的 GachaResult 不同） */
@@ -156,12 +156,13 @@ function StatusBar({
   );
 }
 
-/* ────── 子组件：当前目标条 ────── */
+/* ────── 子组件：当前目标条（常驻导航：始终告诉玩家下一步去哪、做什么） ────── */
 function GoalBar({
-  commission, trust, commissionNeed, objectives, objectivesDone, commissionReady, gameOver,
+  commission, trust, commissionNeed, objectives, objectivesDone, nextObjective, commissionReady, gameOver,
 }: {
   commission: Commission | null; trust: number; commissionNeed: number;
-  objectives: { id: string }[]; objectivesDone: string[]; commissionReady: boolean; gameOver: boolean;
+  objectives: { id: string }[]; objectivesDone: string[];
+  nextObjective: CommissionObjective | null; commissionReady: boolean; gameOver: boolean;
 }) {
   if (gameOver) return null;
   if (!commission) {
@@ -178,10 +179,11 @@ function GoalBar({
       </div>
     );
   }
-  if (objectives.length > 0) {
+  if (objectives.length > 0 && nextObjective) {
     return (
       <div className="mx-3 mt-2 mb-0.5 rounded-lg border border-amber-500/30 bg-amber-500/8 px-3 py-1.5 text-xs font-medium text-amber-200">
-        📋 完成子目标 {objectivesDone.length}/{objectives.length}——在地图热点打出对应卡
+        📋 【{commission.name}】{objectivesDone.length}/{objectives.length} · 下一步：{nextObjective.desc}——
+        {nextObjective.locTag ? `去【${nextObjective.locTag}】类地点` : '任意地点'}打出 {nextObjective.need.join('/')} 卡
       </div>
     );
   }
@@ -204,7 +206,7 @@ export default function Shop() {
     time, energy, rep, money, trust, step, commission, isRevisit, loc, routes, done, hand, log, gameOver,
     board, objectivesDone, sideJobs, pendingScene, lastCardType,
     startDay, refreshRoutes, acceptCommission, abandonCommission, clearCommission,
-    completeObjective, completeSideJob,
+    completeObjective, completeSideJob, noteCommissionFocus,
     setPendingScene, chooseLocation, leaveLocation, addHandCard, consumeHandCard,
     applyDelta, markSpotDone, finishLocation, normalAdvance, addLog, setGameOver, resetDay,
     setLastCardType,
@@ -249,6 +251,10 @@ export default function Shop() {
   /** 有子目标的委托：结局分水岭 = need+5（统一信任口径）；交付条件 = 全部子目标完成 */
   const gateGoal = commission ? commission.need + (objectives.length > 0 ? 5 : 0) : 0;
   const commissionReady = !!commission && (objectives.length > 0 ? allObjectivesDone : trust >= commissionNeed);
+  /** 下一个未完成子目标（GoalBar 导航用） */
+  const nextObjective = objectives.find(o => !objectivesDone.includes(o.id)) ?? null;
+  /** 未完成子目标的限定地点标签（路线「委托相关」徽标用） */
+  const pendingTags = objectives.filter(o => !objectivesDone.includes(o.id) && o.locTag).map(o => o.locTag!);
 
   /* ────── 教学：步骤自动推进 ────── */
   // Step 3 → 4: interview commission accepted
@@ -402,6 +408,7 @@ export default function Shop() {
     setLastCardType(card ? (card.kind === 'person' ? card.serviceType : (card as HandCard).type) : null);
 
     // 子目标 / 顺手单命中判定：在匹配热点上打出要求 type 的卡
+    let objectiveHit = false;
     if (card) {
       const cardType = card.kind === 'person' ? card.serviceType : (card as HandCard).type;
       if (commission?.objectives) {
@@ -409,6 +416,7 @@ export default function Shop() {
           if (objectivesDone.includes(obj.id)) continue;
           if (hitsRequirement(obj, cardType, spot, loc.tags)) {
             completeObjective(obj.id); // 入队该子目标的剧场幕
+            objectiveHit = true;
             break;
           }
         }
@@ -429,6 +437,9 @@ export default function Shop() {
 
     setCurrentEvent(null);
 
+    // 委托催促埋点：连续干别的事，她会发消息来问
+    noteCommissionFocus(objectiveHit);
+
     // 检查失败
     const newState = {
       time: Math.max(0, time + (delta.time ?? 0)),
@@ -441,7 +452,7 @@ export default function Shop() {
       setEndDayResult('fail');
     }
   }, [currentEvent, loc, commission, objectivesDone, sideJobs, time, energy, rep, lastCardType,
-    consumeHandCard, applyDelta, markSpotDone, completeObjective, completeSideJob,
+    consumeHandCard, applyDelta, markSpotDone, completeObjective, completeSideJob, noteCommissionFocus,
     addNormalTickets, addSpiritStones, addLog, refreshRoutes, setGameOver, setLastCardType]);
 
   /* ────── 冒险解法（危险热点）：不出牌，付出更多资源换高信任 ────── */
@@ -652,6 +663,7 @@ export default function Shop() {
           commissionNeed={commissionNeed}
           objectives={objectives}
           objectivesDone={objectivesDone}
+          nextObjective={nextObjective}
           commissionReady={commissionReady}
           gameOver={gameOver}
         />
@@ -727,27 +739,50 @@ export default function Shop() {
                 /* 路线选择 */
                 <>
                   <p className="text-xs text-slate-400">选择前往的地点（共 5 段路线）：</p>
-                  {routes.map(l => (
+                  {routes.map(l => {
+                    const isCommissionSpot = pendingTags.length > 0 && l.tags.some(t => pendingTags.includes(t));
+                    return (
+                      <button
+                        key={l.id}
+                        onClick={() => { if (!gameOver) { playSound('route-select'); chooseLocation(l); setHandledThisLocation(false); } }}
+                        disabled={gameOver}
+                        className={cn(
+                          'w-full rounded-xl border bg-slate-900/60 p-3 text-left',
+                          'active:scale-[0.99] transition-all disabled:opacity-40',
+                          isCommissionSpot
+                            ? 'border-rose-400/50 shadow-[0_0_10px_rgba(251,113,133,0.2)] hover:border-rose-300/70'
+                            : 'border-white/10 hover:border-amber-400/40',
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <span className="font-bold text-white text-sm">
+                            {l.name}
+                            {isCommissionSpot && <span className="ml-1.5 rounded bg-rose-500/30 px-1 py-0.5 text-[9px] font-bold text-rose-200">📍 委托相关</span>}
+                          </span>
+                          <span className="text-[10px] text-amber-300 shrink-0">{l.recommend.join(' / ')}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {l.tags.map(t => (
+                            <span key={t} className="rounded-full bg-white/5 border border-white/10 px-1.5 py-0.5 text-[10px] text-slate-400">{t}</span>
+                          ))}
+                        </div>
+                      </button>
+                    );
+                  })}
+                  {!gameOver && (
                     <button
-                      key={l.id}
-                      onClick={() => { if (!gameOver) { playSound('route-select'); chooseLocation(l); setHandledThisLocation(false); } }}
-                      disabled={gameOver}
-                      className={cn(
-                        'w-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-left',
-                        'hover:border-amber-400/40 active:scale-[0.99] transition-all disabled:opacity-40',
-                      )}
+                      onClick={() => {
+                        if (time <= 1) return toast('天色太晚了，没时间再打听。');
+                        playSound('route-select');
+                        applyDelta({ time: -1 });
+                        refreshRoutes();
+                        addLog('🔄 花时间重新打听了一圈，换了一批落脚点。时间 -1。');
+                      }}
+                      className="w-full rounded-xl border border-dashed border-white/20 bg-slate-900/40 py-2.5 text-xs font-bold text-slate-400 hover:border-amber-400/40 hover:text-amber-300 active:scale-[0.99] transition-all"
                     >
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <span className="font-bold text-white text-sm">{l.name}</span>
-                        <span className="text-[10px] text-amber-300 shrink-0">{l.recommend.join(' / ')}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {l.tags.map(t => (
-                          <span key={t} className="rounded-full bg-white/5 border border-white/10 px-1.5 py-0.5 text-[10px] text-slate-400">{t}</span>
-                        ))}
-                      </div>
+                      🔄 重新打听（换一批地点 · 时间 -1）
                     </button>
-                  ))}
+                  )}
                   {gameOver && (
                     <p className="text-center text-sm text-slate-500 py-4">今日已结束。点击"新一天"重新开始。</p>
                   )}

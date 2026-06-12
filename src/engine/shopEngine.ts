@@ -37,9 +37,17 @@ export function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-/** 从地点列表随机取 count 个路线 */
-export function rollRoutes(allLocations: GameLocation[], count = 3): GameLocation[] {
-  return [...allLocations].sort(() => Math.random() - 0.5).slice(0, count);
+/** 从地点列表随机取 count 个路线。
+ *  mustTags：委托未完成子目标的 locTag——保底掷出至少一个匹配地点，
+ *  消灭「接了单却一直刷不到目标地点」的纯运气墙。 */
+export function rollRoutes(allLocations: GameLocation[], count = 3, mustTags: string[] = []): GameLocation[] {
+  const shuffled = [...allLocations].sort(() => Math.random() - 0.5);
+  const picked = shuffled.slice(0, count);
+  if (mustTags.length > 0 && !picked.some(l => l.tags.some(t => mustTags.includes(t)))) {
+    const candidate = shuffled.slice(count).find(l => l.tags.some(t => mustTags.includes(t)));
+    if (candidate) picked[picked.length - 1] = candidate;
+  }
+  return picked;
 }
 
 /* ─────────────── 事件结算 ─────────────── */

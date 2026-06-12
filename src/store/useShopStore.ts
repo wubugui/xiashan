@@ -10,6 +10,7 @@ import type { Commission, GameLocation, ServiceCard, ServiceTag, TheaterScene } 
 import { sideJobs as allSideJobs } from '@/data/sideJobs';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { locations as allLocations } from '@/data/locations';
+import { getCharacterById } from '@/data/characters';
 import { rollRoutes } from '@/engine/shopEngine';
 import { COLD_DAYS } from '@/engine/gachaEngine';
 
@@ -58,6 +59,8 @@ interface ShopState {
   lastCardType: ServiceTag | null;
   /** 今日已读浏览器情报的委托 id：接单时初始信任 +2 */
   intel: string[];
+  /** 连续未推进委托子目标的行动次数（攒到 3 次触发委托人手机轻催促） */
+  offTask: number;
 
   /* ── Actions ── */
   startDay: () => void;
@@ -82,6 +85,8 @@ interface ShopState {
   markSpotDone: (locId: string, spotIndex: number) => void;
   finishLocation: () => 'continue' | 'end_day';
   normalAdvance: () => void;
+  /** 热点结算后记录本次行动是否推进了委托子目标（驱动手机轻催促） */
+  noteCommissionFocus: (hit: boolean) => void;
   addLog: (text: string, cls?: LogEntry['cls']) => void;
   setGameOver: (over: boolean) => void;
   resetDay: () => void;
@@ -108,6 +113,7 @@ const INITIAL: Omit<ShopState, keyof { [K in keyof ShopState as ShopState[K] ext
   gameOver: false,
   lastCardType: null,
   intel: [],
+  offTask: 0,
 };
 
 let _uid = 1;
@@ -139,6 +145,14 @@ function rollSideJobs(): { id: string; done: boolean }[] {
   return [...allSideJobs].sort(() => Math.random() - 0.5).slice(0, 2).map(j => ({ id: j.id, done: false }));
 }
 
+/** 当前委托还差的子目标限定地点标签（路线保底掷取用） */
+function pendingLocTags(commission: Commission | null, objectivesDone: string[]): string[] {
+  if (!commission?.objectives) return [];
+  return commission.objectives
+    .filter(o => !objectivesDone.includes(o.id) && o.locTag)
+    .map(o => o.locTag!);
+}
+
 export const useShopStore = create<ShopState>()(
   persist(
     (set, get) => ({
@@ -146,7 +160,7 @@ export const useShopStore = create<ShopState>()(
 
       startDay: () => {
         const s0 = get();
-        const routes = rollRoutes(allLocations);
+        const routes = rollRoutes(allLocations, 3, pendingLocTags(s0.commission, s0.objectivesDone));
         // 教学模式下保证「面试」委托出现在委托板
         const ts = usePlayerStore.getState().tutorialStep;
         const forced = (ts >= 0 && ts < 4) ? ['interview'] : [];
@@ -166,7 +180,7 @@ export const useShopStore = create<ShopState>()(
         }
       },
 
-      refreshRoutes: () => set({ routes: rollRoutes(allLocations) }),
+      refreshRoutes: () => set(s => ({ routes: rollRoutes(allLocations, 3, pendingLocTags(s.commission, s.objectivesDone)) })),
 
       setCommission: (c) => set({ commission: c, isRevisit: false, trust: 0, objectivesDone: [] }),
 
@@ -290,7 +304,7 @@ export const useShopStore = create<ShopState>()(
           time: newTime,
           energy: newEnergy,
           loc: null,
-          routes: rollRoutes(allLocations),
+          routes: rollRoutes(allLocations, 3, pendingLocTags(s.commission, s.objectivesDone)),
         });
         get().addLog('离开当前地点，进入下一段路线。');
         return 'continue';
@@ -306,13 +320,45 @@ export const useShopStore = create<ShopState>()(
           }));
           get().addLog('普通跑腿：资金 +2，时间 -1，精力 -1。');
         } else {
+          const who = getCharacterById(s.commission.client ?? s.commission.target)?.name ?? '她';
           set(prev => ({
             time: Math.max(0, prev.time - 2),
             energy: Math.max(0, prev.energy - 1),
             trust: prev.trust + 1,
           }));
-          get().addLog('普通推进：信任 +1，时间 -2，精力 -1。');
+          get().addLog(`为${who}的事四处奔走打点：信任 +1，时间 -2，精力 -1。`);
         }
+      },
+
+      noteCommissionFocus: (hit) => {
+        const s0 = get();
+        const c = s0.commission;
+        // 没有子目标的委托不催（任何热点都算在为她攒信任）
+        if (!c || !c.objectives?.length) return;
+        if (hit) {
+          if (s0.offTask !== 0) set({ offTask: 0 });
+          return;
+        }
+        const n = s0.offTask + 1;
+        if (n < 3) {
+          set({ offTask: n });
+          return;
+        }
+        set({ offTask: 0 });
+        // 轻催促：纯叙事提醒，不扣数值；每委托每自然日最多一次
+        const player = usePlayerStore.getState();
+        if (!player.tryDailyAction(`nudge:${c.id}`)) return;
+        const clientId = c.client ?? c.target;
+        const who = getCharacterById(clientId)?.name ?? '她';
+        player.addPhoneMessage({
+          id: `nudge_${c.id}_${Date.now()}`,
+          characterId: clientId,
+          type: 'wechat',
+          content: '那个……不着急的！就是想问问，事情还顺利吗？我在的，随时找我。',
+          timestamp: Date.now(),
+          read: false,
+        });
+        get().addLog(`📱 ${who}发来消息，小心翼翼地问起委托【${c.name}】的进展——她在等你。`, '');
       },
 
       addLog: (text, cls = '') =>
