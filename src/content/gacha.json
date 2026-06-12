@@ -16,10 +16,16 @@
     "characterRate": 0.06,
     "characterPity": 15,
     "cardWeights": {
-      "skill": 46,
-      "tool": 24,
-      "info": 16,
-      "hint": 8
+      "skill": 40,
+      "tool": 20,
+      "info": 14,
+      "hint": 8,
+      "stoneSmall": 9,
+      "stoneLarge": 3
+    },
+    "stoneAmounts": {
+      "small": 60,
+      "large": 300
     }
   }
 }

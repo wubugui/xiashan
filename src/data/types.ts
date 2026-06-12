@@ -91,7 +91,8 @@ export interface GachaConfig {
     cost: number;
     characterRate: number;
     characterPity: number;
-    cardWeights: { skill: number; tool: number; info: number; hint: number };
+    cardWeights: { skill: number; tool: number; info: number; hint: number; stoneSmall: number; stoneLarge: number };
+    stoneAmounts: { small: number; large: number };
   };
 }
 
@@ -119,6 +120,8 @@ export interface SpotDelta {
 /** 场景热点 */
 export interface Spot {
   name: string;
+  /** 地图标记图标（emoji） */
+  icon?: string;
   x: number;
   y: number;
   type: 'quest' | 'clue' | 'danger' | 'resource';
@@ -137,6 +140,18 @@ export interface GameLocation {
   recommend: ServiceTag[];
   bg: string;
   spots: Spot[];
+  /** 场景装饰元素（纯演出） */
+  scenery?: { emoji: string; x: number; y: number; size?: number }[];
+  /** 无关 NPC：可点击对话的氛围角色（纯演出，不影响规则） */
+  npcs?: LocationNpc[];
+}
+
+export interface LocationNpc {
+  name: string;
+  emoji: string;
+  x: number;
+  y: number;
+  lines: string[];
 }
 
 /** 委托剧场：客户情绪 */

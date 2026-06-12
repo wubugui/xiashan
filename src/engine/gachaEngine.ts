@@ -89,7 +89,9 @@ export type SupplyPullResult =
   | { kind: 'person'; character: Character; isNew: boolean }
   | { kind: 'card'; card: ServiceCard }
   /** 消消乐提示券（计数道具，不进手牌） */
-  | { kind: 'hint' };
+  | { kind: 'hint' }
+  /** 灵石奖励（big 为稀有大袋，给特写） */
+  | { kind: 'stones'; amount: number; big: boolean };
 
 function rollCharacterRarity(): 'SSR' | 'SR' | 'R' | 'N' {
   const roll = Math.random();
@@ -116,22 +118,26 @@ export function pullSupply(
       newPity: 0,
     };
   }
-  const pools: [number, ServiceCard[] | 'hint'][] = [
+  type Outcome = ServiceCard[] | 'hint' | 'stoneSmall' | 'stoneLarge';
+  const pools: [number, Outcome][] = [
     [cfg.cardWeights.skill, allSkills],
     [cfg.cardWeights.tool, allTools],
     [cfg.cardWeights.info, allInfos],
     [cfg.cardWeights.hint, 'hint'],
+    [cfg.cardWeights.stoneSmall, 'stoneSmall'],
+    [cfg.cardWeights.stoneLarge, 'stoneLarge'],
   ];
   const total = pools.reduce((a, [w]) => a + w, 0);
   let roll = Math.random() * total;
-  let chosen: ServiceCard[] | 'hint' = pools[pools.length - 1][1];
+  let chosen: Outcome = pools[pools.length - 1][1];
   for (const [w, pool] of pools) {
     roll -= w;
     if (roll < 0) { chosen = pool; break; }
   }
-  if (chosen === 'hint') {
-    return { result: { kind: 'hint' }, newPity: pityCounter + 1 };
-  }
+  const newPity = pityCounter + 1;
+  if (chosen === 'hint') return { result: { kind: 'hint' }, newPity };
+  if (chosen === 'stoneSmall') return { result: { kind: 'stones', amount: cfg.stoneAmounts.small, big: false }, newPity };
+  if (chosen === 'stoneLarge') return { result: { kind: 'stones', amount: cfg.stoneAmounts.large, big: true }, newPity };
   const card = chosen[Math.floor(Math.random() * chosen.length)];
-  return { result: { kind: 'card', card }, newPity: pityCounter + 1 };
+  return { result: { kind: 'card', card }, newPity };
 }

@@ -8,6 +8,8 @@ import { pullSupply, isHeartUp, HEART_UP_WEIGHT } from '@/engine/gachaEngine';
 import { GACHA_CONFIG } from '@/data/gachaConfig';
 import { characters } from '@/data/characters';
 import GachaAnimation from '@/components/GachaAnimation';
+import SupplyReveal, { type RevealItem } from '@/components/SupplyReveal';
+import confetti from 'canvas-confetti';
 import { cn } from '@/lib/utils';
 
 export default function Gacha() {
@@ -31,8 +33,10 @@ export default function Gacha() {
   const [isTenPull, setIsTenPull] = useState(false);
   const [showRates, setShowRates] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  /** 本次抽到的消耗卡/道具汇总（人物动画播完后展示） */
-  const [cardResults, setCardResults] = useState<{ name: string; type: string; rarity: string; kind: string }[] | null>(null);
+  /** 十连汇总（人物动画播完后展示） */
+  const [cardResults, setCardResults] = useState<{ icon: string; name: string; sub: string; tier: 'normal' | 'rare' }[] | null>(null);
+  /** 单抽非人物的开箱演出 */
+  const [revealItem, setRevealItem] = useState<RevealItem | null>(null);
 
   const pityRemaining = GACHA_CONFIG.supplyPool.characterPity - supplyPityCounter;
 
@@ -46,7 +50,7 @@ export default function Gacha() {
       let ownedIds = ownedCharacters.map((c) => c.characterId);
       let pity = supplyPityCounter;
       const persons: { characterId: string; name: string; rarity: 'N' | 'R' | 'SR' | 'SSR'; title: string; isNew: boolean }[] = [];
-      const cards: { name: string; type: string; rarity: string; kind: string }[] = [];
+      const entries: { icon: string; name: string; sub: string; tier: 'normal' | 'rare'; desc: string }[] = [];
 
       for (let i = 0; i < (isTen ? 10 : 1); i++) {
         const { result, newPity } = pullSupply(ownedIds, affinityMap, pity);
@@ -64,22 +68,45 @@ export default function Gacha() {
           });
         } else if (result.kind === 'hint') {
           addHintTokens(1);
-          cards.push({ name: '消消乐提示券', type: '道具', rarity: 'R', kind: 'hint' });
+          entries.push({ icon: '💡', name: '消消乐提示券', sub: '道具 ×1', tier: 'normal', desc: '消消乐每日免费提示用完后，消耗 1 张继续获得提示。' });
+        } else if (result.kind === 'stones') {
+          addSpiritStones(result.amount);
+          entries.push({
+            icon: result.big ? '💎' : '💰',
+            name: result.big ? '灵石大袋' : '灵石小包',
+            sub: `+${result.amount} 灵石`,
+            tier: result.big ? 'rare' : 'normal',
+            desc: result.big ? '沉甸甸的一袋灵石——稀有补给！' : '零花钱到账。',
+          });
         } else {
           addHandCard(result.card);
-          cards.push({ name: result.card.name, type: result.card.type, rarity: result.card.rarity, kind: result.card.kind });
+          entries.push({
+            icon: result.card.kind === 'skill' ? '⚡' : result.card.kind === 'tool' ? '🧰' : '📡',
+            name: result.card.name,
+            sub: `${result.card.type} · ${result.card.rarity}`,
+            tier: result.card.rarity === 'SR' ? 'rare' : 'normal',
+            desc: result.card.desc,
+          });
         }
       }
       setSupplyPityCounter(pity);
 
+      const pityRemain = GACHA_CONFIG.supplyPool.characterPity - pity;
       if (persons.length > 0) {
         setGachaResults(persons);
         setIsTenPull(persons.length > 1);
         setShowAnimation(true);
-        // 卡片汇总等人物动画播完再弹
-        setCardResults(cards.length > 0 ? cards : null);
+        // 其余出货等人物动画播完再弹汇总
+        setCardResults(entries.length > 0 ? entries : null);
+      } else if (!isTen && entries.length === 1) {
+        // 单抽非人物：开箱演出（和店内一致的仪式感）
+        const e = entries[0];
+        setRevealItem({ tier: e.tier, icon: e.icon, name: e.name, sub: e.sub, desc: e.desc, pityRemain });
       } else {
-        setCardResults(cards);
+        setCardResults(entries);
+        if (entries.some(e => e.tier === 'rare')) {
+          confetti({ particleCount: 110, spread: 75, startVelocity: 35, origin: { y: 0.5 }, scalar: 0.9 });
+        }
       }
     },
     [spiritStones, ownedCharacters, affinityMap, supplyPityCounter, addCharacter, addSpiritStones, addGachaResult, setSupplyPityCounter, addHandCard, addHintTokens],
@@ -94,8 +121,6 @@ export default function Gacha() {
     setShowAnimation(false);
     setGachaResults([]);
   }, []);
-
-  const cardKindIcon = (kind: string) => (kind === 'skill' ? '⚡' : kind === 'tool' ? '🧰' : kind === 'hint' ? '💡' : '📡');
 
   return (
     <motion.div
@@ -370,6 +395,11 @@ export default function Gacha() {
         </div>
       </div>
 
+      {/* 单抽开箱演出 */}
+      <AnimatePresence>
+        {revealItem && <SupplyReveal item={revealItem} onClose={() => setRevealItem(null)} />}
+      </AnimatePresence>
+
       {/* 消耗卡汇总弹窗 */}
       <AnimatePresence>
         {cardResults && !showAnimation && (
@@ -392,13 +422,14 @@ export default function Gacha() {
                 {cardResults.map((c, i) => (
                   <div key={i} className={cn(
                     'rounded-xl border p-2.5',
-                    c.rarity === 'SR' ? 'border-purple-400/50 bg-purple-500/10' : 'border-white/10 bg-white/5',
+                    c.tier === 'rare' ? 'border-amber-300/70 bg-amber-500/15 shadow-[0_0_14px_rgba(251,191,36,0.35)]' : 'border-white/10 bg-white/5',
                   )}>
                     <div className="flex items-center gap-1.5">
-                      <span>{cardKindIcon(c.kind)}</span>
+                      <span>{c.icon}</span>
                       <p className="truncate text-xs font-bold text-white">{c.name}</p>
+                      {c.tier === 'rare' && <span className="text-[9px] font-black text-amber-300">稀有</span>}
                     </div>
-                    <p className="mt-0.5 text-[10px] text-slate-400">{c.type} · <span className={c.rarity === 'SR' ? 'text-purple-300' : 'text-slate-400'}>{c.rarity}</span></p>
+                    <p className="mt-0.5 text-[10px] text-slate-400">{c.sub}</p>
                   </div>
                 ))}
               </div>

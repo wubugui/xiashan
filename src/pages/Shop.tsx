@@ -21,6 +21,7 @@ import { checkPhoneEvents } from '@/engine/phoneScheduler';
 import GachaAnimation from '@/components/GachaAnimation';
 import CommissionTheater from '@/components/CommissionTheater';
 import ResetSaveButton from '@/components/ResetSaveButton';
+import SupplyReveal, { type RevealItem } from '@/components/SupplyReveal';
 import type { Spot } from '@/data/types';
 
 /** GachaAnimation 内部格式（与 engine 的 GachaResult 不同） */
@@ -183,8 +184,10 @@ export default function Shop() {
   const [endDayResult, setEndDayResult] = useState<'success' | 'fail' | null>(null);
   const [showTheater, setShowTheater] = useState(false);
   const [handledThisLocation, setHandledThisLocation] = useState(false);
-  /** 补给池抽到消耗卡时的结果弹窗（人物走全屏 GachaAnimation） */
-  const [drawnCard, setDrawnCard] = useState<{ name: string; type: string; rarity: string; desc: string; kind: string; pityRemain: number } | null>(null);
+  /** 补给池非人物出货的开箱演出（人物走全屏 GachaAnimation） */
+  const [revealItem, setRevealItem] = useState<RevealItem | null>(null);
+  /** 地图 NPC 闲聊气泡 */
+  const [npcTalk, setNpcTalk] = useState<{ name: string; emoji: string; line: string } | null>(null);
 
   /* ── 初始化 ── */
   const isNew = routes.length === 0 && !gameOver && commission === null && step === 1 && time === 13;
@@ -224,35 +227,38 @@ export default function Shop() {
         setGachaResults([animResult]);
         setShowGacha(true);
         addLog(`便利屋补给：✨ ${result.isNew ? '人物出货' : '重复人物'}【${result.character.name}】！`, 'good');
-      } else if (result.kind === 'hint') {
-        addHintTokens(1);
-        const remain = GACHA_CONFIG.supplyPool.characterPity - newPity;
-        addLog(`便利屋补给：抽到【消消乐提示券】×1。距人物保底还剩 ${remain} 抽。`, 'draw');
-        setDrawnCard({
-          name: '消消乐提示券',
-          type: '道具',
-          rarity: 'R',
-          desc: '消消乐每日免费提示用完后，消耗 1 张继续获得提示。',
-          kind: 'hint',
-          pityRemain: remain,
-        });
-        window.setTimeout(() => setDrawnCard(d => (d && d.kind === 'hint' ? null : d)), 2200);
       } else {
-        addHandCard(result.card);
         const remain = GACHA_CONFIG.supplyPool.characterPity - newPity;
-        addLog(`便利屋补给：抽到【${result.card.name}】（${result.card.type}）。距人物保底还剩 ${remain} 抽。`, 'draw');
-        setDrawnCard({
-          name: result.card.name,
-          type: result.card.type,
-          rarity: result.card.rarity,
-          desc: result.card.desc,
-          kind: result.card.kind,
-          pityRemain: remain,
-        });
-        window.setTimeout(() => setDrawnCard(d => (d && d.name === result.card.name ? null : d)), 2200);
+        if (result.kind === 'hint') {
+          addHintTokens(1);
+          addLog(`便利屋补给：抽到【消消乐提示券】×1。距人物保底还剩 ${remain} 抽。`, 'draw');
+          setRevealItem({ tier: 'normal', icon: '💡', name: '消消乐提示券', sub: '道具 ×1', desc: '消消乐每日免费提示用完后，消耗 1 张继续获得提示。', pityRemain: remain });
+        } else if (result.kind === 'stones') {
+          addSpiritStones(result.amount);
+          addLog(`便利屋补给：${result.big ? '✨ 稀有出货！【灵石大袋】' : '抽到【灵石小包】'} +${result.amount} 灵石。距人物保底还剩 ${remain} 抽。`, result.big ? 'good' : 'draw');
+          setRevealItem({
+            tier: result.big ? 'rare' : 'normal',
+            icon: result.big ? '💎' : '💰',
+            name: result.big ? '灵石大袋' : '灵石小包',
+            sub: `+${result.amount} 灵石`,
+            desc: result.big ? '沉甸甸的一袋——今天的运气都花在这了？不，人物保底还在走！' : '零花钱到账，攒着抽卡或培养角色。',
+            pityRemain: remain,
+          });
+        } else {
+          addHandCard(result.card);
+          addLog(`便利屋补给：抽到【${result.card.name}】（${result.card.type}）。距人物保底还剩 ${remain} 抽。`, 'draw');
+          setRevealItem({
+            tier: result.card.rarity === 'SR' ? 'rare' : 'normal',
+            icon: result.card.kind === 'skill' ? '⚡' : result.card.kind === 'tool' ? '🧰' : '📡',
+            name: result.card.name,
+            sub: `${result.card.type} · ${result.card.rarity}`,
+            desc: result.card.desc,
+            pityRemain: remain,
+          });
+        }
       }
     }
-  }, [gameOver, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, setSupplyPityCounter, addCharacter, addGachaResult, addHandCard, addHintTokens, addLog]);
+  }, [gameOver, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, setSupplyPityCounter, addCharacter, addGachaResult, addHandCard, addHintTokens, addSpiritStones, addLog]);
 
   /* ────── 热点点击 ────── */
   const handleSpotClick = useCallback((spot: Spot, spotIndex: number) => {
@@ -566,13 +572,47 @@ export default function Shop() {
                     <span className="text-xs text-slate-400">{loc.tags.join(' · ')}</span>
                   </div>
 
-                  {/* 场景热点区域 */}
+                  {/* 场景热点区域（沉浸式：装饰 + NPC + 语义化热点标记） */}
                   <div
                     className="relative rounded-2xl overflow-hidden border border-white/10"
-                    style={{ height: 220, background: assetCssBackground(loc.bg) }}
+                    style={{ height: 300, background: assetCssBackground(loc.bg) }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-                    <span className="absolute left-4 top-3 text-lg font-black text-white/90 z-10 drop-shadow">{loc.name}</span>
+                    {/* 氛围层 */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
+                    <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between px-4 pt-3 pointer-events-none">
+                      <span className="text-lg font-black text-white/90 drop-shadow">{loc.name}</span>
+                      <span className="text-[10px] text-white/50">{loc.tags.join(' · ')}</span>
+                    </div>
+
+                    {/* 场景装饰（纯演出） */}
+                    {loc.scenery?.map((d, i) => (
+                      <span
+                        key={`deco-${i}`}
+                        className="absolute -translate-x-1/2 -translate-y-1/2 opacity-50 pointer-events-none select-none"
+                        style={{ left: `${d.x}%`, top: `${d.y}%`, fontSize: d.size ?? 22 }}
+                      >
+                        {d.emoji}
+                      </span>
+                    ))}
+
+                    {/* 路人 NPC：点击闲聊（不影响规则） */}
+                    {loc.npcs?.map((npc, i) => (
+                      <button
+                        key={`npc-${i}`}
+                        onClick={() => setNpcTalk({
+                          name: npc.name,
+                          emoji: npc.emoji,
+                          line: npc.lines[Math.floor(Math.random() * npc.lines.length)],
+                        })}
+                        className="absolute z-10 -translate-x-1/2 -translate-y-1/2 text-xl opacity-80 transition-transform hover:scale-125 active:scale-95"
+                        style={{ left: `${npc.x}%`, top: `${npc.y}%` }}
+                        title={npc.name}
+                      >
+                        {npc.emoji}
+                      </button>
+                    ))}
+
+                    {/* 热点标记：图标 + 名称牌 */}
                     {loc.spots.map((spot, i) => {
                       const isDone = done[loc.id]?.[i] ?? false;
                       return (
@@ -580,23 +620,49 @@ export default function Shop() {
                           key={i}
                           onClick={() => handleSpotClick(spot, i)}
                           disabled={isDone || gameOver}
-                          className={cn(
-                            'absolute z-10 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full',
-                            'border-2 font-black text-white text-sm shadow-lg transition-all',
-                            isDone
-                              ? 'border-emerald-400/50 bg-emerald-500/20 opacity-50'
-                              : spot.type === 'danger'
-                                ? 'border-red-300 bg-red-500/30 shadow-[0_0_16px_rgba(239,68,68,0.5)] animate-pulse'
-                                : spot.type === 'quest'
-                                  ? 'border-pink-300 bg-pink-500/30 shadow-[0_0_16px_rgba(244,114,182,0.5)] animate-pulse'
-                                  : 'border-cyan-300 bg-cyan-500/30 shadow-[0_0_16px_rgba(34,211,238,0.5)] animate-pulse',
-                          )}
+                          className="absolute z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5"
                           style={{ left: `${spot.x}%`, top: `${spot.y}%` }}
                         >
-                          {isDone ? '✓' : i + 1}
+                          <span
+                            className={cn(
+                              'flex h-11 w-11 items-center justify-center rounded-full border-2 text-lg shadow-lg transition-all',
+                              isDone
+                                ? 'border-emerald-400/50 bg-emerald-500/20 opacity-60'
+                                : spot.type === 'danger'
+                                  ? 'border-red-300 bg-red-500/40 shadow-[0_0_18px_rgba(239,68,68,0.6)] animate-pulse'
+                                  : spot.type === 'quest'
+                                    ? 'border-pink-300 bg-pink-500/40 shadow-[0_0_18px_rgba(244,114,182,0.6)] animate-pulse'
+                                    : 'border-cyan-300 bg-cyan-500/40 shadow-[0_0_18px_rgba(34,211,238,0.6)] animate-pulse',
+                            )}
+                          >
+                            {isDone ? '✓' : spot.icon ?? '❗'}
+                          </span>
+                          <span className={cn(
+                            'rounded-full px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm',
+                            isDone ? 'bg-black/40 text-emerald-300/70 line-through' : 'bg-black/60 text-white shadow',
+                          )}>
+                            {spot.name}
+                          </span>
                         </button>
                       );
                     })}
+
+                    {/* NPC 闲聊气泡 */}
+                    <AnimatePresence>
+                      {npcTalk && (
+                        <motion.div
+                          key={npcTalk.name + npcTalk.line}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          onClick={() => setNpcTalk(null)}
+                          className="absolute inset-x-3 bottom-3 z-30 rounded-xl border border-white/20 bg-black/80 px-3 py-2.5 backdrop-blur"
+                        >
+                          <p className="text-[10px] font-bold text-amber-300">{npcTalk.emoji} {npcTalk.name}</p>
+                          <p className="mt-0.5 text-xs leading-relaxed text-slate-200">{npcTalk.line}</p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               )}
@@ -885,7 +951,7 @@ export default function Shop() {
           )
         )}
         <button
-          onClick={() => { if (money >= 5) { applyDelta({ money: -5, energy: 2 }); addLog('买咖啡：精力 +2，资金 -5。', 'good'); } else toast('资金不足。'); }}
+          onClick={() => { if (money >= 5) { applyDelta({ money: -5, energy: 2 }); addLog('买咖啡：精力 +2，资金 -5。', 'good'); toast('☕ 咕嘟咕嘟……精力 +2（资金 -5）'); } else toast('资金不足，咖啡 5 块一杯。'); }}
           disabled={gameOver || money < 5}
           className="rounded-xl bg-slate-800 border border-white/10 px-3 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 disabled:opacity-40"
         >
@@ -1072,44 +1138,9 @@ export default function Shop() {
       </AnimatePresence>
 
       {/* ── 抽卡动画 ── */}
-      {/* ── 抽卡结果弹窗（消耗卡） ── */}
+      {/* ── 补给开箱演出（非人物出货） ── */}
       <AnimatePresence>
-        {drawnCard && (
-          <motion.div
-            key={drawnCard.name + drawnCard.pityRemain}
-            initial={{ opacity: 0, y: 40, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 22, stiffness: 320 }}
-            onClick={() => setDrawnCard(null)}
-            className="fixed bottom-24 left-1/2 z-50 w-[88%] max-w-sm -translate-x-1/2"
-          >
-            <div className={cn(
-              'rounded-2xl border-2 bg-slate-900/95 p-4 shadow-2xl backdrop-blur',
-              drawnCard.rarity === 'SR' ? 'border-purple-400/70 shadow-purple-500/20' : 'border-sky-400/50 shadow-sky-500/10',
-            )}>
-              <div className="flex items-center gap-3">
-                <div className={cn(
-                  'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl',
-                  drawnCard.kind === 'skill' ? 'bg-amber-500/20' : drawnCard.kind === 'tool' ? 'bg-cyan-500/20' : 'bg-emerald-500/20',
-                )}>
-                  {drawnCard.kind === 'skill' ? '⚡' : drawnCard.kind === 'tool' ? '🧰' : drawnCard.kind === 'hint' ? '💡' : '📡'}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-base font-black text-white">{drawnCard.name}</p>
-                    <span className={cn('text-xs font-bold', rarityColor(drawnCard.rarity))}>{drawnCard.rarity}</span>
-                    <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] text-slate-300">{drawnCard.type}</span>
-                  </div>
-                  <p className="mt-0.5 text-[11px] leading-snug text-slate-400">{drawnCard.desc}</p>
-                </div>
-              </div>
-              <p className="mt-2 text-center text-[10px] font-bold text-pink-300">
-                💗 距人物保底还剩 {drawnCard.pityRemain} 抽
-              </p>
-            </div>
-          </motion.div>
-        )}
+        {revealItem && <SupplyReveal item={revealItem} onClose={() => setRevealItem(null)} />}
       </AnimatePresence>
 
       {showGacha && gachaResults.length > 0 && (
