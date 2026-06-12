@@ -3,11 +3,12 @@ import react from '@vitejs/plugin-react'
 import tsconfigPaths from "vite-tsconfig-paths";
 import { traeBadgePlugin } from 'vite-plugin-trae-solo-badge';
 import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { extname, join, relative, sep } from 'node:path';
 import type { Plugin } from 'vite';
 
 const ASSET_EXTS = new Set(['.svg', '.png', '.jpg', '.jpeg', '.webp']);
+const VIDEO_EXTS = new Set(['.mp4', '.webm']);
 // These subdirs contain source/unused/heavy files and are not preloaded.
 const EXCLUDE_DIRS = new Set([
   'source',
@@ -26,6 +27,14 @@ function assetManifestPlugin(): Plugin {
   function generate() {
     const hasher = createHash('sha256');
     const files: string[] = [];
+    const seen = new Set<string>();
+
+    function addFile(file: string) {
+      if (!seen.has(file)) {
+        seen.add(file);
+        files.push(file);
+      }
+    }
 
     function walk(dir: string) {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -33,12 +42,28 @@ function assetManifestPlugin(): Plugin {
         if (entry.isDirectory()) {
           if (!EXCLUDE_DIRS.has(entry.name)) walk(full);
         } else if (ASSET_EXTS.has(extname(entry.name).toLowerCase())) {
-          files.push(full);
+          addFile(full);
         }
       }
     }
 
+    function addReferencedVideos() {
+      const videosFile = join('src', 'content', 'videos.json');
+      const content = JSON.parse(readFileSync(videosFile, 'utf8')) as { videos?: Array<{ src?: string }> };
+
+      for (const video of content.videos ?? []) {
+        if (!video.src || /^(https?:|data:|blob:)/.test(video.src)) continue;
+
+        const normalized = video.src.replace(/^\/+/, '');
+        if (!VIDEO_EXTS.has(extname(normalized).toLowerCase())) continue;
+
+        const full = join('public', normalized);
+        if (existsSync(full)) addFile(full);
+      }
+    }
+
     walk('public');
+    addReferencedVideos();
     files.sort();
 
     const assets = files.map((file) => {

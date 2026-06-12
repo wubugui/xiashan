@@ -18,9 +18,12 @@ interface VideoPlayerProps {
  */
 export default function VideoPlayer({ src, onEnd, skippable = true, className }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const endingTimerRef = useRef<number | null>(null);
+  const endedRef = useRef(false);
   const [isPaused, setIsPaused] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
 
   // 鼠标/触摸静止后隐藏控制提示
   useEffect(() => {
@@ -33,6 +36,12 @@ export default function VideoPlayer({ src, onEnd, skippable = true, className }:
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+    if (endingTimerRef.current !== null) {
+      window.clearTimeout(endingTimerRef.current);
+      endingTimerRef.current = null;
+    }
+    endedRef.current = false;
+    setIsEnding(false);
     video.muted = false;
     setIsMuted(false);
     const playPromise = video.play();
@@ -45,9 +54,28 @@ export default function VideoPlayer({ src, onEnd, skippable = true, className }:
     }
   }, [src]);
 
+  useEffect(() => {
+    return () => {
+      if (endingTimerRef.current !== null) {
+        window.clearTimeout(endingTimerRef.current);
+      }
+    };
+  }, []);
+
+  const finishNaturally = () => {
+    if (endedRef.current) return;
+    endedRef.current = true;
+    setIsPaused(false);
+    setShowControls(false);
+    setIsEnding(true);
+    endingTimerRef.current = window.setTimeout(() => {
+      onEnd();
+    }, 850);
+  };
+
   const toggleMute = () => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || isEnding) return;
     video.muted = !video.muted;
     setIsMuted(video.muted);
     setShowControls(true);
@@ -55,7 +83,7 @@ export default function VideoPlayer({ src, onEnd, skippable = true, className }:
 
   const togglePause = () => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || isEnding) return;
     if (video.paused) {
       video.play();
       setIsPaused(false);
@@ -67,6 +95,11 @@ export default function VideoPlayer({ src, onEnd, skippable = true, className }:
   };
 
   const handleSkip = () => {
+    endedRef.current = true;
+    if (endingTimerRef.current !== null) {
+      window.clearTimeout(endingTimerRef.current);
+      endingTimerRef.current = null;
+    }
     videoRef.current?.pause();
     onEnd();
   };
@@ -78,16 +111,28 @@ export default function VideoPlayer({ src, onEnd, skippable = true, className }:
       transition={{ duration: 0.4 }}
       className={cn('fixed inset-0 z-[300] flex items-center justify-center bg-black', className)}
       onClick={togglePause}
-      onMouseMove={() => setShowControls(true)}
+      onMouseMove={() => !isEnding && setShowControls(true)}
     >
       <video
         ref={videoRef}
         src={src}
         playsInline
         className="h-full w-full object-contain"
-        onEnded={onEnd}
+        onEnded={finishNaturally}
         onError={onEnd}
       />
+
+      <AnimatePresence>
+        {isEnding && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.55 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.85, ease: 'easeOut' }}
+            className="pointer-events-none absolute inset-0 bg-black"
+          />
+        )}
+      </AnimatePresence>
 
       {/* 暂停状态提示 */}
       <AnimatePresence>
@@ -105,7 +150,7 @@ export default function VideoPlayer({ src, onEnd, skippable = true, className }:
 
       {/* 顶部控制栏 */}
       <AnimatePresence>
-        {showControls && (
+        {showControls && !isEnding && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
