@@ -63,6 +63,8 @@ interface ShopState {
   setOverdue: (o: { id: string; daysLeft: number } | null) => void;
   setCommission: (c: Commission) => void;
   chooseLocation: (loc: GameLocation) => void;
+  /** 退回路线选择（不消耗路段，路线不重掷） */
+  leaveLocation: () => void;
   addHandCard: (card: ServiceCard) => void;
   consumeHandCard: (uid: number) => void;
   applyDelta: (delta: Partial<{ time: number; energy: number; money: number; trust: number; rep: number }>) => void;
@@ -185,6 +187,8 @@ export const useShopStore = create<ShopState>()(
           loc,
           done: { ...s.done, [loc.id]: s.done[loc.id] ?? {} },
         })),
+
+      leaveLocation: () => set({ loc: null }),
 
       addHandCard: (card) =>
         set(s => ({ hand: [...s.hand, { ...card, uid: _uid++ }] })),

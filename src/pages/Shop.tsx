@@ -162,7 +162,7 @@ export default function Shop() {
     time, energy, rep, money, trust, step, commission, loc, routes, done, hand, log, gameOver,
     board, overdue, objectivesDone, sideJobs, pendingScene,
     startDay, refreshRoutes, acceptCommission, completeObjective, completeSideJob,
-    setPendingScene, setOverdue, chooseLocation, addHandCard, consumeHandCard,
+    setPendingScene, setOverdue, chooseLocation, leaveLocation, addHandCard, consumeHandCard,
     applyDelta, markSpotDone, finishLocation, normalAdvance, addLog, setGameOver, resetDay,
   } = shopStore;
 
@@ -183,6 +183,8 @@ export default function Shop() {
   const [endDayResult, setEndDayResult] = useState<'success' | 'fail' | null>(null);
   const [showTheater, setShowTheater] = useState(false);
   const [handledThisLocation, setHandledThisLocation] = useState(false);
+  /** 补给池抽到消耗卡时的结果弹窗（人物走全屏 GachaAnimation） */
+  const [drawnCard, setDrawnCard] = useState<{ name: string; type: string; rarity: string; desc: string; kind: string; pityRemain: number } | null>(null);
 
   /* ── 初始化 ── */
   const isNew = routes.length === 0 && !gameOver && commission === null && step === 1 && time === 13;
@@ -226,6 +228,15 @@ export default function Shop() {
         addHandCard(result.card);
         const remain = GACHA_CONFIG.supplyPool.characterPity - newPity;
         addLog(`便利屋补给：抽到【${result.card.name}】（${result.card.type}）。距人物保底还剩 ${remain} 抽。`, 'draw');
+        setDrawnCard({
+          name: result.card.name,
+          type: result.card.type,
+          rarity: result.card.rarity,
+          desc: result.card.desc,
+          kind: result.card.kind,
+          pityRemain: remain,
+        });
+        window.setTimeout(() => setDrawnCard(d => (d && d.name === result.card.name ? null : d)), 2200);
       }
     }
   }, [gameOver, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, setSupplyPityCounter, addCharacter, addGachaResult, addHandCard, addLog]);
@@ -331,11 +342,13 @@ export default function Shop() {
   const handleFinishLocation = useCallback(() => {
     if (gameOver) return;
     if (!loc) return toast('先选择地点。');
-    if (!handledThisLocation) return toast('至少处理一个热点后才能完成当前地点。');
+    // 全部热点已处理过（含此前来过这个地点的情况）时允许直接离开，避免卡死
+    const allSpotsDone = loc.spots.every((_, i) => done[loc.id]?.[i]);
+    if (!handledThisLocation && !allSpotsDone) return toast('至少处理一个热点，或点「换地点」退回路线选择。');
     const result = finishLocation();
     setHandledThisLocation(false);
     if (result === 'end_day') handleEndDay();
-  }, [gameOver, loc, handledThisLocation, finishLocation, handleEndDay]);
+  }, [gameOver, loc, done, handledThisLocation, finishLocation, handleEndDay]);
 
   /* ────── 委托剧场结算 ────── */
   const handleTheaterComplete = useCallback((ok: boolean) => {
@@ -397,7 +410,7 @@ export default function Shop() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#080b12] pb-32">
+    <div className="relative min-h-screen overflow-hidden bg-[#080b12] pb-44">
       {/* 背景 */}
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 pointer-events-none" />
 
@@ -828,15 +841,26 @@ export default function Shop() {
       </div>
 
       {/* ── 底部操作区 ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-white/10 bg-slate-950/95 backdrop-blur-xl px-3 py-2 flex flex-wrap gap-2">
+      <div className="fixed bottom-16 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/95 backdrop-blur-xl px-3 py-2 flex flex-wrap gap-2 mb-[env(safe-area-inset-bottom)]">
         {loc ? (
-          <button
-            onClick={handleFinishLocation}
-            disabled={gameOver}
-            className="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-2.5 text-sm font-black text-amber-950 disabled:opacity-40"
-          >
-            ✅ 完成当前地点
-          </button>
+          <>
+            {!handledThisLocation && (
+              <button
+                onClick={() => { leaveLocation(); setHandledThisLocation(false); }}
+                disabled={gameOver}
+                className="rounded-xl bg-slate-800 border border-white/10 px-3 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 disabled:opacity-40"
+              >
+                ↩ 换地点
+              </button>
+            )}
+            <button
+              onClick={handleFinishLocation}
+              disabled={gameOver}
+              className="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-2.5 text-sm font-black text-amber-950 disabled:opacity-40"
+            >
+              ✅ 完成当前地点
+            </button>
+          </>
         ) : (
           !gameOver && (
             <button
@@ -1035,6 +1059,46 @@ export default function Shop() {
       </AnimatePresence>
 
       {/* ── 抽卡动画 ── */}
+      {/* ── 抽卡结果弹窗（消耗卡） ── */}
+      <AnimatePresence>
+        {drawnCard && (
+          <motion.div
+            key={drawnCard.name + drawnCard.pityRemain}
+            initial={{ opacity: 0, y: 40, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 22, stiffness: 320 }}
+            onClick={() => setDrawnCard(null)}
+            className="fixed bottom-24 left-1/2 z-50 w-[88%] max-w-sm -translate-x-1/2"
+          >
+            <div className={cn(
+              'rounded-2xl border-2 bg-slate-900/95 p-4 shadow-2xl backdrop-blur',
+              drawnCard.rarity === 'SR' ? 'border-purple-400/70 shadow-purple-500/20' : 'border-sky-400/50 shadow-sky-500/10',
+            )}>
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl',
+                  drawnCard.kind === 'skill' ? 'bg-amber-500/20' : drawnCard.kind === 'tool' ? 'bg-cyan-500/20' : 'bg-emerald-500/20',
+                )}>
+                  {drawnCard.kind === 'skill' ? '⚡' : drawnCard.kind === 'tool' ? '🧰' : '📡'}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-base font-black text-white">{drawnCard.name}</p>
+                    <span className={cn('text-xs font-bold', rarityColor(drawnCard.rarity))}>{drawnCard.rarity}</span>
+                    <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] text-slate-300">{drawnCard.type}</span>
+                  </div>
+                  <p className="mt-0.5 text-[11px] leading-snug text-slate-400">{drawnCard.desc}</p>
+                </div>
+              </div>
+              <p className="mt-2 text-center text-[10px] font-bold text-pink-300">
+                💗 距人物保底还剩 {drawnCard.pityRemain} 抽
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {showGacha && gachaResults.length > 0 && (
         <GachaAnimation
           results={gachaResults}
