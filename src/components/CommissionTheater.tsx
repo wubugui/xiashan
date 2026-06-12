@@ -16,7 +16,7 @@ import { useShopStore } from '@/store/useShopStore';
 import type { Commission, CommissionNode, Line, Mood, ServiceTag, TheaterScene } from '@/data/types';
 import type { HandCard } from '@/store/useShopStore';
 import { cn } from '@/lib/utils';
-import { assetUrl } from '@/lib/assets';
+import { assetCssBackground, assetUrl } from '@/lib/assets';
 
 type Tier = 'perfect' | 'ok' | 'poor';
 
@@ -203,7 +203,7 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
   return (
     <div className="fixed inset-0 z-[60] overflow-hidden bg-black">
       {/* 背景 */}
-      <div className="absolute inset-0" style={{ background: bg ?? 'linear-gradient(135deg,#20283a,#10141f)' }} />
+      <div className="absolute inset-0" style={{ background: assetCssBackground(bg) ?? 'linear-gradient(135deg,#20283a,#10141f)' }} />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40" />
 
       {/* 顶部 HUD */}

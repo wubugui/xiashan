@@ -131,7 +131,7 @@ function GachaCard({
 }) {
   const isSSR = result.rarity === 'SSR';
   const character = getCharacterById(result.characterId) as GachaCharacter | undefined;
-  const portraitUrl = character?.gachaPortraitUrl || character?.portraitUrl;
+  const cardArtUrl = character?.gachaBackgroundUrl || character?.gachaPortraitUrl || character?.portraitUrl;
 
   useEffect(() => {
     if (isRevealed && isSSR) {
@@ -189,8 +189,8 @@ function GachaCard({
                 className={cn('absolute inset-0 z-10', rarityFlash[result.rarity])}
               />
               <div className={cn('relative flex-1 bg-gradient-to-b', rarityGradient[result.rarity])}>
-                {portraitUrl ? (
-                  <img src={assetUrl(portraitUrl)} alt={result.name} className="h-full w-full object-cover object-top opacity-80" />
+                {cardArtUrl ? (
+                  <img src={assetUrl(cardArtUrl)} alt={result.name} className="h-full w-full object-cover object-top opacity-90" />
                 ) : (
                   <div className="flex h-full items-center justify-center">
                     <span className="text-3xl text-white/20">人</span>
@@ -261,6 +261,7 @@ function GachaShowcase({
   const character = getCharacterById(result.characterId) as GachaCharacter | undefined;
   const portraitUrl = character?.gachaPortraitUrl || character?.portraitUrl;
   const backgroundUrl = character?.gachaBackgroundUrl;
+  const hasSceneArt = Boolean(backgroundUrl);
   const quote = character?.gachaQuote || character?.dialogues?.[0]?.text || '你抽到了新的羁绊。';
   const tags = character?.gachaTags || [character?.element, result.title].filter(Boolean);
   const canSwitch = results.length > 1;
@@ -273,13 +274,20 @@ function GachaShowcase({
       className="relative h-full w-full overflow-hidden bg-[#071126]"
     >
       <div
-        className="absolute inset-0 bg-cover bg-center opacity-70"
+        className={cn('absolute inset-0 bg-cover bg-center', hasSceneArt ? 'opacity-95' : 'opacity-70')}
         style={backgroundUrl ? { backgroundImage: `url(${assetUrl(backgroundUrl)})` } : undefined}
       />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_58%_42%,rgba(148,163,184,0.24),transparent_34%),linear-gradient(90deg,rgba(7,17,38,0.96)_0%,rgba(15,23,42,0.74)_42%,rgba(15,23,42,0.24)_72%,rgba(49,46,129,0.42)_100%)]" />
-      <div className="absolute -left-16 top-0 h-44 w-[48vw] -skew-x-[24deg] bg-indigo-300/40" />
-      <div className="absolute -right-20 top-24 h-28 w-[28vw] -skew-x-[30deg] bg-indigo-300/70" />
-      <div className="absolute -bottom-16 right-0 h-56 w-[72vw] -skew-x-[24deg] bg-indigo-300/70" />
+      <div
+        className={cn(
+          'absolute inset-0',
+          hasSceneArt
+            ? 'bg-[linear-gradient(90deg,rgba(7,17,38,0.94)_0%,rgba(15,23,42,0.68)_42%,rgba(15,23,42,0.18)_74%,rgba(7,17,38,0.16)_100%)]'
+            : 'bg-[radial-gradient(circle_at_58%_42%,rgba(148,163,184,0.24),transparent_34%),linear-gradient(90deg,rgba(7,17,38,0.96)_0%,rgba(15,23,42,0.74)_42%,rgba(15,23,42,0.24)_72%,rgba(49,46,129,0.42)_100%)]',
+        )}
+      />
+      <div className={cn('absolute -left-16 top-0 h-44 w-[48vw] -skew-x-[24deg] bg-indigo-300/40', hasSceneArt && 'opacity-20')} />
+      <div className={cn('absolute -right-20 top-24 h-28 w-[28vw] -skew-x-[30deg] bg-indigo-300/70', hasSceneArt && 'opacity-15')} />
+      <div className={cn('absolute -bottom-16 right-0 h-56 w-[72vw] -skew-x-[24deg] bg-indigo-300/70', hasSceneArt && 'opacity-20')} />
       <div className="absolute inset-0 opacity-25 [background-image:radial-gradient(circle,rgba(255,255,255,0.22)_1px,transparent_1px)] [background-size:18px_18px]" />
 
       <motion.div
@@ -292,7 +300,7 @@ function GachaShowcase({
         <div className="absolute inset-24 rounded-full border border-amber-100/25" />
       </motion.div>
 
-      {portraitUrl ? (
+      {!hasSceneArt && portraitUrl ? (
         <motion.img
           key={portraitUrl}
           src={assetUrl(portraitUrl)}
@@ -302,11 +310,11 @@ function GachaShowcase({
           transition={{ type: 'spring', damping: 22, stiffness: 110 }}
           className="absolute bottom-0 right-[8%] z-10 h-[96%] max-w-[62%] object-contain object-bottom drop-shadow-[0_18px_45px_rgba(0,0,0,0.55)]"
         />
-      ) : (
+      ) : !hasSceneArt ? (
         <div className="absolute bottom-0 right-[15%] z-10 flex h-[86%] w-[36%] items-center justify-center text-8xl text-white/20">
           人
         </div>
-      )}
+      ) : null}
 
       <div className="absolute left-10 top-[56%] z-20 w-[38%] max-w-lg -translate-y-1/2">
         <div className="mb-3 flex items-center gap-1">

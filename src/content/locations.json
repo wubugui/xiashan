@@ -5,7 +5,7 @@
       "name": "地铁站",
       "tags": ["通勤", "迷路", "时间压力"],
       "recommend": ["流程", "技术", "安抚"],
-      "bg": "linear-gradient(135deg,#1a2440,#20222d 42%,#0d1018)",
+      "bg": "url('/bg/scene/subway-station.jpg') center / cover no-repeat",
       "spots": [
         {
           "name": "闸机口",
@@ -53,7 +53,7 @@
       "name": "写字楼大厅",
       "tags": ["职场", "门禁", "文件"],
       "recommend": ["流程", "表达", "技术"],
-      "bg": "linear-gradient(135deg,#273244,#151923 60%,#0b0d12)",
+      "bg": "url('/bg/scene/office-lobby.jpg') center / cover no-repeat",
       "spots": [
         {
           "name": "前台",
@@ -94,7 +94,7 @@
       "name": "深夜便利店",
       "tags": ["补给", "夜班", "小麻烦"],
       "recommend": ["表达", "观察", "补给"],
-      "bg": "linear-gradient(135deg,#28312a,#151c18 60%,#080b09)",
+      "bg": "url('/bg/scene/store-night.jpg') center / cover no-repeat",
       "spots": [
         {
           "name": "收银台",
@@ -141,7 +141,7 @@
       "name": "公寓楼",
       "tags": ["邻里", "钥匙", "宠物"],
       "recommend": ["宠物", "安抚", "观察"],
-      "bg": "linear-gradient(135deg,#2b2435,#171522 60%,#09080d)",
+      "bg": "url('/bg/scene/apartment-stairs.jpg') center / cover no-repeat",
       "spots": [
         {
           "name": "楼道猫叫",
@@ -186,7 +186,7 @@
       "name": "直播间",
       "tags": ["设备", "表达", "临场救场"],
       "recommend": ["表达", "技术", "维修"],
-      "bg": "linear-gradient(135deg,#33243a,#1e1724 55%,#0a0810)",
+      "bg": "url('/bg/scene/studio-room.jpg') center / cover no-repeat",
       "spots": [
         {
           "name": "补光灯",

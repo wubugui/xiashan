@@ -62,6 +62,7 @@ export default function CharacterCard({
   const config = rarityConfig[rarity];
   const sizeConf = sizeConfig[size];
   const character = getCharacterById(characterId);
+  const artUrl = character?.gachaBackgroundUrl || character?.portraitUrl;
 
   return (
     <motion.button
@@ -80,9 +81,9 @@ export default function CharacterCard({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_45%_18%,rgba(255,255,255,0.38),transparent_38%)]" />
       <div className="absolute inset-[3px] border border-white/30" />
 
-      {character?.portraitUrl ? (
+      {artUrl ? (
         <img
-          src={assetUrl(character.portraitUrl)}
+          src={assetUrl(artUrl)}
           alt={name}
           className="absolute inset-x-0 top-0 h-[72%] w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
           loading="lazy"

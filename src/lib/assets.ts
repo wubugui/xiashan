@@ -7,3 +7,11 @@ export function assetUrl(path?: string | null): string | undefined {
   const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
   return `${normalizedBase}${normalizedPath}`;
 }
+
+export function assetCssBackground(value?: string | null): string | undefined {
+  if (!value) return undefined;
+
+  return value.replace(/url\((['"]?)(\/[^'")]+)\1\)/g, (_match, _quote, path: string) => {
+    return `url("${assetUrl(path)}")`;
+  });
+}
