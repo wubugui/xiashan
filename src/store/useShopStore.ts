@@ -11,7 +11,10 @@ import { sideJobs as allSideJobs } from '@/data/sideJobs';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { locations as allLocations } from '@/data/locations';
 import { getCharacterById } from '@/data/characters';
-import { rollRoutes } from '@/engine/shopEngine';
+import {
+  rollRoutes, fatigueFromDelta, coffeeRelief,
+  FATIGUE_MAX, FATIGUE_TIRED, FATIGUE_EXHAUSTED, COFFEE_COST,
+} from '@/engine/shopEngine';
 import { COLD_DAYS } from '@/engine/gachaEngine';
 
 export interface HandCard extends ServiceCard {
@@ -26,12 +29,13 @@ export interface LogEntry {
 
 interface ShopState {
   /* ── 局内资源 ── */
-  time: number;
-  energy: number;
+  /** 疲劳（0-100）：唯一的体力仪表。60+ 疲惫（信任减半），85+ 透支（接不了新单），100 强制打烊 */
+  fatigue: number;
   rep: number;
   money: number;
   trust: number;
-  step: number;
+  /** 今日咖啡杯数（同一自然日内效果递减） */
+  coffees: { date: string; n: number };
 
   /* ── 进程 ── */
   /** 当前接取的委托：锁单制——永不过期、进度跨天保留，只能交付或主动放弃 */
@@ -81,10 +85,13 @@ interface ShopState {
   consumeHandCard: (uid: number) => void;
   setLastCardType: (t: ServiceTag | null) => void;
   grantIntel: (commissionId: string) => void;
-  applyDelta: (delta: Partial<{ time: number; energy: number; money: number; trust: number; rep: number }>) => void;
+  /** 资源增减：内容数据中的 time/energy 消耗自动折算为疲劳 */
+  applyDelta: (delta: Partial<{ time: number; energy: number; fatigue: number; money: number; trust: number; rep: number }>) => void;
   markSpotDone: (locId: string, spotIndex: number) => void;
-  finishLocation: () => 'continue' | 'end_day';
+  finishLocation: () => void;
   normalAdvance: () => void;
+  /** 买咖啡缓解疲劳（同一自然日递减），返回本杯缓解量（0 = 今天喝不下了/钱不够） */
+  buyCoffee: () => number;
   /** 热点结算后记录本次行动是否推进了委托子目标（驱动手机轻催促） */
   noteCommissionFocus: (hit: boolean) => void;
   addLog: (text: string, cls?: LogEntry['cls']) => void;
@@ -93,12 +100,11 @@ interface ShopState {
 }
 
 const INITIAL: Omit<ShopState, keyof { [K in keyof ShopState as ShopState[K] extends (...args: never[]) => unknown ? K : never]: unknown }> = {
-  time: 13,
-  energy: 8,
+  fatigue: 0,
   rep: 5,
   money: 20,
   trust: 0,
-  step: 1,
+  coffees: { date: '', n: 0 },
   commission: null,
   isRevisit: false,
   loc: null,
@@ -166,9 +172,11 @@ export const useShopStore = create<ShopState>()(
         const forced = (ts >= 0 && ts < 4) ? ['interview'] : [];
         const board = rollBoard(forced);
         // 跨天保留：手牌（持有资产）+ 进行中委托（锁单制：进度不清零，干不完明天继续）
+        // 咖啡杯数挂真实自然日，休息不重置（防「打烊刷咖啡」）
         set({
           ...INITIAL, routes, board, sideJobs: rollSideJobs(), done: {},
           hand: s0.hand, log: [], gameOver: false,
+          coffees: s0.coffees,
           commission: s0.commission, isRevisit: s0.isRevisit,
           trust: s0.commission ? s0.trust : 0,
           objectivesDone: s0.commission ? s0.objectivesDone : [],
@@ -189,6 +197,10 @@ export const useShopStore = create<ShopState>()(
         if (!c) return;
         const s0 = get();
         if (s0.commission) return; // 锁单制：先了结手上的委托
+        if (s0.fatigue >= FATIGUE_EXHAUSTED) {
+          get().addLog('🥴 你已经累得睁不开眼，没法对新委托负责——先休息吧。', 'bad');
+          return;
+        }
         const hasIntel = s0.intel.includes(id);
         // 回访单：该委托已完成过——精简剧场（不播开场/子目标幕），奖励递减
         const isRevisit = usePlayerStore.getState().flags.includes(`commission_${id}_done`);
@@ -273,14 +285,23 @@ export const useShopStore = create<ShopState>()(
       grantIntel: (commissionId) =>
         set(s => ({ intel: s.intel.includes(commissionId) ? s.intel : [...s.intel, commissionId] })),
 
-      applyDelta: (delta) =>
+      applyDelta: (delta) => {
+        const before = get().fatigue;
+        const after = Math.min(FATIGUE_MAX, Math.max(0, before + fatigueFromDelta(delta)));
         set(s => ({
-          time: Math.max(0, s.time + (delta.time ?? 0)),
-          energy: Math.max(0, s.energy + (delta.energy ?? 0)),
+          fatigue: after,
           money: Math.max(0, s.money + (delta.money ?? 0)),
           trust: Math.max(0, s.trust + (delta.trust ?? 0)),
           rep: Math.max(0, s.rep + (delta.rep ?? 0)),
-        })),
+        }));
+        // 跨过疲劳阈值时给一次叙事提示（软惩罚要让玩家知道发生了什么）
+        if (before < FATIGUE_TIRED && after >= FATIGUE_TIRED) {
+          get().addLog('😮‍💨 你开始觉得累了——疲惫状态：信任收益减半。来杯咖啡，或者早点打烊。', 'bad');
+        }
+        if (before < FATIGUE_EXHAUSTED && after >= FATIGUE_EXHAUSTED) {
+          get().addLog('🥴 强弩之末——透支状态：接不了新委托了。再硬撑就要累垮。', 'bad');
+        }
+      },
 
       markSpotDone: (locId, spotIndex) =>
         set(s => ({
@@ -292,42 +313,40 @@ export const useShopStore = create<ShopState>()(
 
       finishLocation: () => {
         const s = get();
-        const newStep = s.step + 1;
-        const newTime = Math.max(0, s.time - 1);
-        const newEnergy = Math.max(0, s.energy - 1);
-        if (newStep > 5) {
-          set({ step: newStep, time: newTime, energy: newEnergy, loc: null });
-          return 'end_day';
-        }
         set({
-          step: newStep,
-          time: newTime,
-          energy: newEnergy,
           loc: null,
           routes: rollRoutes(allLocations, 3, pendingLocTags(s.commission, s.objectivesDone)),
         });
-        get().addLog('离开当前地点，进入下一段路线。');
-        return 'continue';
+        get().applyDelta({ fatigue: 10 });
+        get().addLog('离开当前地点，进入下一段路线。疲劳 +10。');
       },
 
       normalAdvance: () => {
         const s = get();
         if (!s.commission) {
-          set(prev => ({
-            time: Math.max(0, prev.time - 1),
-            energy: Math.max(0, prev.energy - 1),
-            money: prev.money + 2,
-          }));
-          get().addLog('普通跑腿：资金 +2，时间 -1，精力 -1。');
+          get().applyDelta({ fatigue: 10, money: 2 });
+          get().addLog('普通跑腿：资金 +2，疲劳 +10。');
         } else {
           const who = getCharacterById(s.commission.client ?? s.commission.target)?.name ?? '她';
-          set(prev => ({
-            time: Math.max(0, prev.time - 2),
-            energy: Math.max(0, prev.energy - 1),
-            trust: prev.trust + 1,
-          }));
-          get().addLog(`为${who}的事四处奔走打点：信任 +1，时间 -2，精力 -1。`);
+          get().applyDelta({ fatigue: 14, trust: 1 });
+          get().addLog(`为${who}的事四处奔走打点：信任 +1，疲劳 +14。`);
         }
+      },
+
+      buyCoffee: () => {
+        const s = get();
+        const today = new Date().toISOString().slice(0, 10);
+        const n = s.coffees.date === today ? s.coffees.n : 0;
+        const relief = coffeeRelief(n);
+        if (relief === 0 || s.money < COFFEE_COST) return 0;
+        set(prev => ({
+          money: prev.money - COFFEE_COST,
+          fatigue: Math.max(0, prev.fatigue - relief),
+          coffees: { date: today, n: n + 1 },
+        }));
+        const next = coffeeRelief(n + 1);
+        get().addLog(`☕ 买咖啡：疲劳 -${relief}，资金 -${COFFEE_COST}。${next > 0 ? `（再喝效果会变差：下一杯 -${next}）` : '（今天喝到头了，再喝只剩心悸）'}`, 'good');
+        return relief;
       },
 
       noteCommissionFocus: (hit) => {
@@ -371,7 +390,7 @@ export const useShopStore = create<ShopState>()(
     }),
     {
       name: 'xiashan-shop-store',
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => safeStorage),
       // 局内存档是当天一局的断点，跨版本恢复价值低、风险高（整对象快照随内容结构漂移）。
       // 旧版本（version < 1）一律作废重开一天。
@@ -405,13 +424,13 @@ function isValidShopSnapshot(p: unknown): boolean {
     const c = s.commission as Record<string, unknown>;
     if (typeof c.need !== 'number' || typeof c.id !== 'string') return false;
   }
-  for (const key of ['time', 'energy', 'rep', 'money', 'trust', 'step'] as const) {
+  for (const key of ['fatigue', 'rep', 'money', 'trust'] as const) {
     if (s[key] !== undefined && typeof s[key] !== 'number') return false;
   }
   return true;
 }
 
-/** 检查局内资源耗尽 → 返回是否失败 */
-export function checkFail(s: Pick<ShopState, 'time' | 'energy' | 'rep'>): boolean {
-  return s.time <= 0 || s.energy <= 0 || s.rep <= 0;
+/** 检查局内资源耗尽 → 返回是否被迫打烊（疲劳爆表或口碑见底） */
+export function checkFail(s: Pick<ShopState, 'fatigue' | 'rep'>): boolean {
+  return s.fatigue >= FATIGUE_MAX || s.rep <= 0;
 }

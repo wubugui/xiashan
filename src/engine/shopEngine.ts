@@ -19,6 +19,32 @@ export function scoreCard(cardType: ServiceTag, spotNeeds: ServiceTag[]): number
   return isMatch(cardType, spotNeeds) ? 10 : 0;
 }
 
+/* ─────────────── 疲劳系统 ───────────────
+ * 单一仪表替代旧的「时间 13 点 + 路段 1-5 + 精力 8」三时钟：
+ * 内容数据（locations.json 等）仍用 time/energy 表达消耗，运行时统一折算成疲劳，
+ * 旧内容无需迁移。一天的体力预算 ≈ 13×4 + 8×6 = 100。
+ */
+export const FATIGUE_MAX = 100;
+/** 疲惫线：信任收益减半 */
+export const FATIGUE_TIRED = 60;
+/** 透支线：不能接新委托 */
+export const FATIGUE_EXHAUSTED = 85;
+const FATIGUE_PER_TIME = 4;
+const FATIGUE_PER_ENERGY = 6;
+/** 同一自然日内咖啡效果递减：-20 → -12 → -6 → 无效 */
+export const COFFEE_RELIEFS = [20, 12, 6];
+export const COFFEE_COST = 5;
+
+/** 把内容数据的 time/energy 消耗折算成疲劳增量（正值 = 更累） */
+export function fatigueFromDelta(d: { time?: number; energy?: number; fatigue?: number }): number {
+  return (d.fatigue ?? 0) - (d.time ?? 0) * FATIGUE_PER_TIME - (d.energy ?? 0) * FATIGUE_PER_ENERGY;
+}
+
+/** 今天第 n+1 杯咖啡能缓解多少疲劳（0 = 喝不下了） */
+export function coffeeRelief(n: number): number {
+  return COFFEE_RELIEFS[n] ?? 0;
+}
+
 /* ─────────────── 资源增减 ─────────────── */
 
 /** 匹配时降低资源消耗（负值 +1，不超过 0） */

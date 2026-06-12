@@ -15,7 +15,10 @@ import { getCharacterById } from '@/data/characters';
 import { commissions } from '@/data/commissions';
 import { GACHA_CONFIG } from '@/data/gachaConfig';
 import { pullSupply, RATE_UP_DAYS } from '@/engine/gachaEngine';
-import { isMatch, scoreCard, resolveSpot, hitsRequirement, applyCommissionRewards } from '@/engine/shopEngine';
+import {
+  isMatch, scoreCard, resolveSpot, hitsRequirement, applyCommissionRewards,
+  fatigueFromDelta, coffeeRelief, FATIGUE_TIRED, FATIGUE_EXHAUSTED, FATIGUE_MAX, COFFEE_COST,
+} from '@/engine/shopEngine';
 import { getSideJobById } from '@/data/sideJobs';
 import { checkPhoneEvents } from '@/engine/phoneScheduler';
 import GachaAnimation from '@/components/GachaAnimation';
@@ -113,32 +116,48 @@ function dispatchAvailablePhoneEvents(addLog?: (text: string, cls?: 'good' | 'ba
 
 /* ────── 子组件：状态条 ────── */
 function StatusBar({
-  time, energy, rep, money, trust, step, commissionNeed,
+  fatigue, rep, money, trust, commissionNeed,
   normalTickets,
 }: {
-  time: number; energy: number; rep: number; money: number;
-  trust: number; step: number; commissionNeed: number;
+  fatigue: number; rep: number; money: number;
+  trust: number; commissionNeed: number;
   normalTickets: number;
 }) {
   const pct = commissionNeed > 0 ? Math.min(100, (trust / commissionNeed) * 100) : 0;
+  const fatigueState = fatigue >= FATIGUE_EXHAUSTED ? '透支' : fatigue >= FATIGUE_TIRED ? '疲惫' : '';
   return (
     <div className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/90 backdrop-blur-xl px-3 py-2 text-xs">
       {/* 资源行 */}
       <div className="flex gap-2 flex-wrap mb-1.5">
         {[
-          { label: '⏱时间', val: time, warn: time <= 3 },
-          { label: '⚡精力', val: energy, warn: energy <= 2 },
           { label: '📣口碑', val: rep, warn: rep <= 1 },
-          { label: '💴资金', val: money },
-          { label: '🎫券', val: normalTickets },
+          { label: '💴资金', val: money, warn: false },
+          { label: '🎫券', val: normalTickets, warn: false },
         ].map(({ label, val, warn }) => (
           <span key={label} className={cn('rounded-full border border-white/10 bg-white/5 px-2 py-0.5 font-bold', warn ? 'text-red-400' : 'text-slate-200')}>
             {label} <b>{val}</b>
           </span>
         ))}
-        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 font-bold text-slate-200">
-          路线 <b>{Math.min(step, 5)}</b>/5
+      </div>
+      {/* 疲劳仪表 */}
+      <div className="flex items-center gap-2 mb-1">
+        <span className={cn(
+          'shrink-0 font-bold',
+          fatigue >= FATIGUE_EXHAUSTED ? 'text-red-400' : fatigue >= FATIGUE_TIRED ? 'text-amber-300' : 'text-slate-400',
+        )}>
+          😪疲劳 {fatigue}/100{fatigueState && ` · ${fatigueState}`}
         </span>
+        <div className="h-1.5 flex-1 rounded-full bg-slate-800 overflow-hidden">
+          <div
+            className={cn(
+              'h-full rounded-full transition-all duration-500',
+              fatigue >= FATIGUE_EXHAUSTED ? 'bg-gradient-to-r from-red-500 to-rose-600'
+                : fatigue >= FATIGUE_TIRED ? 'bg-gradient-to-r from-amber-400 to-orange-500'
+                : 'bg-gradient-to-r from-emerald-400 to-teal-500',
+            )}
+            style={{ width: `${Math.min(100, fatigue)}%` }}
+          />
+        </div>
       </div>
       {/* 信任进度条 */}
       {commissionNeed > 0 && (
@@ -203,12 +222,12 @@ export default function Shop() {
   const shopStore = useShopStore();
 
   const {
-    time, energy, rep, money, trust, step, commission, isRevisit, loc, routes, done, hand, log, gameOver,
+    fatigue, rep, money, trust, coffees, commission, isRevisit, loc, routes, done, hand, log, gameOver,
     board, objectivesDone, sideJobs, pendingScene, lastCardType,
     startDay, refreshRoutes, acceptCommission, abandonCommission, clearCommission,
     completeObjective, completeSideJob, noteCommissionFocus,
     setPendingScene, chooseLocation, leaveLocation, addHandCard, consumeHandCard,
-    applyDelta, markSpotDone, finishLocation, normalAdvance, addLog, setGameOver, resetDay,
+    applyDelta, markSpotDone, finishLocation, normalAdvance, buyCoffee, addLog, setGameOver, resetDay,
     setLastCardType,
   } = shopStore;
 
@@ -244,7 +263,7 @@ export default function Shop() {
   useCssVarFromHeight('--bar-h', actionBarRef);
 
   /* ── 初始化 ── */
-  const isNew = routes.length === 0 && !gameOver && commission === null && step === 1 && time === 13;
+  const isNew = routes.length === 0 && !gameOver && commission === null && fatigue === 0;
   const commissionNeed = commission?.need ?? 0;
   const objectives = commission?.objectives ?? [];
   const allObjectivesDone = objectives.length > 0 && objectives.every(o => objectivesDone.includes(o.id));
@@ -397,6 +416,11 @@ export default function Shop() {
       refreshRoutes();
     }
 
+    // 疲惫状态：信任收益减半（向上取整）
+    if (fatigue >= FATIGUE_TIRED && (delta.trust ?? 0) > 1) {
+      delta.trust = Math.ceil((delta.trust ?? 0) / 2);
+    }
+
     applyDelta(delta);
     markSpotDone(locId, spotIndex);
     setHandledThisLocation(true);
@@ -440,18 +464,17 @@ export default function Shop() {
     // 委托催促埋点：连续干别的事，她会发消息来问
     noteCommissionFocus(objectiveHit);
 
-    // 检查失败
+    // 检查强制打烊
     const newState = {
-      time: Math.max(0, time + (delta.time ?? 0)),
-      energy: Math.max(0, energy + (delta.energy ?? 0)),
+      fatigue: Math.min(FATIGUE_MAX, fatigue + fatigueFromDelta(delta)),
       rep: Math.max(0, rep + (delta.rep ?? 0)),
     };
     if (checkFail(newState)) {
       setGameOver(true);
-      addLog('今日失败：时间、精力或口碑耗尽。', 'bad');
+      addLog('🌙 强制打烊：疲劳爆表或口碑见底。委托进度已保留。', 'bad');
       setEndDayResult('fail');
     }
-  }, [currentEvent, loc, commission, objectivesDone, sideJobs, time, energy, rep, lastCardType,
+  }, [currentEvent, loc, commission, objectivesDone, sideJobs, fatigue, rep, lastCardType,
     consumeHandCard, applyDelta, markSpotDone, completeObjective, completeSideJob, noteCommissionFocus,
     addNormalTickets, addSpiritStones, addLog, refreshRoutes, setGameOver, setLastCardType]);
 
@@ -462,24 +485,28 @@ export default function Shop() {
     const risk = spot.risk!;
 
     playSound('risk');
-    applyDelta(risk.delta);
+    // 疲惫状态：冒险解法的信任收益同样减半
+    const riskDelta = { ...risk.delta };
+    if (fatigue >= FATIGUE_TIRED && (riskDelta.trust ?? 0) > 1) {
+      riskDelta.trust = Math.ceil((riskDelta.trust ?? 0) / 2);
+    }
+    applyDelta(riskDelta);
     markSpotDone(locId, spotIndex);
     setHandledThisLocation(true);
     setLastCardType(null);
-    addLog(`⚡ ${spot.name}：${risk.text}`, (risk.delta.trust ?? 0) > 0 ? 'good' : 'bad');
+    addLog(`⚡ ${spot.name}：${risk.text}`, (riskDelta.trust ?? 0) > 0 ? 'good' : 'bad');
     setCurrentEvent(null);
 
     const newState = {
-      time: Math.max(0, time + (risk.delta.time ?? 0)),
-      energy: Math.max(0, energy + (risk.delta.energy ?? 0)),
-      rep: Math.max(0, rep + (risk.delta.rep ?? 0)),
+      fatigue: Math.min(FATIGUE_MAX, fatigue + fatigueFromDelta(riskDelta)),
+      rep: Math.max(0, rep + (riskDelta.rep ?? 0)),
     };
     if (checkFail(newState)) {
       setGameOver(true);
-      addLog('今日失败：时间、精力或口碑耗尽。', 'bad');
+      addLog('🌙 强制打烊：疲劳爆表或口碑见底。委托进度已保留。', 'bad');
       setEndDayResult('fail');
     }
-  }, [currentEvent, loc, time, energy, rep, applyDelta, markSpotDone, setLastCardType, addLog, setGameOver]);
+  }, [currentEvent, loc, fatigue, rep, applyDelta, markSpotDone, setLastCardType, addLog, setGameOver]);
 
   /* ────── 结束当天 ────── */
   const handleEndDay = useCallback(() => {
@@ -515,10 +542,10 @@ export default function Shop() {
     const allSpotsDone = loc.spots.every((_, i) => done[loc.id]?.[i]);
     if (!handledThisLocation && !allSpotsDone) return toast('至少处理一个热点，或点「换地点」退回路线选择。');
     playSound('location-done');
-    const result = finishLocation();
+    finishLocation();
     setHandledThisLocation(false);
-    if (result === 'end_day') handleEndDay();
-  }, [gameOver, loc, done, handledThisLocation, finishLocation, handleEndDay]);
+    checkAndFail();
+  }, [gameOver, loc, done, handledThisLocation, finishLocation]);
 
   /* ────── 委托剧场结算 ────── */
   const handleTheaterComplete = useCallback((ok: boolean) => {
@@ -650,8 +677,8 @@ export default function Shop() {
 
         {/* 状态条 */}
         <StatusBar
-          time={time} energy={energy} rep={rep} money={money}
-          trust={trust} step={step}
+          fatigue={fatigue} rep={rep} money={money}
+          trust={trust}
           commissionNeed={gateGoal}
           normalTickets={normalTickets}
         />
@@ -738,7 +765,7 @@ export default function Shop() {
               {!loc ? (
                 /* 路线选择 */
                 <>
-                  <p className="text-xs text-slate-400">选择前往的地点（共 5 段路线）：</p>
+                  <p className="text-xs text-slate-400">选择前往的地点（疲劳见底前可以一直跑）：</p>
                   {routes.map(l => {
                     const isCommissionSpot = pendingTags.length > 0 && l.tags.some(t => pendingTags.includes(t));
                     return (
@@ -772,15 +799,15 @@ export default function Shop() {
                   {!gameOver && (
                     <button
                       onClick={() => {
-                        if (time <= 1) return toast('天色太晚了，没时间再打听。');
+                        if (fatigue >= FATIGUE_MAX - 4) return toast('累得不想再多走一步了。');
                         playSound('route-select');
-                        applyDelta({ time: -1 });
+                        applyDelta({ fatigue: 4 });
                         refreshRoutes();
-                        addLog('🔄 花时间重新打听了一圈，换了一批落脚点。时间 -1。');
+                        addLog('🔄 花力气重新打听了一圈，换了一批落脚点。疲劳 +4。');
                       }}
                       className="w-full rounded-xl border border-dashed border-white/20 bg-slate-900/40 py-2.5 text-xs font-bold text-slate-400 hover:border-amber-400/40 hover:text-amber-300 active:scale-[0.99] transition-all"
                     >
-                      🔄 重新打听（换一批地点 · 时间 -1）
+                      🔄 重新打听（换一批地点 · 疲劳 +4）
                     </button>
                   )}
                   {gameOver && (
@@ -938,13 +965,15 @@ export default function Shop() {
                         <p className="text-xs text-slate-400 mb-2">{c.desc}</p>
                         <button
                           onClick={() => { if (!gameOver) { playSound('commission-accept'); acceptCommission(id); } }}
-                          disabled={gameOver}
+                          disabled={gameOver || fatigue >= FATIGUE_EXHAUSTED}
                           className={cn(
                             'w-full rounded-lg py-2 text-xs font-black text-white disabled:opacity-40 active:scale-[0.99] transition-all',
                             isRevisitItem ? 'bg-gradient-to-r from-emerald-600 to-teal-600' : 'bg-gradient-to-r from-rose-500 to-pink-600',
                           )}
                         >
-                          {isRevisitItem ? '再帮她一次（回访单 · 奖励递减）' : '接单'}
+                          {fatigue >= FATIGUE_EXHAUSTED
+                            ? '太累了，先休息再接单'
+                            : isRevisitItem ? '再帮她一次（回访单 · 奖励递减）' : '接单'}
                         </button>
                       </div>
                     );
@@ -1196,16 +1225,26 @@ export default function Shop() {
             </button>
           )
         )}
-        <button
-          onClick={() => { if (money >= 5) { applyDelta({ money: -5, energy: 2 }); addLog('买咖啡：精力 +2，资金 -5。', 'good'); toast('☕ 咕嘟咕嘟……精力 +2（资金 -5）'); } else toast('资金不足，咖啡 5 块一杯。'); }}
-          disabled={gameOver || money < 5}
-          className="rounded-xl bg-slate-800 border border-white/10 px-3 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 disabled:opacity-40"
-        >
-          ☕ 买咖啡
-        </button>
-        {!gameOver && step > 5 && (
-          <button onClick={handleEndDay} className="rounded-xl bg-rose-600 px-3 py-2.5 text-xs font-bold text-white">
-            结束今日
+        {(() => {
+          const today = new Date().toISOString().slice(0, 10);
+          const nextRelief = coffeeRelief(coffees.date === today ? coffees.n : 0);
+          return (
+            <button
+              onClick={() => {
+                if (money < COFFEE_COST) return toast(`资金不足，咖啡 ${COFFEE_COST} 块一杯。`);
+                const relief = buyCoffee();
+                if (relief > 0) toast(`☕ 咕嘟咕嘟……疲劳 -${relief}（资金 -${COFFEE_COST}）`);
+              }}
+              disabled={gameOver || money < COFFEE_COST || nextRelief === 0}
+              className="rounded-xl bg-slate-800 border border-white/10 px-3 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 disabled:opacity-40"
+            >
+              {nextRelief > 0 ? `☕ 买咖啡（疲劳 -${nextRelief}）` : '☕ 今天喝不下了'}
+            </button>
+          );
+        })()}
+        {!gameOver && (
+          <button onClick={handleEndDay} className="rounded-xl bg-indigo-700 px-3 py-2.5 text-xs font-bold text-white hover:bg-indigo-600">
+            🌙 打烊休息
           </button>
         )}
       </div>
@@ -1276,9 +1315,16 @@ export default function Shop() {
                   >
                     <p className="text-xs font-bold text-red-300 mb-1">⚡ {currentEvent.spot.risk.label}</p>
                     <p className="text-[10px] text-slate-400">
-                      {Object.entries(currentEvent.spot.risk.delta)
-                        .map(([k, v]) => `${{ time: '时间', energy: '精力', trust: '信任', rep: '口碑', money: '资金' }[k]}${(v as number) > 0 ? '+' : ''}${v}`)
-                        .join('，')}
+                      {(() => {
+                        const d = currentEvent.spot.risk!.delta;
+                        const f = fatigueFromDelta(d);
+                        const labels = { trust: '信任', rep: '口碑', money: '资金' } as const;
+                        return [
+                          f !== 0 ? `疲劳${f > 0 ? '+' : ''}${f}` : '',
+                          ...(Object.keys(labels) as (keyof typeof labels)[])
+                            .map(k => d[k] ? `${labels[k]}${(d[k] as number) > 0 ? '+' : ''}${d[k]}` : ''),
+                        ].filter(Boolean).join('，');
+                      })()}
                     </p>
                   </button>
                 )}
@@ -1514,14 +1560,14 @@ export default function Shop() {
     </div>
   );
 
-  /* ── 检查失败（在 normalAdvance 后调用） ── */
+  /* ── 检查强制打烊（在改变疲劳/口碑的操作后调用） ── */
   function checkAndFail() {
     // 状态更新是异步的，延迟一帧检查
     setTimeout(() => {
       const s = useShopStore.getState();
       if (checkFail(s) && !s.gameOver) {
         s.setGameOver(true);
-        s.addLog('今日失败：时间、精力或口碑耗尽。', 'bad');
+        s.addLog('🌙 强制打烊：疲劳爆表或口碑见底。委托进度已保留。', 'bad');
         setEndDayResult('fail');
       }
     }, 0);
