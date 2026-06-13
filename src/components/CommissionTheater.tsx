@@ -335,17 +335,13 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
               return (
                 <>
                   {locked && (
-                    <div className="mb-2 flex items-end gap-2 rounded-lg border border-amber-400/40 bg-amber-500/10 px-2.5 py-1.5">
+                    <div className="mb-2 flex items-center gap-2 rounded-lg border border-amber-400/40 bg-amber-500/10 px-2.5 py-1.5">
                       <img
                         src={assetUrl('/characters/face/linxia/smile.png')}
                         alt="江夏"
-                        className="pointer-events-none -mt-5 -mb-1.5 h-14 w-10 shrink-0 select-none object-cover object-top drop-shadow-lg"
-                        style={{
-                          WebkitMaskImage: 'linear-gradient(to bottom, black 78%, transparent 100%)',
-                          maskImage: 'linear-gradient(to bottom, black 78%, transparent 100%)',
-                        }}
+                        className="pointer-events-none h-10 w-8 shrink-0 select-none rounded object-cover object-top"
                       />
-                      <p className="pb-1 text-[10px] font-bold text-amber-200">江夏：打出带 ✨ 的卡——类型对上，判定才是「完美」！</p>
+                      <p className="text-[10px] font-bold text-amber-200">江夏：打出带 ✨ 的卡——类型对上，判定才是「完美」！</p>
                     </div>
                   )}
                   <CardTray need={node.need} personCards={personCards} hand={hand} onPlay={playChoice} lockToMatched={locked} />
