@@ -36,7 +36,15 @@ export default function ContactScreen({ characterId, initialTab = 'wechat', onBa
 
   const [tab, setTab] = useState<Tab>(initialTab);
 
-  if (!character) return null;
+  // 兜底：角色查不到（如旧存档残留已删除角色）也不能黑屏——给个能返回的提示
+  if (!character) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3 bg-[#0f0c29] px-8 text-center">
+        <p className="text-sm text-white/60">这个联系人已经不在了。</p>
+        <button onClick={onBack} className="rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs text-white/80">返回消息</button>
+      </div>
+    );
+  }
 
   const TABS: { key: Tab; label: string; icon: typeof MessageCircle; need: CommsTier }[] = [
     { key: 'wechat', label: '微信', icon: MessageCircle, need: 1 },
