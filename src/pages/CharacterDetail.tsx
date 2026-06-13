@@ -46,15 +46,6 @@ const INTERACT_AFFINITY = 2;
 const GIFT_COST = 50;
 const GIFT_AFFINITY = 5;
 
-const expressionLabels = [
-  ['smile', '微笑'],
-  ['shy', '害羞'],
-  ['laugh', '大笑'],
-  ['angry', '生气'],
-  ['cry', '哭泣'],
-  ['calm', '平静'],
-] as const;
-
 export default function CharacterDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -82,7 +73,8 @@ export default function CharacterDetail() {
 
   const [activeTab, setActiveTab] = useState<TabType>('info');
   const [interactionResponse, setInteractionResponse] = useState<string | null>(null);
-  const [playingBeat, setPlayingBeat] = useState<RomanceBeat | null>(null);
+  // 正在演的节点；replay=true 时是「重温」已解锁的故事，不重复结算奖励
+  const [playingBeat, setPlayingBeat] = useState<{ beat: RomanceBeat; replay: boolean } | null>(null);
 
   const character = id ? getCharacterById(id) : undefined;
   const ownedChar = ownedCharacters.find((c) => c.characterId === id);
@@ -186,11 +178,13 @@ export default function CharacterDetail() {
     affinityMap, relationshipStages, completedNodes, flags, dupeCount,
   };
 
-  /** 节点演完落幕：结算默契 + 奖励 + 进度 +1 */
+  /** 节点演完落幕：结算默契 + 奖励 + 进度 +1（重温模式只看不结算） */
   const handleBeatComplete = (chosen: RomanceChoiceOption | null) => {
-    const beat = playingBeat;
+    const playing = playingBeat;
     setPlayingBeat(null);
-    if (!beat || !id) return;
+    if (!playing || !id) return;
+    if (playing.replay) return; // 重温已解锁的故事，不重复结算
+    const beat = playing.beat;
     if (chosen?.momo) addMomo(id, chosen.momo);
     // 告白门：没确认心意就不过门——留在门前，可重来
     if (beat.isGate && !chosen?.gateConfirm) return;
@@ -355,13 +349,22 @@ export default function CharacterDetail() {
                       {done ? '💗 已解锁' : available ? '✨ 可进行' : '🔒'}
                     </span>
                   </div>
-                  {/* 指引：锁着/可进时显示怎么挣到；已完成显示标题即可 */}
+                  {/* 指引：锁着/可进时显示怎么挣到 */}
                   {!done && (
                     <p className="mt-1 text-xs leading-relaxed text-slate-400">{beat.guide}</p>
                   )}
+                  {/* 已解锁：可重温这段故事 */}
+                  {done && (
+                    <button
+                      onClick={() => { playSound('dialog-next'); setPlayingBeat({ beat, replay: true }); }}
+                      className="mt-2.5 w-full rounded-lg border border-rose-400/30 bg-rose-500/10 py-2 text-xs font-bold text-rose-200 active:scale-[0.99] transition-all hover:bg-rose-500/15"
+                    >
+                      ↺ 重温这段
+                    </button>
+                  )}
                   {available && (
                     <button
-                      onClick={() => { playSound('challenge-appear'); setPlayingBeat(beat); }}
+                      onClick={() => { playSound('challenge-appear'); setPlayingBeat({ beat, replay: false }); }}
                       className="mt-2.5 w-full rounded-lg bg-gradient-to-r from-rose-500 to-pink-600 py-2 text-xs font-black text-white active:scale-[0.99] transition-all"
                     >
                       ▶ 去见她
@@ -422,25 +425,6 @@ export default function CharacterDetail() {
               <p className="text-sm leading-relaxed text-slate-300">{character.description}</p>
             </div>
 
-            {character.expressionUrls && (
-              <div>
-                <h3 className="mb-2 text-xs font-bold tracking-wider text-slate-500">表情</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {expressionLabels.map(([key, label]) => {
-                    const src = character.expressionUrls?.[key];
-                    if (!src) return null;
-                    return (
-                      <div key={key} className="overflow-hidden rounded-md border border-slate-700/50 bg-slate-900/60">
-                        <div className="aspect-[1.18] overflow-hidden bg-slate-800">
-                          <img src={assetUrl(src)} alt={`${character.name}${label}`} className="h-full w-full object-cover object-top" loading="lazy" />
-                        </div>
-                        <p className="px-2 py-1 text-center text-[11px] text-slate-400">{label}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* 效果列表 */}
             <div>
@@ -695,7 +679,7 @@ export default function CharacterDetail() {
 
       {/* 心动场景演出 */}
       {playingBeat && id && (
-        <RomanceScene characterId={id} beat={playingBeat} onComplete={handleBeatComplete} />
+        <RomanceScene key={playingBeat.beat.id + (playingBeat.replay ? '-r' : '')} characterId={id} beat={playingBeat.beat} onComplete={handleBeatComplete} />
       )}
     </div>
   );
