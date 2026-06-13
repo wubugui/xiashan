@@ -5,6 +5,7 @@ import { ChevronLeft, Info, History } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useShopStore } from '@/store/useShopStore';
 import { pullSupply, isHeartUp, HEART_UP_WEIGHT } from '@/engine/gachaEngine';
+import { EXP_DUPE } from '@/engine/shopEngine';
 import { GACHA_CONFIG } from '@/data/gachaConfig';
 import { characters } from '@/data/characters';
 import GachaAnimation from '@/components/GachaAnimation';
@@ -24,6 +25,7 @@ export default function Gacha() {
   const rateUpUntil = usePlayerStore((s) => s.rateUpUntil);
   const coldUntil = usePlayerStore((s) => s.coldUntil);
   const addCharacter = usePlayerStore((s) => s.addCharacter);
+  const addExp = usePlayerStore((s) => s.addExp);
   const addSpiritStones = usePlayerStore((s) => s.addSpiritStones);
   const addGachaResult = usePlayerStore((s) => s.addGachaResult);
   const setSupplyPityCounter = usePlayerStore((s) => s.setSupplyPityCounter);
@@ -66,6 +68,8 @@ export default function Gacha() {
         if (result.kind === 'person') {
           addCharacter(result.character.id);
           addGachaResult(result.character.id, result.character.rarity);
+          // 重复抽到：她的卡折算成长经验（养成接进抽卡循环）
+          if (!result.isNew) addExp(result.character.id, EXP_DUPE);
           ownedIds = [...ownedIds, result.character.id];
           persons.push({
             characterId: result.character.id,
@@ -117,7 +121,7 @@ export default function Gacha() {
         }
       }
     },
-    [pullBusy, spiritStones, ownedCharacters, affinityMap, supplyPityCounter, rateUpUntil, coldUntil, addCharacter, addSpiritStones, addGachaResult, setSupplyPityCounter, addHandCard, addHintTokens],
+    [pullBusy, spiritStones, ownedCharacters, affinityMap, supplyPityCounter, rateUpUntil, coldUntil, addCharacter, addExp, addSpiritStones, addGachaResult, setSupplyPityCounter, addHandCard, addHintTokens],
   );
 
   // 心动 UP：好感已达标但尚未入伙的角色（同稀有度内权重提升）

@@ -6,6 +6,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
 import { getRelationshipStages, getStageInfo, getNextStage } from '@/data/relationship';
 import { dupesNeededForStage } from '@/engine/bondEngine';
+import { expForLevel } from '@/engine/shopEngine';
 import { cn } from '@/lib/utils';
 import { playSound } from '@/lib/sound';
 import { assetUrl } from '@/lib/assets';
@@ -59,7 +60,6 @@ export default function CharacterDetail() {
   const spiritStones = usePlayerStore((s) => s.spiritStones);
   const addSpiritStones = usePlayerStore((s) => s.addSpiritStones);
   const addExp = usePlayerStore((s) => s.addExp);
-  const levelUpCharacter = usePlayerStore((s) => s.levelUpCharacter);
   const addAffinity = usePlayerStore((s) => s.addAffinity);
   const advanceRelationshipStage = usePlayerStore((s) => s.advanceRelationshipStage);
   const tryDailyAction = usePlayerStore((s) => s.tryDailyAction);
@@ -83,7 +83,7 @@ export default function CharacterDetail() {
   const dupes = id ? dupeCount[id] ?? 0 : 0;
   const dupesNeeded = nextStage ? dupesNeededForStage(nextStage.stage) : 0;
   const hasDupesForNext = dupes >= dupesNeeded;
-  const expToLevel = level * 100;
+  const expToLevel = expForLevel(level);
   const expPercent = Math.min((exp / expToLevel) * 100, 100);
 
   // 当前等级可用的对话
@@ -158,13 +158,7 @@ export default function CharacterDetail() {
   const handleUpgrade = () => {
     if (!id || spiritStones < UPGRADE_COST) return;
     addSpiritStones(-UPGRADE_COST);
-    addExp(id, 50);
-    // 检查是否可以升级
-    const currentExp = (ownedChar?.exp || 0) + 50;
-    const needed = (ownedChar?.level || 1) * 100;
-    if (currentExp >= needed) {
-      levelUpCharacter(id);
-    }
+    addExp(id, 50); // store.addExp 内部自动连升级，无需在此手动 levelUp
   };
 
   if (!character) {
@@ -345,6 +339,11 @@ export default function CharacterDetail() {
                       <span className="text-xs text-slate-400">Lv.{effect.level}</span>
                     </div>
                     <p className="mt-1 text-sm text-slate-300">{effect.description}</p>
+                    {effect.type === 'passive' && (
+                      <p className={cn('mt-1 text-[11px]', level >= 10 ? 'text-emerald-400' : 'text-amber-400/70')}>
+                        {level >= 10 ? '✦ 已精通：特质加成翻倍' : `升至 Lv.10 精通：特质加成翻倍（还差 ${10 - level} 级）`}
+                      </p>
+                    )}
                   </div>
                 ))}
                 {availableEffects.length === 0 && (

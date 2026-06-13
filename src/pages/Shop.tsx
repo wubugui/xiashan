@@ -18,6 +18,7 @@ import { pullSupply, RATE_UP_DAYS } from '@/engine/gachaEngine';
 import {
   isMatch, scoreCard, resolveSpot, hitsRequirement, applyCommissionRewards,
   fatigueFromDelta, coffeeRelief, FATIGUE_TIRED, FATIGUE_EXHAUSTED, FATIGUE_MAX, COFFEE_COST,
+  EXP_HIT_MATCHED, EXP_HIT_PLAIN, EXP_DELIVERY, EXP_DUPE,
 } from '@/engine/shopEngine';
 import { getSideJobById } from '@/data/sideJobs';
 import { checkPhoneEvents } from '@/engine/phoneScheduler';
@@ -281,7 +282,7 @@ export default function Shop() {
     normalTickets, flags, rateUpUntil, coldUntil,
     spendNormalTickets, setSupplyPityCounter,
     addNormalTickets, addAffinity, setCharacterRateUp,
-    addGachaResult, addCharacter,
+    addGachaResult, addCharacter, addExp,
     addSpiritStones, addReputation, addHintTokens,
     tutorialStep, setTutorialStep,
   } = playerStore;
@@ -421,6 +422,8 @@ export default function Shop() {
       if (result.kind === 'person') {
         addCharacter(result.character.id);
         addGachaResult(result.character.id, result.character.rarity);
+        // 重复抽到：她的卡折算成长经验，重复卡不再只是缘分信物（设计文档 6.3）
+        if (!result.isNew) addExp(result.character.id, EXP_DUPE);
         // 入伙演出：抽到邂逅期已攒好感的角色，出货时承认此前积累（设计文档 6.3）
         if (result.isNew && (affinityMap[result.character.id] ?? 0) > 0) {
           addLog(`【${result.character.name}】握住你的手："那几次委托……我都记得。"她正式加入二十五时便利屋。`, 'good');
@@ -467,7 +470,7 @@ export default function Shop() {
         }
       }
     }
-  }, [drawBusy, gameOver, tutorialActive, tutStep, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, rateUpUntil, coldUntil, setSupplyPityCounter, addCharacter, addGachaResult, addHandCard, addHintTokens, addSpiritStones, addLog]);
+  }, [drawBusy, gameOver, tutorialActive, tutStep, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, rateUpUntil, coldUntil, setSupplyPityCounter, addCharacter, addGachaResult, addExp, addHandCard, addHintTokens, addSpiritStones, addLog]);
 
   const closeRevealItem = useCallback(() => {
     drawCooldownUntilRef.current = Date.now() + 700;
@@ -514,6 +517,11 @@ export default function Shop() {
     if (card && card.kind !== 'person') {
       consumeHandCard((card as HandCard).uid);
       addLog(`消耗${kindName(card.kind)}【${card.name}】。`, 'play');
+    }
+
+    // 人物卡：用她干活喂经验，把养成接进主循环（命中匹配热点经验更多）
+    if (card && card.kind === 'person') {
+      addExp(card.id, isMatch(card.serviceType, spot.need) ? EXP_HIT_MATCHED : EXP_HIT_PLAIN);
     }
 
     // 情报卡"城市情报"刷新路线
@@ -581,7 +589,7 @@ export default function Shop() {
     }
   }, [currentEvent, loc, commission, objectivesDone, sideJobs, fatigue, rep, lastCardType,
     consumeHandCard, applyDelta, markSpotDone, completeObjective, completeSideJob, noteCommissionFocus,
-    addNormalTickets, addSpiritStones, addLog, refreshRoutes, setGameOver, setLastCardType]);
+    addNormalTickets, addSpiritStones, addExp, addLog, refreshRoutes, setGameOver, setLastCardType]);
 
   /* ────── 冒险解法（危险热点）：不出牌，付出更多资源换高信任 ────── */
   const handleRisk = useCallback(() => {
@@ -659,6 +667,8 @@ export default function Shop() {
     if (!commission) return;
     setCompletedName(commission.name);
     if (ok) {
+      // 为她交付委托喂一笔经验（仅对已拥有的角色生效）——养成与主循环挂钩
+      addExp(commission.target, EXP_DELIVERY);
       if (isRevisit) {
         // 回访单：奖励递减（防券/口碑通胀），但缘分 UP 照常刷新
         addNormalTickets(1);
@@ -688,7 +698,7 @@ export default function Shop() {
       setEndDayResult('fail');
     }
     setGameOver(true);
-  }, [commission, isRevisit, setPendingScene, addNormalTickets, addReputation, addAffinity, setCharacterRateUp, applyDelta, clearCommission, addLog, setGameOver, tutorialActive]);
+  }, [commission, isRevisit, setPendingScene, addNormalTickets, addReputation, addAffinity, addExp, setCharacterRateUp, applyDelta, clearCommission, addLog, setGameOver, tutorialActive]);
 
   /* ────── Toast ────── */
   const [toastMsg, setToastMsg] = useState('');
@@ -1242,7 +1252,11 @@ export default function Shop() {
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
                     {personCards.map(p => (
-                      <div key={p.id} className="rounded-xl border border-violet-500/30 bg-violet-500/10 p-3">
+                      <button
+                        key={p.id}
+                        onClick={() => navigate(`/character/${p.id}`)}
+                        className="rounded-xl border border-violet-500/30 bg-violet-500/10 p-3 text-left active:scale-[0.98] transition-all hover:border-violet-400/50"
+                      >
                         <div className="flex items-center gap-2 mb-1">
                           {(() => {
                             const c = getCharacterById(p.id);
@@ -1252,8 +1266,11 @@ export default function Shop() {
                             <p className="text-xs font-bold text-white truncate">Lv.{p.level} {p.name}</p>
                           </div>
                         </div>
-                        <span className="rounded-full bg-violet-500/20 px-1.5 py-0.5 text-[10px] text-violet-300">{p.serviceType}</span>
-                      </div>
+                        <div className="flex items-center justify-between">
+                          <span className="rounded-full bg-violet-500/20 px-1.5 py-0.5 text-[10px] text-violet-300">{p.serviceType}</span>
+                          <span className="text-[10px] text-violet-300/70">养成 ›</span>
+                        </div>
+                      </button>
                     ))}
                   </div>
                 )}

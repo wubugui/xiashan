@@ -119,7 +119,6 @@ interface PlayerState {
   advanceRelationshipStage: (characterId: string) => void;
   tryDailyAction: (key: string) => boolean;
   addExp: (characterId: string, amount: number) => void;
-  levelUpCharacter: (characterId: string) => void;
   addGachaResult: (characterId: string, rarity: string) => void;
   setPityCounter: (count: number) => void;
   setTotalGachaCount: (count: number) => void;
@@ -249,15 +248,16 @@ export const usePlayerStore = create<PlayerState>()(
         set(s => ({ dailyActions: { ...s.dailyActions, [key]: today } }));
         return true;
       },
+      // 累加经验并自动连升级（exp 满 level*100 即升一级，溢出转下一级），
+      // 让所有经验来源（打热点/交付/重复卡/养成页）共用同一升级口径，调用方无需判断。
       addExp: (characterId, amount) => set(s => ({
-        ownedCharacters: s.ownedCharacters.map(c =>
-          c.characterId === characterId ? { ...c, exp: c.exp + amount } : c
-        ),
-      })),
-      levelUpCharacter: (characterId) => set(s => ({
-        ownedCharacters: s.ownedCharacters.map(c =>
-          c.characterId === characterId ? { ...c, level: c.level + 1, exp: 0 } : c
-        ),
+        ownedCharacters: s.ownedCharacters.map(c => {
+          if (c.characterId !== characterId) return c;
+          let level = c.level;
+          let exp = c.exp + amount;
+          while (exp >= level * 100) { exp -= level * 100; level += 1; }
+          return { ...c, level, exp };
+        }),
       })),
       addGachaResult: (characterId, rarity) => set(s => ({
         gachaHistory: [...s.gachaHistory, { characterId, rarity, timestamp: Date.now() }],

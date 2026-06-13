@@ -5,6 +5,7 @@
 import type { ServiceTag, GameLocation, Spot, ServiceCard, SpotDelta } from '@/data/types';
 import type { Effect } from '@/engine/types';
 import { usePlayerStore } from '@/store/usePlayerStore';
+import { getCharacterById } from '@/data/characters';
 
 /* ─────────────── 匹配系统 ─────────────── */
 
@@ -43,6 +44,44 @@ export function fatigueFromDelta(d: { time?: number; energy?: number; fatigue?: 
 /** 今天第 n+1 杯咖啡能缓解多少疲劳（0 = 喝不下了） */
 export function coffeeRelief(n: number): number {
   return COFFEE_RELIEFS[n] ?? 0;
+}
+
+/* ─────────────── 角色养成 ───────────────
+ * 养成与主循环挂钩：用她的卡干活、为她交付委托、重复抽到她，都会喂经验。
+ * 升级解锁/强化她的 passive 特质（character.effects），让「培养」真正影响战力。
+ */
+/** 经验来源：人物卡命中匹配热点 / 命中不匹配热点 / 委托交付 / 重复抽到同一角色 */
+export const EXP_HIT_MATCHED = 10;
+export const EXP_HIT_PLAIN = 4;
+export const EXP_DELIVERY = 60;
+export const EXP_DUPE = 40;
+/** 升一级所需经验（与 usePlayerStore.addExp 的自动升级同口径，避免两处漂移） */
+export function expForLevel(level: number): number {
+  return level * 100;
+}
+/** 等级里程碑：达到后该角色 passive 特质加成翻倍（「精通」，给升级一个明确目标） */
+export const TRAIT_MILESTONE_LEVEL = 10;
+
+/** 该角色 passive effect 的解锁等级（无 passive 返回 null）。passive 数据驱动特质加成。 */
+export function personPassiveLevel(characterId: string): number | null {
+  const passive = getCharacterById(characterId)?.effects.find(e => e.type === 'passive');
+  return passive ? passive.level : null;
+}
+
+/** 在匹配热点上施加角色 passive 特质加成（effect 描述的兑现）。
+ *  按 serviceType 给额外资源；达到里程碑等级后翻倍。直接修改传入的 delta。 */
+function applyPersonTrait(delta: SpotDelta, serviceType: ServiceTag, level: number): void {
+  const mult = level >= TRAIT_MILESTONE_LEVEL ? 2 : 1;
+  if (serviceType === '表达' || serviceType === '宠物') {
+    delta.rep = (delta.rep ?? 0) + 1 * mult;
+  } else if (serviceType === '安抚') {
+    delta.energy = (delta.energy ?? 0) + 1 * mult;
+  } else if (serviceType === '补给') {
+    delta.money = (delta.money ?? 0) + 2 * mult;
+  } else if (serviceType === '流程' || serviceType === '情报') {
+    // 减免行动成本：再 reduceCost 一次（里程碑则两次）
+    for (let i = 0; i < mult; i++) Object.assign(delta, reduceCost(delta));
+  }
 }
 
 /* ─────────────── 资源增减 ─────────────── */
@@ -128,9 +167,11 @@ function resolveSpotBase(
     if (matched) {
       delta = reduceCost(delta);
       delta.trust = (delta.trust ?? 0) + 3 + bonus;
-      if (card.serviceType === '表达' || card.serviceType === '宠物') delta.rep = (delta.rep ?? 0) + 1;
-      if (card.serviceType === '补给') delta.money = (delta.money ?? 0) + 2;
-      if (card.serviceType === '安抚') delta.energy = (delta.energy ?? 0) + 1;
+      // 特质资源加成由角色 passive effect 驱动：达到 effect.level 激活，里程碑等级翻倍
+      const passiveLv = personPassiveLevel(card.id);
+      if (passiveLv !== null && card.level >= passiveLv) {
+        applyPersonTrait(delta, card.serviceType, card.level);
+      }
       const specialText = spot.special?.[card.id];
       text = specialText ?? `${card.name}用自己的专长处理了这个麻烦。`;
     } else {
