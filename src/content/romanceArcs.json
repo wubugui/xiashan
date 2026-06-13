@@ -473,6 +473,693 @@
           "reward": { "affinity": 10, "unlockFlag": "romance_suli_b5" }
         }
       ]
+    },
+    {
+      "characterId": "aruo",
+      "theme": "她永远在镜头前营业、给所有人热度，却把下播后那个会冷场的自己藏起来；你成为唯一一个，不用她接梗营业、能陪那个卸了妆的她安静待着的人。",
+      "beats": [
+        {
+          "id": "aruo_b1",
+          "phase": "共事",
+          "title": "直播事故救场",
+          "guide": "抽到她、攒一点好感（约 8）后，接她那桩《直播事故救场》——看看这位主播怎么把翻车现场救回来。",
+          "trigger": [
+            { "type": "has_character", "characterId": "aruo" },
+            { "type": "affinity", "characterId": "aruo", "minValue": 8 }
+          ],
+          "scene": {
+            "location": "studio",
+            "lines": [
+              { "text": "云晓蔻的周年直播翻车了——背景音乐卡死，弹幕开始刷尴尬。她却笑得更亮，朝镜头比了个手势，又飞快朝你打暗号。" },
+              { "speaker": "aruo", "text": "（压低声）救场！给我一个能接的梗，快！" },
+              { "text": "你递了一句。她当场接住，顺势抖成一个包袱，弹幕瞬间从嘲讽变成「哈哈哈」。" },
+              { "speaker": "aruo", "text": "（对镜头）看吧，连技术总监都被我们逗笑了！——（侧过头，气音）你这反应，绝了。" },
+              { "text": "一场事故被她生生救成名场面。下播红灯亮起的那一刻，她整个人像被抽掉电，肩膀塌了下来。" }
+            ],
+            "choice": {
+              "prompt": "镜头一关，她明显松了一大口气。你怎么接？",
+              "options": [
+                {
+                  "text": "刚才那一下，是你救的，不是我。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "aruo", "text": "嘁，谦虚。……不过，谢谢你接得住。" },
+                    { "text": "她笑着锤了你一下，力道很轻。" }
+                  ]
+                },
+                {
+                  "text": "你笑得那么稳，原来里面是空的啊。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "aruo", "text": "诶——你不许拆穿！（小声）……被你看出来了。" },
+                    { "text": "她吐了吐舌，眼神却闪了一下。" }
+                  ]
+                },
+                {
+                  "text": "下次翻车，我还在。",
+                  "momo": 1,
+                  "reaction": [
+                    { "speaker": "aruo", "text": "记住你说的啊！口说无凭——我录下来了！" },
+                    { "text": "她举起手机晃了晃，笑得见牙不见眼。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 3, "unlockFlag": "romance_aruo_b1", "wechat": "今天那段我剪进高光了。你出镜 0.5 秒，别说我没给你番位。😎" }
+        },
+        {
+          "id": "aruo_b2",
+          "phase": "熟络",
+          "title": "下播之后",
+          "guide": "多陪她跑几场直播、攒点好感（约 25），某个下播后的深夜，她会露出镜头背后的那一面。",
+          "trigger": [
+            { "type": "affinity", "characterId": "aruo", "minValue": 25 }
+          ],
+          "scene": {
+            "location": "studio",
+            "lines": [
+              { "text": "又一场直播收工。这次没有事故，弹幕一片好评。可红灯一灭，她对着空荡荡的直播间，忽然不说话了。" },
+              { "speaker": "aruo", "text": "你发现没有……我在镜头前，一秒都不会冷场。可是下播之后，我经常突然不知道该说什么。" },
+              { "text": "她抱着膝盖坐在补光灯旁，平时那个亮闪闪的主播，像被人按了静音。" },
+              { "speaker": "aruo", "text": "大家喜欢的是会接梗的云晓蔻。那个不接梗的我……好像没人想看。" }
+            ],
+            "choice": {
+              "prompt": "她第一次在你面前像卸了妆。你怎么接？",
+              "options": [
+                {
+                  "text": "那个不接梗的你，我想看。",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "aruo", "text": "……（愣住）你这句，没走剧本吧？" },
+                    { "text": "她偏过头，没让你看见她耳朵红了。" }
+                  ]
+                },
+                {
+                  "text": "冷场就冷着，我陪你坐着。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "aruo", "text": "……（沉默几秒）原来安静，也可以不尴尬。" },
+                    { "text": "她把头轻轻靠在膝盖上，没再说话，可嘴角是松的。" }
+                  ]
+                },
+                {
+                  "text": "镜头前是工作，镜头后才是你。",
+                  "momo": 1,
+                  "reaction": [
+                    { "speaker": "aruo", "text": "你怎么说得比我场控还明白。" },
+                    { "text": "她笑了一下，这次的笑没有对着任何镜头。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 4, "unlockFlag": "romance_aruo_b2", "wechat": "下播了。突然想跟你聊两句，没有梗，就……想聊。（这很反常，我知道。）" }
+        },
+        {
+          "id": "aruo_b3",
+          "phase": "暧昧",
+          "title": "没播出去的那条",
+          "guide": "你们更近了（好感约 45）。某天她会让你看一段，没敢发出去的视频。",
+          "trigger": [
+            { "type": "affinity", "characterId": "aruo", "minValue": 45 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "你来便利屋接班，她神神秘秘地把手机塞给你，屏幕上是一段没发布的视频草稿。" },
+              { "speaker": "aruo", "text": "今日高光的废案。剪了一半，没敢发。你……看一眼。" },
+              { "text": "视频里是某场直播的边角料：镜头扫过控场台，停在你递词的侧脸上，停了很久很久。配乐是她平时绝不会用的、很轻的歌。" },
+              { "speaker": "aruo", "text": "（抢回手机）就、就是手滑多停了几秒！剪辑废案而已，删了删了——" },
+              { "text": "可她删之前又犹豫了一下，最终把那条草稿，存进了收藏夹。" }
+            ],
+            "choice": {
+              "prompt": "她脸红得像直播间的补光灯。你怎么办？",
+              "options": [
+                {
+                  "text": "原来你的高光里，有我的番位。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "aruo", "text": "番位是路人甲！别给自己加戏！（小声）……特写而已。" },
+                    { "text": "她跺脚，可没忍住翘起来的嘴角。" }
+                  ]
+                },
+                {
+                  "text": "这条别删。我想要一份。",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "aruo", "text": "……要可以。但你不许外传，这是限定独家。" },
+                    { "text": "她把手机抱在胸前，声音越来越小。" }
+                  ]
+                },
+                {
+                  "text": "（什么也不说，只是看着她笑）",
+                  "momo": 1,
+                  "reaction": [
+                    { "speaker": "aruo", "text": "你别用这种眼神看我！比弹幕还让人慌！" },
+                    { "text": "她抓起一包零食挡住脸，从缝里偷偷看你。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 5, "unlockFlag": "romance_aruo_b3", "wechat": "那条……我设成仅自己可见了。偶尔会点开看。（看完删掉这条消息！）" }
+        },
+        {
+          "id": "aruo_b4",
+          "phase": "告白门",
+          "title": "没有弹幕的现场",
+          "guide": "她约你回直播间（好感约 70）。这一次，没有观众，没有弹幕，她想关掉镜头说一句话。",
+          "trigger": [
+            { "type": "affinity", "characterId": "aruo", "minValue": 70 }
+          ],
+          "isGate": true,
+          "scene": {
+            "location": "studio",
+            "lines": [
+              { "text": "她约你来直播间。这次，所有补光灯都关着，镜头盖着盖子，弹幕屏一片漆黑。" },
+              { "speaker": "aruo", "text": "今天没有直播。没有观众，没有弹幕，没有梗。" },
+              { "text": "她站在那个最熟悉的控场台前，第一次显得有点无措，像个忘了台本的新人。" },
+              { "speaker": "aruo", "text": "我在几万人面前都不会紧张。可现在只有你一个人，我心跳快得像要直播事故了。" },
+              { "speaker": "aruo", "text": "（她深吸一口气，没有看提词器）这句话我没排练过，只说一次——" }
+            ],
+            "choice": {
+              "prompt": "空荡荡的直播间里，只剩你们两个。你的回答——",
+              "options": [
+                {
+                  "text": "云晓蔻，我想当你唯一的那个观众。",
+                  "momo": 3,
+                  "gateConfirm": true,
+                  "reaction": [
+                    { "text": "她捂住脸，从指缝里笑出了眼泪。" },
+                    { "speaker": "aruo", "text": "唯一观众……那、那要一直在线啊。不许下播。" },
+                    { "text": "她扑过来抱住你。这一次没有镜头记录，只有她乱掉的心跳。" }
+                  ]
+                },
+                {
+                  "text": "再等等——这场告白，我想等你准备好，不带一点表演。",
+                  "momo": 0,
+                  "reaction": [
+                    { "speaker": "aruo", "text": "……好。我练一练，怎么不靠台本跟你说话。" },
+                    { "text": "她笑着抹了下眼角。「下次见，你再来。」" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "unlockFlag": "romance_aruo_b4" }
+        },
+        {
+          "id": "aruo_b5",
+          "phase": "终幕",
+          "title": "只有一个粉丝的频道",
+          "guide": "确认心意之后，慢慢走到这里（好感约 110）。",
+          "trigger": [
+            { "type": "affinity", "characterId": "aruo", "minValue": 110 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "便利屋打烊后，她举着手机献宝似的冲过来：「给你看我新开的号！」" },
+              { "text": "屏幕上是一个崭新的私密直播间，粉丝数：1。简介写着——「本频道只对一位观众开放，永不下播」。" },
+              { "speaker": "aruo", "text": "以前我直播，是怕没人看我。现在……我只想被一个人看着，就够了。" },
+              { "text": "她把手机递到你面前，那唯一一个粉丝的头像，是你。" }
+            ],
+            "choice": {
+              "prompt": "她眨眨眼，等你的反应。",
+              "options": [
+                {
+                  "text": "那我这个粉丝，申请转正成专属。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "aruo", "text": "审核通过！——欢迎来到云晓蔻的余生独家频道。" },
+                    { "text": "她笑得眼睛弯成月牙，凑过来在你耳边，用只有一个人能听见的音量，说了句什么。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 10, "unlockFlag": "romance_aruo_b5" }
+        }
+      ]
+    },
+    {
+      "characterId": "sangluo",
+      "theme": "她给所有失眠夜归人留一盏灯、一杯咖啡，自己却从不需要别人；你慢慢成为那个让她也愿意坐下、卸下「主理人」的从容、说说自己的人。",
+      "beats": [
+        {
+          "id": "sangluo_b1",
+          "phase": "共事",
+          "title": "今晚必须睡着",
+          "guide": "抽到她、攒一点好感（约 8）后，接她那桩《今晚必须睡着》——看看这位主理人怎么对付一个崩溃的失眠客。",
+          "trigger": [
+            { "type": "has_character", "characterId": "sangluo" },
+            { "type": "affinity", "characterId": "sangluo", "minValue": 8 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "顾夜莺接了桩怪委托：一个加班到崩溃的客人，闹着「今晚必须睡着，否则明天就完了」。越逼自己睡，越清醒。" },
+              { "speaker": "sangluo", "text": "（慢悠悠）你看，他不是睡不着，是太怕睡不着。先别管睡觉的事。" },
+              { "text": "她不慌不忙给客人冲了杯热的，把灯调暗一档，让你陪着随便聊点没用的。" },
+              { "speaker": "sangluo", "text": "麻烦大多不是解决不了，只是太吵了。声音放低，事情会自己露出边。" },
+              { "text": "半小时后，那位客人趴在桌上睡着了。她回头看你，眼里有点笑意。" }
+            ],
+            "choice": {
+              "prompt": "她示意你别出声。你压低声音——",
+              "options": [
+                {
+                  "text": "你这套，比安眠药管用。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "sangluo", "text": "安眠药治标。我治的是那股慌。" },
+                    { "text": "她慢慢收起杯子，动作轻得没发出一点声响。" }
+                  ]
+                },
+                {
+                  "text": "你怎么知道，他怕的不是睡不着？",
+                  "momo": 1,
+                  "reaction": [
+                    { "speaker": "sangluo", "text": "夜里见多了。怕的人，眼神都一样。" },
+                    { "text": "她说得很淡，像在说今晚的天气。" }
+                  ]
+                },
+                {
+                  "text": "那……我要是睡不着，也能来找你？",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "sangluo", "text": "随时。这儿的灯，我很少关。" },
+                    { "text": "她偏头看了你一眼，那一眼里有种说不清的稳。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 3, "unlockFlag": "romance_sangluo_b1", "wechat": "他睡到打烊才走。今晚风很静。" }
+        },
+        {
+          "id": "sangluo_b2",
+          "phase": "熟络",
+          "title": "主理人也会累",
+          "guide": "多陪她守几个深夜、攒点好感（约 25），某个打烊后她会难得地为自己也冲一杯。",
+          "trigger": [
+            { "type": "affinity", "characterId": "sangluo", "minValue": 25 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "深夜打烊，最后一位客人走了。顾夜莺没急着收摊，反而给自己也冲了一杯，难得地在吧台后坐下。" },
+              { "speaker": "sangluo", "text": "你还没走？……正好，陪我喝一杯。这个点的咖啡，不影响睡眠，影响的人是另一回事。" },
+              { "text": "她搅着杯子，慵懒的眼神里，第一次露出一点疲惫。" },
+              { "speaker": "sangluo", "text": "我给所有人留灯、留咖啡、让他们冷静下来。可你知道吗，我自己……也常常一整夜睡不着。" }
+            ],
+            "choice": {
+              "prompt": "她罕见地说起自己。你怎么接？",
+              "options": [
+                {
+                  "text": "那今晚，换我陪你坐到天亮。",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "sangluo", "text": "……（慢慢笑了）好啊。反正我这儿，最不缺的就是夜。" },
+                    { "text": "她往你这边挪了挪杯子，两只杯子并在一起。" }
+                  ]
+                },
+                {
+                  "text": "总给别人留灯的人，谁给你留？",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "sangluo", "text": "（怔了一下）……这个问题，很久没人问过了。" },
+                    { "text": "她低头看着杯里的热气，没有马上回答。" }
+                  ]
+                },
+                {
+                  "text": "睡不着不丢人，你跟你的客人一样。",
+                  "momo": 1,
+                  "reaction": [
+                    { "speaker": "sangluo", "text": "被你这么一说，好像是。" },
+                    { "text": "她轻轻笑了，肩膀松下来一点。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 4, "unlockFlag": "romance_sangluo_b2", "wechat": "今晚没失眠。大概是因为，有人陪着喝完了那杯。" }
+        },
+        {
+          "id": "sangluo_b3",
+          "phase": "暧昧",
+          "title": "只调给你的那杯",
+          "guide": "你们更近了（好感约 45）。某天她会给你留一杯，菜单上没有的咖啡。",
+          "trigger": [
+            { "type": "affinity", "characterId": "sangluo", "minValue": 45 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "你推门进来，吧台上已经摆好一杯，热气刚好。她靠在咖啡机旁，像是算准了你来的时间。" },
+              { "speaker": "sangluo", "text": "尝尝。这个配方，菜单上没有。" },
+              { "text": "入口先苦后回甘，尾调是一点很轻的、说不出的暖。你抬头，她正看着你。" },
+              { "speaker": "sangluo", "text": "这杯叫……（她顿了顿）算了，名字保密。只调给一个人，写出来就不值钱了。" },
+              { "text": "她转过身去擦杯子，可耳尖那点红，藏不住。" }
+            ],
+            "choice": {
+              "prompt": "只给你的一杯。你怎么办？",
+              "options": [
+                {
+                  "text": "菜单外的，只给我一个人？",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "sangluo", "text": "……嗯。这家店，只有一个客人能点。" },
+                    { "text": "她背对着你，声音慢得几乎要化在夜里。" }
+                  ]
+                },
+                {
+                  "text": "那这杯的名字，我帮你取。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "sangluo", "text": "你取？说来听听。——不对，先别说，我有点怕听。" },
+                    { "text": "她难得地慌了一下，慵懒的壳裂了条缝。" }
+                  ]
+                },
+                {
+                  "text": "今晚风很静。我想多坐一会儿。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "sangluo", "text": "坐吧。灯，我给你留着。" },
+                    { "text": "她重新坐回你对面，没有再去擦那些其实已经很干净的杯子。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 5, "unlockFlag": "romance_sangluo_b3", "wechat": "那杯的名字，想好了。等你来，当面告诉你。别催。" }
+        },
+        {
+          "id": "sangluo_b4",
+          "phase": "告白门",
+          "title": "打烊牌翻面",
+          "guide": "她约你这个点来店里（好感约 70）。今晚她想关掉「营业中」，不当主理人，只当她自己。",
+          "trigger": [
+            { "type": "affinity", "characterId": "sangluo", "minValue": 70 }
+          ],
+          "isGate": true,
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "她约你这个点来。你推门时，看见她把门口那块「营业中」的牌子，翻成了「打烊」。" },
+              { "speaker": "sangluo", "text": "今晚不做生意。也不当主理人。" },
+              { "text": "她拉过一把椅子坐在你对面，两杯咖啡，一杯给你，一杯给自己。第一次，她不是隔着吧台。" },
+              { "speaker": "sangluo", "text": "我习惯让所有人冷静下来。可有个人，让我一靠近就乱。这种事，我处理不了，也……不想处理了。" },
+              { "speaker": "sangluo", "text": "（她慢慢抬眼，声音一如往常的稳，内容却不是）那杯咖啡的名字——" }
+            ],
+            "choice": {
+              "prompt": "打烊后的店里，只剩你们和两杯咖啡。你的回答——",
+              "options": [
+                {
+                  "text": "顾夜莺，我喜欢你。那名字我猜，是我的名字。",
+                  "momo": 3,
+                  "gateConfirm": true,
+                  "reaction": [
+                    { "text": "她愣了几秒，然后极慢地笑开，那是你见过她最不设防的样子。" },
+                    { "speaker": "sangluo", "text": "……被你猜中了。第一次，被人抢了我的台词。" },
+                    { "text": "她伸手，覆在你手背上，掌心是咖啡杯焐过的暖。" }
+                  ]
+                },
+                {
+                  "text": "再等等——这杯的名字，我想等你亲口、慢慢说。",
+                  "momo": 0,
+                  "reaction": [
+                    { "speaker": "sangluo", "text": "好。不急。我这儿，最不缺的就是时间。" },
+                    { "text": "她笑了笑，把牌子又翻回「营业中」。「下次打烊，你再来。」" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "unlockFlag": "romance_sangluo_b4" }
+        },
+        {
+          "id": "sangluo_b5",
+          "phase": "终幕",
+          "title": "夜里总有一杯",
+          "guide": "确认心意之后，慢慢走到这里（好感约 110）。",
+          "trigger": [
+            { "type": "affinity", "characterId": "sangluo", "minValue": 110 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "又一个深夜。你推门进来，吧台上那杯熟悉的特调已经在等你。可这次，旁边多了一块小小的木牌。" },
+              { "text": "木牌上刻着一行字，是那杯咖啡的名字，也是你们两个的名字，并排刻着。" },
+              { "speaker": "sangluo", "text": "我把它正式写进菜单了。不过——" },
+              { "speaker": "sangluo", "text": "（她慢悠悠地笑）只接受一位客人预订，终身有效。你说过的，睡不着就来找我。" }
+            ],
+            "choice": {
+              "prompt": "她把那杯推到你面前。",
+              "options": [
+                {
+                  "text": "那这家店打烊以后，我留下来洗杯子。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "sangluo", "text": "成交。工钱嘛……（她偏头想了想）用余生来付。" },
+                    { "text": "她终于不再慵懒地端着，把头轻轻搁在你肩上。夜很静，灯一直亮着。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 10, "unlockFlag": "romance_sangluo_b5" }
+        }
+      ]
+    },
+    {
+      "characterId": "aman",
+      "theme": "她总温柔地接住别人和小动物的害怕，却把自己的需要藏起来——只说「交给我」，从不说「我也需要」；你成为唯一一个看穿她温柔背后、也愿意接住她的人。",
+      "beats": [
+        {
+          "id": "aman_b1",
+          "phase": "共事",
+          "title": "搬家日的兵荒马乱",
+          "guide": "抽到她、攒一点好感（约 8）后，接她那桩《搬家日的兵荒马乱》——看看这位护理师怎么哄住一只炸毛的猫。",
+          "trigger": [
+            { "type": "has_character", "characterId": "aman" },
+            { "type": "affinity", "characterId": "aman", "minValue": 8 }
+          ],
+          "scene": {
+            "location": "apartment",
+            "lines": [
+              { "text": "搬家日的公寓楼乱成一团。一只受惊的猫躲进楼道最深处，谁靠近都炸毛，搬家的住户急得团团转。" },
+              { "text": "许念却不急。她在台阶上坐下，离猫三步远，掏出一根猫条自己先慢慢逗着玩，看都不看那只猫。" },
+              { "speaker": "aman", "text": "（轻声）别追它。小动物害怕的时候，追得越急、越躲。我们等它自己过来。" },
+              { "text": "几分钟后，那只炸毛的猫探出头，一点点挪过来，最后蹭上了她的手。她回头朝你弯起眼睛。" },
+              { "speaker": "aman", "text": "你看，它只是需要一点时间，和一个不逼它的人。" }
+            ],
+            "choice": {
+              "prompt": "她把猫轻轻抱起来。你怎么接？",
+              "options": [
+                {
+                  "text": "你这套，对人是不是也管用？",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "aman", "text": "（笑）也许吧。你也别太逼自己呀。" },
+                    { "text": "她说得轻飘飘的，你却愣了一下。" }
+                  ]
+                },
+                {
+                  "text": "换我早把它追跑了。你真有耐心。",
+                  "momo": 1,
+                  "reaction": [
+                    { "speaker": "aman", "text": "耐心不是天生的，是被很多害怕的小家伙教会的。" },
+                    { "text": "她低头蹭了蹭怀里的猫，没再多说。" }
+                  ]
+                },
+                {
+                  "text": "下次再遇到害怕的孩子或小猫，我叫你。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "aman", "text": "好呀，一定叫我。这是约定哦。" },
+                    { "text": "她伸出小指，认真地跟你拉了钩。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 3, "unlockFlag": "romance_aman_b1", "wechat": "猫被原主人接走啦，乖乖的。今天谢谢你帮忙~" }
+        },
+        {
+          "id": "aman_b2",
+          "phase": "熟络",
+          "title": "总说交给我",
+          "guide": "多陪她跑几趟邻里互助、攒点好感（约 25），某个深夜你会发现她从不肯让人帮自己。",
+          "trigger": [
+            { "type": "affinity", "characterId": "aman", "minValue": 25 }
+          ],
+          "scene": {
+            "location": "apartment",
+            "lines": [
+              { "text": "又一个忙到深夜的晚上。许念接连处理了三桩邻里求助，最后一桩刚收尾，她靠在楼梯间的墙上，差点站着睡着。" },
+              { "text": "你让她歇会儿，下一桩你来。她却摆摆手，习惯性地笑。" },
+              { "speaker": "aman", "text": "没事的，交给我吧~ 我还撑得住。" },
+              { "text": "可她说着，手却悄悄扶住了栏杆。你这才发现，她对所有人都说「交给我」，却从来没说过一句「我也需要帮忙」。" }
+            ],
+            "choice": {
+              "prompt": "她又想逞强。你怎么接？",
+              "options": [
+                {
+                  "text": "你总说交给你。这次，交给我。",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "aman", "text": "……（怔住）我、我习惯了照顾别人，被照顾……有点不会。" },
+                    { "text": "她低下头，声音轻得像怕被听见。" }
+                  ]
+                },
+                {
+                  "text": "你接得住所有人，谁来接住你？",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "aman", "text": "（眼睛一下子有点湿）这个问题……你是第一个问的。" },
+                    { "text": "她飞快地别过脸，假装去看楼道里的猫。" }
+                  ]
+                },
+                {
+                  "text": "歇五分钟，天塌不下来。我守着。",
+                  "momo": 1,
+                  "reaction": [
+                    { "speaker": "aman", "text": "那……就五分钟哦。" },
+                    { "text": "她乖乖坐下，可那五分钟，她睡得很沉。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 4, "unlockFlag": "romance_aman_b2", "wechat": "刚才那五分钟，是我这周睡得最踏实的一次。（被你发现我逞强了，好丢脸。）" }
+        },
+        {
+          "id": "aman_b3",
+          "phase": "暧昧",
+          "title": "今天最温柔的花",
+          "guide": "你们更近了（好感约 45）。某天收银台上，会出现一束只留给你的花。",
+          "trigger": [
+            { "type": "affinity", "characterId": "aman", "minValue": 45 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "你来便利屋，收银台上放着一小束花，扎得很用心，旁边压着张小卡片。" },
+              { "text": "卡片上是她的字：「今天最温柔的一束，留给同样温柔的人。」" },
+              { "text": "正看着，许念抱着猫条和暖包从门口进来，看见你手里的卡片，整个人僵住了。" },
+              { "speaker": "aman", "text": "啊——那个，那是、那是给店里添点生气的！随手写写的！" },
+              { "text": "可她耳朵红透了，怀里的猫被她不自觉抱紧，喵地叫了一声抗议。" }
+            ],
+            "choice": {
+              "prompt": "她慌得语无伦次。你怎么办？",
+              "options": [
+                {
+                  "text": "同样温柔的人——你是说我？",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "aman", "text": "我、我没指名道姓！是你自己对号入座的！" },
+                    { "text": "她跺脚，可嘴角悄悄翘了起来。" }
+                  ]
+                },
+                {
+                  "text": "这束花我收下了。谢谢你，许念。",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "aman", "text": "……嗯。喜欢就好。" },
+                    { "text": "她把脸埋进猫的毛里，只露出一双躲闪的眼睛。" }
+                  ]
+                },
+                {
+                  "text": "原来你也会为一个人，特意留点什么。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "aman", "text": "……被你说中了。我好像，藏不住事。" },
+                    { "text": "她声音越来越小，最后几乎听不见。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 5, "unlockFlag": "romance_aman_b3", "wechat": "花记得换水呀。还有……卡片别扔。（就这一次，准你对号入座。）" }
+        },
+        {
+          "id": "aman_b4",
+          "phase": "告白门",
+          "title": "这次换你接住我",
+          "guide": "她约你回到第一次默契配合的公园猫聚点（好感约 70）。这一次，她想说说自己的害怕。",
+          "trigger": [
+            { "type": "affinity", "characterId": "aman", "minValue": 70 }
+          ],
+          "isGate": true,
+          "scene": {
+            "location": "park",
+            "lines": [
+              { "text": "她约你来公园那个流浪猫聚点——你们第一次默契配合的地方。傍晚的风很软，猫在脚边绕。" },
+              { "speaker": "aman", "text": "我一直觉得，我的任务就是接住所有害怕的小家伙。人也好，小猫也好。" },
+              { "text": "她蹲下摸了摸一只猫，忽然没头没尾地说了一句。" },
+              { "speaker": "aman", "text": "可是最近，我发现自己也会害怕。怕你哪天不来了，怕这份「交给我」，有一天没人接。" },
+              { "speaker": "aman", "text": "（她站起来，鼓起好大的勇气看你）所以这一次，我想说——" }
+            ],
+            "choice": {
+              "prompt": "风很软，她的眼睛亮亮的。你的回答——",
+              "options": [
+                {
+                  "text": "许念，这次换我接住你。我喜欢你。",
+                  "momo": 3,
+                  "gateConfirm": true,
+                  "reaction": [
+                    { "text": "她眼眶一下子红了，重重点头，扑进你怀里，像那只终于不再炸毛的猫。" },
+                    { "speaker": "aman", "text": "我也是……我也想，被你交给你自己照顾。（剩下的话埋进你怀里，听不清了）" },
+                    { "text": "脚边的猫喵喵叫着，像在起哄。" }
+                  ]
+                },
+                {
+                  "text": "再等等——让我把这份心意，攒得能稳稳接住你。",
+                  "momo": 0,
+                  "reaction": [
+                    { "speaker": "aman", "text": "……好。我等你。反正我跑得没小猫快，跑不掉的。" },
+                    { "text": "她笑了，眼里有点失落，又有点安心。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "unlockFlag": "romance_aman_b4" }
+        },
+        {
+          "id": "aman_b5",
+          "phase": "终幕",
+          "title": "两个人的猫",
+          "guide": "确认心意之后，慢慢走到这里（好感约 110）。",
+          "trigger": [
+            { "type": "affinity", "characterId": "aman", "minValue": 110 }
+          ],
+          "scene": {
+            "location": "apartment",
+            "lines": [
+              { "text": "确认心意之后的某个傍晚，许念神神秘秘地把你拉到公寓楼下，怀里抱着个猫窝。" },
+              { "text": "猫窝里，正是当初搬家日那只受惊的猫——如今乖乖地打着呼噜。" },
+              { "speaker": "aman", "text": "原主人要出国，托我找个家。我想了想……（她脸红）我们一起养它，好不好？" },
+              { "text": "她把猫窝塞进你怀里，小猫睁开眼看了看你，又安心地睡了过去。" }
+            ],
+            "choice": {
+              "prompt": "她眼巴巴地看着你。",
+              "options": [
+                {
+                  "text": "好。从今天起，它有两个家长了。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "aman", "text": "那……它跟我们，就是一家人啦。" },
+                    { "text": "她笑得眉眼弯弯，靠在你肩上，伸手轻轻挠着猫的下巴。楼道的灯，暖暖地亮着。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 10, "unlockFlag": "romance_aman_b5" }
+        }
+      ]
     }
   ]
 }
