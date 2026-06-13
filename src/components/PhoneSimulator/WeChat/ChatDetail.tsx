@@ -9,6 +9,8 @@ import { assetUrl } from '@/lib/assets';
 interface ChatDetailProps {
   characterId: string;
   onBack: () => void;
+  /** 嵌入 ContactScreen 时隐藏自带顶栏（由外层统一渲染） */
+  hideHeader?: boolean;
 }
 
 const avatarColors: Record<string, string> = {
@@ -22,23 +24,28 @@ const avatarColors: Record<string, string> = {
   linxia: '#FFCA28',
 };
 
-// 模拟回复选项（按当前 8 位角色人设）
-const quickReplies: Record<string, string[]> = {
-  suli: ['……还没睡？', '今晚的节目放了你点的歌。', '零点，频段见。'],
-  aruo: ['直播马上开！来捧场！', '今天弹幕全在问你是谁哦~', '救场之恩，请你喝奶茶！'],
-  sangluo: ['店里给你留了位子。', '别熬太晚。', '咖啡煮上了，慢慢来。'],
-  aman: ['团子今天很乖哦。', '你也要按时吃饭呀。', '带了猫条，要来摸猫吗？'],
-  shenzhaoning: ['收到。', '流程我来对，你别管。', '十分钟后给你结果。'],
-  murongxue: ['我记了点东西，你可能用得上。', '细节对不上，回头细说。', '嗯，在听。'],
-  yunzhiyi: ['马上到！！', '跑这趟算我的！', '今天也是元气满满的一天！'],
-  linxia: ['清单我列好了！', '收到收到，马上办！', '那个……谢谢你今天。'],
-  default: ['嗯。', '好的。', '知道了。'],
+// 玩家可点的快捷回复（玩家口吻，通用且暖）
+const playerReplies = ['在的，怎么了？', '辛苦啦，注意休息', '想你了', '改天约你出来'];
+
+// 她的回应（角色口吻——聊天有来有回，不再答非所问）
+const herReplies: Record<string, string[]> = {
+  suli: ['嗯……听到你的消息，安心了点。', '今晚的节目，悄悄给你留了首歌。', '别太晚睡，我陪着你。'],
+  aruo: ['哇你终于回我了！感动！', '下次直播我喊你的名字哦~', '有你在，冷场都不怕啦！'],
+  sangluo: ['店里给你留着位子，随时来。', '别硬撑，累了就歇会儿。', '听你这么说，我就放心了。'],
+  aman: ['团子刚还在念叨你呢（骗你的）。', '你也要好好吃饭呀。', '想我了就来摸猫，随时欢迎。'],
+  shenzhaoning: ['收到。……谢谢你还想着我。', '有你这句，今天的乱摊子也值了。', '嗯，我也是。'],
+  murongxue: ['我把你说的记下来了。', '……被你这么一说，有点不好意思。', '嗯，我一直都在听。'],
+  yunzhiyi: ['哎嘿，被你发现我在等消息了！', '约我呀约我呀！我超有空！', '今天也要元气满满哦，一起！'],
+  linxia: ['看到你消息，今天的累都没了。', '那个……我也很谢谢你。', '下次换我请你，说定了！'],
+  default: ['嗯，谢谢你。', '收到，照顾好自己。', '改天见面聊。'],
 };
 
-export default function ChatDetail({ characterId, onBack }: ChatDetailProps) {
+export default function ChatDetail({ characterId, onBack, hideHeader = false }: ChatDetailProps) {
   const phoneMessages = usePlayerStore((s) => s.phoneMessages);
   const addPhoneMessage = usePlayerStore((s) => s.addPhoneMessage);
   const markMessageRead = usePlayerStore((s) => s.markMessageRead);
+  const addAffinity = usePlayerStore((s) => s.addAffinity);
+  const tryDailyAction = usePlayerStore((s) => s.tryDailyAction);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
@@ -46,28 +53,26 @@ export default function ChatDetail({ characterId, onBack }: ChatDetailProps) {
   const character = getCharacterById(characterId);
   const color = avatarColors[characterId] || '#999';
 
-  // 获取当前角色的微信消息
   const messages = phoneMessages
     .filter((m) => m.type === 'wechat' && m.characterId === characterId)
     .sort((a, b) => a.timestamp - b.timestamp);
 
-  // 自动滚动到底部
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages.length, isTyping]);
 
-  // 标记消息已读
   useEffect(() => {
     messages.forEach((m) => {
-      if (!m.read) {
+      if (!m.read && !m.id.startsWith('player_')) {
         markMessageRead(m.id);
       }
     });
   }, [messages, markMessageRead]);
 
   const handleQuickReply = (text: string) => {
+    if (isTyping) return;
     const playerId = `player_${Date.now()}`;
     addPhoneMessage({
       id: playerId,
@@ -79,13 +84,18 @@ export default function ChatDetail({ characterId, onBack }: ChatDetailProps) {
     });
     setNewMessageIds((prev) => new Set(prev).add(playerId));
 
-    // 模拟角色正在输入
+    // 每日首次主动聊天 +2 好感（看手机是「有用的事」，限频防刷）
+    if (tryDailyAction(`wechat_chat:${characterId}`)) {
+      addAffinity(characterId, 2);
+    }
+
+    // 她回应（角色口吻，有来有回）
     setIsTyping(true);
-    const delay = 1000 + Math.random() * 2000;
+    const delay = 900 + Math.random() * 1500;
     setTimeout(() => {
       setIsTyping(false);
-      const phrases = character?.phonePersonality.commonPhrases || ['……'];
-      const reply = phrases[Math.floor(Math.random() * phrases.length)];
+      const pool = herReplies[characterId] || herReplies.default;
+      const reply = pool[Math.floor(Math.random() * pool.length)];
       const replyId = `char_${Date.now()}`;
       addPhoneMessage({
         id: replyId,
@@ -93,41 +103,45 @@ export default function ChatDetail({ characterId, onBack }: ChatDetailProps) {
         type: 'wechat',
         content: reply,
         timestamp: Date.now(),
-        read: false,
+        read: true,
       });
       setNewMessageIds((prev) => new Set(prev).add(replyId));
     }, delay);
   };
 
-  const replies = quickReplies[characterId] || quickReplies.default;
-
   return (
     <div className="flex h-full flex-col" style={{ background: '#EDEDED' }}>
-      {/* Header */}
-      <div
-        className="flex items-center justify-between px-4 pb-2 pt-2"
-        style={{ background: '#EDEDED', height: '50px' }}
-      >
-        <button onClick={onBack} className="flex items-center text-black/70">
-          <ChevronLeft size={22} />
-        </button>
-        <span className="text-base font-semibold text-black">
-          {character?.name || '未知'}
-        </span>
-        <MoreVertical size={20} className="text-black/40" />
-      </div>
+      {!hideHeader && (
+        <div className="flex items-center justify-between px-4 pb-2 pt-2" style={{ background: '#EDEDED', height: '50px' }}>
+          <button onClick={onBack} className="flex items-center text-black/70">
+            <ChevronLeft size={22} />
+          </button>
+          <span className="text-base font-semibold text-black">{character?.name || '未知'}</span>
+          <MoreVertical size={20} className="text-black/40" />
+        </div>
+      )}
 
       {/* 消息区域 */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto py-3">
-        {messages.map((msg) => (
-          <MessageBubble
-            key={msg.id}
-            content={msg.content}
-            type="text"
-            sender="character"
-            isNew={newMessageIds.has(msg.id)}
-          />
-        ))}
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto py-3">
+        {messages.length === 0 && (
+          <p className="px-4 py-8 text-center text-xs text-black/30">
+            还没有聊过天——发条消息，她会回你的。
+          </p>
+        )}
+        {messages.map((msg) => {
+          const isPlayer = msg.id.startsWith('player_');
+          return (
+            <MessageBubble
+              key={msg.id}
+              content={msg.content}
+              type="text"
+              sender={isPlayer ? 'player' : 'character'}
+              avatarUrl={isPlayer ? undefined : character?.avatarUrl}
+              fallbackInitial={character?.name.charAt(0) ?? ''}
+              isNew={newMessageIds.has(msg.id)}
+            />
+          );
+        })}
 
         {/* 正在输入指示器 */}
         <AnimatePresence>
@@ -139,36 +153,22 @@ export default function ChatDetail({ characterId, onBack }: ChatDetailProps) {
               className="flex items-center gap-2 px-4 py-2"
             >
               {character?.avatarUrl ? (
-                <img
-                  src={assetUrl(character.avatarUrl)}
-                  alt={character.name}
-                  className="h-9 w-9 flex-shrink-0 rounded-lg object-cover"
-                />
+                <img src={assetUrl(character.avatarUrl)} alt={character.name} className="h-9 w-9 flex-shrink-0 rounded-lg object-cover" />
               ) : (
-                <div
-                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
-                  style={{ backgroundColor: color }}
-                >
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white" style={{ backgroundColor: color }}>
                   {character?.name.charAt(0)}
                 </div>
               )}
               <div className="rounded-lg bg-white px-3 py-2">
                 <div className="flex items-center gap-1">
-                  <motion.span
-                    animate={{ opacity: [0.3, 1, 0.3] }}
-                    transition={{ repeat: Infinity, duration: 1, delay: 0 }}
-                    className="h-1.5 w-1.5 rounded-full bg-black/30"
-                  />
-                  <motion.span
-                    animate={{ opacity: [0.3, 1, 0.3] }}
-                    transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
-                    className="h-1.5 w-1.5 rounded-full bg-black/30"
-                  />
-                  <motion.span
-                    animate={{ opacity: [0.3, 1, 0.3] }}
-                    transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
-                    className="h-1.5 w-1.5 rounded-full bg-black/30"
-                  />
+                  {[0, 0.2, 0.4].map((d) => (
+                    <motion.span
+                      key={d}
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{ repeat: Infinity, duration: 1, delay: d }}
+                      className="h-1.5 w-1.5 rounded-full bg-black/30"
+                    />
+                  ))}
                 </div>
               </div>
             </motion.div>
@@ -176,26 +176,22 @@ export default function ChatDetail({ characterId, onBack }: ChatDetailProps) {
         </AnimatePresence>
       </div>
 
-      {/* 快捷回复 + 输入区域 */}
+      {/* 玩家快捷回复 */}
       <div style={{ background: '#F7F7F7' }}>
-        {/* 快捷回复按钮 */}
         <div className="flex gap-2 overflow-x-auto px-3 py-2">
-          {replies.map((reply, i) => (
+          {playerReplies.map((reply) => (
             <button
-              key={i}
+              key={reply}
               onClick={() => handleQuickReply(reply)}
-              className="flex-shrink-0 rounded-full border border-black/10 bg-white px-3 py-1 text-xs text-black/70 transition-colors active:bg-black/5"
+              disabled={isTyping}
+              className="flex-shrink-0 rounded-full border border-black/10 bg-white px-3 py-1 text-xs text-black/70 transition-colors active:bg-black/5 disabled:opacity-40"
             >
               {reply}
             </button>
           ))}
         </div>
-
-        {/* 输入栏 */}
         <div className="flex items-center gap-2 px-3 pb-3 pt-1">
-          <div className="flex-1 rounded-md bg-white px-3 py-2 text-sm text-black/30">
-            输入消息...
-          </div>
+          <div className="flex-1 rounded-md bg-white px-3 py-2 text-sm text-black/30">点上面的快捷回复…</div>
           <button className="rounded-md bg-white px-3 py-2 text-sm text-black/50">发送</button>
         </div>
       </div>

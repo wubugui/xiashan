@@ -1,150 +1,117 @@
-import { FaWeixin } from 'react-icons/fa';
-import { Phone, MessageSquare, Globe } from 'lucide-react';
+import { MessageCircle, MessageSquare, Phone as PhoneIcon, Globe, ChevronRight } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
-import { motion } from 'framer-motion';
+import { getCharacterById } from '@/data/characters';
+import { commsTier, type CommsTier } from '@/engine/phoneAccess';
+import { assetUrl } from '@/lib/assets';
+import { cn } from '@/lib/utils';
 
 interface PhoneHomeScreenProps {
-  onOpenWeChat: () => void;
-  onOpenPhone: () => void;
-  onOpenSMS: () => void;
+  onOpenContact: (characterId: string) => void;
   onOpenBrowser: () => void;
 }
 
-const apps = [
-  {
-    id: 'wechat',
-    label: '微信',
-    icon: FaWeixin,
-    gradient: 'from-green-500 to-green-600',
-    countKey: 'wechat' as const,
-  },
-  {
-    id: 'phone',
-    label: '电话',
-    icon: Phone,
-    gradient: 'from-green-400 to-green-600',
-    countKey: 'call' as const,
-  },
-  {
-    id: 'sms',
-    label: '短信',
-    icon: MessageSquare,
-    gradient: 'from-blue-400 to-blue-600',
-    countKey: 'sms' as const,
-  },
-  {
-    id: 'browser',
-    label: '浏览器',
-    icon: Globe,
-    gradient: 'from-blue-500 to-indigo-500',
-    countKey: null,
-  },
-];
+/**
+ * 手机首页 = 以「人」为中心的消息中心。
+ * 每个已加微信（抽到）的角色一行：头像 + 最近消息 + 未读 + 三档通讯图标（亮=已解锁/灰=未解锁）。
+ * 取代旧的四个拟真 app 图标网格。
+ */
+export default function PhoneHomeScreen({ onOpenContact, onOpenBrowser }: PhoneHomeScreenProps) {
+  const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
+  const affinityMap = usePlayerStore((s) => s.affinityMap);
+  const phoneMessages = usePlayerStore((s) => s.phoneMessages);
 
-export default function PhoneHomeScreen({
-  onOpenWeChat,
-  onOpenPhone,
-  onOpenSMS,
-  onOpenBrowser,
-}: PhoneHomeScreenProps) {
-  const unreadCounts = usePlayerStore((s) => s.unreadCounts);
+  const contacts = ownedCharacters
+    .map((oc) => {
+      const char = getCharacterById(oc.characterId);
+      if (!char) return null;
+      const msgs = phoneMessages
+        .filter((m) => m.characterId === oc.characterId)
+        .sort((a, b) => a.timestamp - b.timestamp);
+      const last = msgs[msgs.length - 1];
+      const unread = msgs.filter((m) => !m.read && !m.id.startsWith('player_')).length;
+      const tier = commsTier(oc.characterId, true, affinityMap[oc.characterId] ?? 0);
+      return { char, last, unread, tier, lastTs: last?.timestamp ?? 0 };
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null)
+    .sort((a, b) => b.lastTs - a.lastTs);
 
-  const handleAppClick = (appId: string) => {
-    switch (appId) {
-      case 'wechat':
-        onOpenWeChat();
-        break;
-      case 'phone':
-        onOpenPhone();
-        break;
-      case 'sms':
-        onOpenSMS();
-        break;
-      case 'browser':
-        onOpenBrowser();
-        break;
+  const formatTime = (ts: number) => {
+    if (!ts) return '';
+    const d = new Date(ts);
+    const now = new Date();
+    if (d.toDateString() === now.toDateString()) {
+      return d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
     }
+    return `${d.getMonth() + 1}/${d.getDate()}`;
   };
 
+  const tierIcon = (tier: CommsTier, need: 1 | 2 | 3, Icon: typeof MessageCircle, onColor: string) => (
+    <Icon size={14} className={tier >= need ? onColor : 'text-white/15'} />
+  );
+
   return (
-    <div
-      className="flex h-full flex-col"
-      style={{
-        background: 'linear-gradient(135deg, #0f0c29 0%, #1a1a2e 40%, #16213e 100%)',
-      }}
-    >
-      {/* 顶部空间 */}
-      <div className="flex-shrink-0" style={{ height: '80px' }} />
-
-      {/* App 图标网格 */}
-      <div className="flex-1 px-6 pt-4">
-        <div className="grid grid-cols-4 gap-y-6">
-          {apps.map((app, index) => {
-            const Icon = app.icon;
-            const badge = app.countKey ? unreadCounts[app.countKey] : 0;
-
-            return (
-              <motion.button
-                key={app.id}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: index * 0.05, type: 'spring', stiffness: 400, damping: 20 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => handleAppClick(app.id)}
-                className="flex flex-col items-center gap-1.5"
-              >
-                <div className="relative">
-                  <div
-                    className={`flex h-14 w-14 items-center justify-center rounded-[15px] bg-gradient-to-br ${app.gradient} shadow-lg`}
-                  >
-                    <Icon size={28} className="text-white" />
-                  </div>
-                  {badge > 0 && (
-                    <div className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1">
-                      <span className="text-xs font-bold text-white">
-                        {badge > 99 ? '99+' : badge}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <span className="text-xs text-white/80">{app.label}</span>
-              </motion.button>
-            );
-          })}
-        </div>
+    <div className="flex h-full flex-col bg-gradient-to-b from-[#0f0c29] via-[#16213e] to-[#0f0c29]">
+      {/* 标题 */}
+      <div className="flex items-center justify-between px-5 pb-2 pt-1">
+        <h1 className="text-xl font-black text-white">消息</h1>
+        <button
+          onClick={onOpenBrowser}
+          className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-bold text-sky-300 active:scale-95"
+        >
+          <Globe size={13} /> 城市情报
+        </button>
       </div>
 
-      {/* 底部 Dock */}
-      <div className="flex-shrink-0 px-4 pb-2">
-        <div
-          className="flex items-center justify-around rounded-2xl px-4 py-3"
-          style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)' }}
-        >
-          {apps.slice(0, 4).map((app) => {
-            const Icon = app.icon;
-            const badge = app.countKey ? unreadCounts[app.countKey] : 0;
-            return (
+      {/* 联系人列表 */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4">
+        {contacts.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center gap-2 px-8 text-center">
+            <MessageCircle size={36} className="text-white/15" />
+            <p className="text-sm text-white/40">还没有联系人</p>
+            <p className="text-xs leading-relaxed text-white/25">在补给频道抽到她，就会自动加上微信——她会主动给你发消息。</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {contacts.map(({ char, last, unread, tier }) => (
               <button
-                key={`dock-${app.id}`}
-                onClick={() => handleAppClick(app.id)}
-                className="relative"
+                key={char.id}
+                onClick={() => onOpenContact(char.id)}
+                className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 text-left transition-all active:scale-[0.99] hover:border-white/20"
               >
-                <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-[13px] bg-gradient-to-br ${app.gradient}`}
-                >
-                  <Icon size={24} className="text-white" />
-                </div>
-                {badge > 0 && (
-                  <div className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-0.5">
-                    <span className="text-[10px] font-bold text-white">
-                      {badge > 99 ? '99+' : badge}
+                <div className="relative shrink-0">
+                  {char.avatarUrl ? (
+                    <img src={assetUrl(char.avatarUrl)} alt={char.name} className="h-12 w-12 rounded-2xl object-cover" loading="lazy" />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-600 text-lg font-bold text-white">{char.name.charAt(0)}</div>
+                  )}
+                  {unread > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
+                      {unread > 99 ? '99+' : unread}
                     </span>
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="truncate text-sm font-bold text-white">{char.name}</span>
+                    <span className="shrink-0 text-[10px] text-white/35">{formatTime(last?.timestamp ?? 0)}</span>
                   </div>
-                )}
+                  <p className={cn('mt-0.5 truncate text-xs', unread > 0 ? 'text-white/80' : 'text-white/40')}>
+                    {last ? last.content : '还没有聊过天'}
+                  </p>
+                  {/* 三档通讯图标：亮=已解锁 */}
+                  <div className="mt-1.5 flex items-center gap-2.5">
+                    {tierIcon(tier, 1, MessageCircle, 'text-green-400')}
+                    {tierIcon(tier, 2, MessageSquare, 'text-sky-400')}
+                    {tierIcon(tier, 3, PhoneIcon, 'text-amber-400')}
+                  </div>
+                </div>
+
+                <ChevronRight size={16} className="shrink-0 text-white/25" />
               </button>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import { PhoneOff } from 'lucide-react';
 import { getCharacterById } from '@/data/characters';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { assetUrl } from '@/lib/assets';
 
 interface InCallProps {
   characterId: string;
@@ -79,12 +80,22 @@ export default function InCall({ characterId, dialogueLines, onEnd }: InCallProp
     >
       {/* 头像 */}
       <div className="mt-12">
-        <div
-          className="flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold text-white shadow-xl"
-          style={{ backgroundColor: color }}
-        >
-          {character?.name.charAt(0) || '?'}
-        </div>
+        {character?.avatarUrl ? (
+          <motion.img
+            src={assetUrl(character.avatarUrl)}
+            alt={character.name}
+            animate={{ scale: [1, 1.04, 1] }}
+            transition={{ repeat: Infinity, duration: 2.4, ease: 'easeInOut' }}
+            className="h-24 w-24 rounded-full object-cover shadow-xl ring-2 ring-white/20"
+          />
+        ) : (
+          <div
+            className="flex h-24 w-24 items-center justify-center rounded-full text-2xl font-bold text-white shadow-xl"
+            style={{ backgroundColor: color }}
+          >
+            {character?.name.charAt(0) || '?'}
+          </div>
+        )}
       </div>
 
       {/* 名称 */}

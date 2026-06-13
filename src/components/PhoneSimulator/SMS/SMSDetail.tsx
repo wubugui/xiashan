@@ -3,10 +3,13 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { assetUrl } from '@/lib/assets';
 
 interface SMSDetailProps {
   characterId: string;
   onBack: () => void;
+  /** 嵌入 ContactScreen 时隐藏自带顶栏 */
+  hideHeader?: boolean;
 }
 
 const avatarColors: Record<string, string> = {
@@ -20,16 +23,30 @@ const avatarColors: Record<string, string> = {
   linxia: '#FFCA28',
 };
 
+// 短信定位「更短、更随性」——玩家发起的小问候
 const smsReplies: Record<string, string[]> = {
-  suli: ['收到。', '我知道了。', '……'],
-  aruo: ['好呀！', '哈哈', '师姐最棒了！'],
-  default: ['好的', '收到', '嗯'],
+  default: ['在干嘛？', '路上小心', '早点睡', '周末有空吗？'],
 };
 
-export default function SMSDetail({ characterId, onBack }: SMSDetailProps) {
+// 她的短信回应（短、私人、口吻贴人设）
+const herSms: Record<string, string[]> = {
+  suli: ['刚下播。听到提示音就笑了。', '嗯，你也是。', '夜里别想太多，有我。'],
+  aruo: ['哎你猜我在干嘛~等你消息呀！', '收到收到！明天见！', '么么，注意安全！'],
+  sangluo: ['在煮今天最后一壶。', '路上慢点，不急。', '周末？给你留位子。'],
+  aman: ['在给团子梳毛，它打了个喷嚏。', '好，你也是。', '有空就来，我都在。'],
+  shenzhaoning: ['刚收工。难得你先发我。', '嗯，知道了。', '周末……可以。'],
+  murongxue: ['在整理素材，看到一条想发你。', '好，路上看手机别走神。', '嗯，约。'],
+  yunzhiyi: ['刚送完最后一单！超快的！', '收到！明天见明天见！', '有空有空！去哪都行！'],
+  linxia: ['刚到家，正想发你呢。', '你也早点休息呀。', '周末！我看看清单排一下~'],
+  default: ['嗯，收到。', '好，你也是。', '改天约。'],
+};
+
+export default function SMSDetail({ characterId, onBack, hideHeader = false }: SMSDetailProps) {
   const phoneMessages = usePlayerStore((s) => s.phoneMessages);
   const addPhoneMessage = usePlayerStore((s) => s.addPhoneMessage);
   const markMessageRead = usePlayerStore((s) => s.markMessageRead);
+  const addAffinity = usePlayerStore((s) => s.addAffinity);
+  const tryDailyAction = usePlayerStore((s) => s.tryDailyAction);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
 
@@ -48,7 +65,7 @@ export default function SMSDetail({ characterId, onBack }: SMSDetailProps) {
 
   useEffect(() => {
     messages.forEach((m) => {
-      if (!m.read) {
+      if (!m.read && !m.id.startsWith('player_')) {
         markMessageRead(m.id);
       }
     });
@@ -66,10 +83,15 @@ export default function SMSDetail({ characterId, onBack }: SMSDetailProps) {
     });
     setNewMessageIds((prev) => new Set(prev).add(msgId));
 
-    // 模拟回复
+    // 每日首次短信问候 +2 好感（限频防刷）
+    if (tryDailyAction(`sms_chat:${characterId}`)) {
+      addAffinity(characterId, 2);
+    }
+
+    // 她回应（角色口吻）
     setTimeout(() => {
-      const phrases = character?.phonePersonality.commonPhrases || ['……'];
-      const reply = phrases[Math.floor(Math.random() * phrases.length)];
+      const pool = herSms[characterId] || herSms.default;
+      const reply = pool[Math.floor(Math.random() * pool.length)];
       const replyId = `char_sms_${Date.now()}`;
       addPhoneMessage({
         id: replyId,
@@ -77,28 +99,32 @@ export default function SMSDetail({ characterId, onBack }: SMSDetailProps) {
         type: 'sms',
         content: reply,
         timestamp: Date.now(),
-        read: false,
+        read: true,
       });
       setNewMessageIds((prev) => new Set(prev).add(replyId));
-    }, 1500 + Math.random() * 1500);
+    }, 1200 + Math.random() * 1200);
   };
 
   const replies = smsReplies[characterId] || smsReplies.default;
 
   return (
     <div className="flex h-full flex-col" style={{ background: '#000' }}>
-      {/* Header */}
-      <div className="flex items-center px-4 pb-2 pt-2" style={{ background: '#1c1c1e', height: '50px' }}>
-        <button onClick={onBack} className="mr-3 flex items-center text-blue-400">
-          <ChevronLeft size={22} />
-        </button>
-        <span className="text-base font-semibold text-white">
-          {character?.name || '未知'}
-        </span>
-      </div>
+      {!hideHeader && (
+        <div className="flex items-center px-4 pb-2 pt-2" style={{ background: '#1c1c1e', height: '50px' }}>
+          <button onClick={onBack} className="mr-3 flex items-center text-blue-400">
+            <ChevronLeft size={22} />
+          </button>
+          <span className="text-base font-semibold text-white">{character?.name || '未知'}</span>
+        </div>
+      )}
 
       {/* 消息区域 */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+        {messages.length === 0 && (
+          <p className="px-2 py-8 text-center text-xs text-white/30">
+            还没有短信——发条问候，她会回你。
+          </p>
+        )}
         {messages.map((msg) => {
           const isPlayer = msg.id.startsWith('player_');
           return (
@@ -109,12 +135,13 @@ export default function SMSDetail({ characterId, onBack }: SMSDetailProps) {
               className={`mb-2.5 flex ${isPlayer ? 'justify-end' : 'justify-start'}`}
             >
               {!isPlayer && (
-                <div
-                  className="mr-2 mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                  style={{ backgroundColor: color }}
-                >
-                  {character?.name.charAt(0)}
-                </div>
+                character?.avatarUrl ? (
+                  <img src={assetUrl(character.avatarUrl)} alt="" className="mr-2 mt-1 h-8 w-8 flex-shrink-0 rounded-full object-cover" loading="lazy" />
+                ) : (
+                  <div className="mr-2 mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: color }}>
+                    {character?.name.charAt(0)}
+                  </div>
+                )
               )}
               <div
                 className={`max-w-[75%] rounded-2xl px-3 py-2 ${

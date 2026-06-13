@@ -1,10 +1,15 @@
 import { motion } from 'framer-motion';
 import { Camera, Volume2 } from 'lucide-react';
+import { assetUrl } from '@/lib/assets';
 
 interface MessageBubbleProps {
   content: string;
   type: 'text' | 'image' | 'voice' | 'red_packet';
   sender: 'character' | 'player';
+  /** 角色头像（character 侧用真头像，缺省退回首字色块） */
+  avatarUrl?: string;
+  /** 头像首字回退（角色名首字，不是消息内容首字） */
+  fallbackInitial?: string;
   voiceText?: string;
   isNew?: boolean;
 }
@@ -13,6 +18,8 @@ export default function MessageBubble({
   content,
   type,
   sender,
+  avatarUrl,
+  fallbackInitial = '',
   voiceText,
   isNew = false,
 }: MessageBubbleProps) {
@@ -84,12 +91,21 @@ export default function MessageBubble({
       className={`flex ${isPlayer ? 'justify-end' : 'justify-start'} mb-3 px-3`}
     >
       {!isPlayer && (
-        <div
-          className="mr-2 mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
-          style={{ background: '#07C160' }}
-        >
-          {content.charAt(0)}
-        </div>
+        avatarUrl ? (
+          <img
+            src={assetUrl(avatarUrl)}
+            alt=""
+            className="mr-2 mt-1 h-9 w-9 flex-shrink-0 rounded-lg object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div
+            className="mr-2 mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
+            style={{ background: '#07C160' }}
+          >
+            {fallbackInitial}
+          </div>
+        )
       )}
 
       <div className="relative max-w-[75%]">
