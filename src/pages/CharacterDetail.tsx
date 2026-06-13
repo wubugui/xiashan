@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Hand, MessageCircle, Gift, TrendingUp, Heart } from 'lucide-react';
+import { ChevronLeft, TrendingUp, Heart } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
 import { getRelationshipStages, getStageInfo, getNextStage } from '@/data/relationship';
@@ -18,7 +18,7 @@ import { assetUrl } from '@/lib/assets';
 import PageBackdrop from '@/components/PageBackdrop';
 import { backdropForCharacter } from '@/lib/pageBackdrops';
 
-type TabType = 'info' | 'interact' | 'upgrade' | 'romance' | 'collect';
+type TabType = 'info' | 'upgrade' | 'romance' | 'collect';
 
 const rarityGradient = {
   N: 'from-slate-600 to-slate-800',
@@ -42,9 +42,6 @@ const rarityLabel = {
 };
 
 const UPGRADE_COST = 100;
-const INTERACT_AFFINITY = 2;
-const GIFT_COST = 50;
-const GIFT_AFFINITY = 5;
 
 export default function CharacterDetail() {
   const { id } = useParams<{ id: string }>();
@@ -103,12 +100,6 @@ export default function CharacterDetail() {
     return available[0]?.text || character.dialogues[0]?.text || '';
   }, [character, level]);
 
-  // 当前等级可用的互动
-  const availableInteractions = useMemo(() => {
-    if (!character) return [];
-    return character.interactions.filter((i) => i.level <= level);
-  }, [character, level]);
-
   // 当前等级可用的效果
   const availableEffects = useMemo(() => {
     if (!character) return [];
@@ -120,32 +111,6 @@ export default function CharacterDetail() {
     if (!character) return [];
     return character.effects.filter((e) => e.level > level).sort((a, b) => a.level - b.level);
   }, [character, level]);
-
-  const handleInteract = (type: 'touch' | 'talk' | 'gift') => {
-    playSound('btn-confirm');
-    if (!character || !owned) return;
-    const interaction = availableInteractions.find((i) => i.type === type);
-    if (!interaction) return;
-    if (type === 'gift' && spiritStones < GIFT_COST) {
-      setInteractionResponse(`（灵石不足，送礼需要 ${GIFT_COST}。）`);
-      setTimeout(() => setInteractionResponse(null), 3000);
-      return;
-    }
-    // 可再生好感源按自然日限频（设计文档 6.3）
-    if (!tryDailyAction(`interact:${type}:${character.id}`)) {
-      setInteractionResponse('（今天已经这样相处过了，明天再来吧。）');
-      setTimeout(() => setInteractionResponse(null), 3000);
-      return;
-    }
-    if (type === 'gift') {
-      addSpiritStones(-GIFT_COST);
-      addAffinity(character.id, GIFT_AFFINITY);
-    } else {
-      addAffinity(character.id, INTERACT_AFFINITY);
-    }
-    setInteractionResponse(interaction.response);
-    setTimeout(() => setInteractionResponse(null), 3000);
-  };
 
   const handleAdvanceStage = () => {
     playSound('stage-up');
@@ -299,8 +264,7 @@ export default function CharacterDetail() {
           ...(romanceArc ? [{ id: 'romance' as TabType, label: '心动' }] : []),
           { id: 'info' as TabType, label: '信息' },
           { id: 'collect' as TabType, label: '收藏' },
-          { id: 'interact' as TabType, label: '互动' },
-          { id: 'upgrade' as TabType, label: '升级' },
+          { id: 'upgrade' as TabType, label: '养成' },
         ]).map((tab) => (
           <button
             key={tab.id}
@@ -464,14 +428,14 @@ export default function CharacterDetail() {
           </motion.div>
         )}
 
-        {/* 互动标签 */}
-        {activeTab === 'interact' && (
+        {/* 养成标签 · 关系阶段（承重：引荐/视频/手机事件都看它）*/}
+        {activeTab === 'upgrade' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
-            {/* 关系阶段 */}
+            {/* 关系阶段：好感是温度、信物（她的卡）是钥匙 */}
             <div className="rounded-xl bg-slate-800/40 p-4">
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-sm text-slate-400">
@@ -530,53 +494,11 @@ export default function CharacterDetail() {
 
             {!owned && (
               <p className="rounded-lg bg-slate-800/30 px-3 py-2 text-xs leading-relaxed text-slate-500">
-                她还只是便利屋的委托人。继续帮她完成委托，好感不会丢失；好感攒到 40 后人物频道触发心动UP，抽到她即可解锁互动与关系。
+                她还只是便利屋的委托人。继续帮她完成委托，好感不会丢失；好感攒到 40 后人物频道触发心动UP，抽到她即可加深关系。
               </p>
             )}
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => handleInteract('touch')}
-                disabled={!owned || !availableInteractions.some((i) => i.type === 'touch')}
-                className={cn(
-                  'flex flex-1 flex-col items-center gap-2 rounded-xl py-4',
-                  'bg-slate-800/40 border border-slate-700/30',
-                  'text-slate-300 transition-colors hover:bg-slate-700/40',
-                  'disabled:opacity-40 disabled:cursor-not-allowed',
-                )}
-              >
-                <Hand size={20} />
-                <span className="text-xs">触摸</span>
-              </button>
-              <button
-                onClick={() => handleInteract('talk')}
-                disabled={!owned || !availableInteractions.some((i) => i.type === 'talk')}
-                className={cn(
-                  'flex flex-1 flex-col items-center gap-2 rounded-xl py-4',
-                  'bg-slate-800/40 border border-slate-700/30',
-                  'text-slate-300 transition-colors hover:bg-slate-700/40',
-                  'disabled:opacity-40 disabled:cursor-not-allowed',
-                )}
-              >
-                <MessageCircle size={20} />
-                <span className="text-xs">对话</span>
-              </button>
-              <button
-                onClick={() => handleInteract('gift')}
-                disabled={!owned || !availableInteractions.some((i) => i.type === 'gift')}
-                className={cn(
-                  'flex flex-1 flex-col items-center gap-2 rounded-xl py-4',
-                  'bg-slate-800/40 border border-slate-700/30',
-                  'text-slate-300 transition-colors hover:bg-slate-700/40',
-                  'disabled:opacity-40 disabled:cursor-not-allowed',
-                )}
-              >
-                <Gift size={20} />
-                <span className="text-xs">送礼 💎{GIFT_COST}</span>
-              </button>
-            </div>
-
-            {/* 互动回应 */}
+            {/* 关系推进反馈 */}
             {interactionResponse && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -587,14 +509,10 @@ export default function CharacterDetail() {
                 <p className="text-sm leading-relaxed text-slate-300">{interactionResponse}</p>
               </motion.div>
             )}
-
-            {owned && !availableInteractions.length && (
-              <p className="text-center text-xs text-slate-600">提升等级解锁更多互动</p>
-            )}
           </motion.div>
         )}
 
-        {/* 升级标签 */}
+        {/* 养成标签 · 等级培养 */}
         {activeTab === 'upgrade' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
