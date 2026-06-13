@@ -82,6 +82,10 @@ const gachaSceneComposition: Record<string, { mobileFocus: string; desktopFocus:
   linxia: { mobileFocus: '42% 50%', desktopFocus: '50% 50%', panel: 'right' },
 };
 
+function getGachaSilhouetteUrl(backgroundUrl?: string) {
+  return backgroundUrl?.replace(/\/bg\/gacha\/([^/]+)\.(?:jpe?g|png)$/i, '/bg/gacha-silhouette/$1.png');
+}
+
 /* ────── 高稀有揭晓：角色背景图剪影 → 星星暂停 → 最终背景图 ────── */
 function HighRarityReveal({
   result, onShake, onDone,
@@ -92,8 +96,11 @@ function HighRarityReveal({
 }) {
   const [stage, setStage] = useState<'silhouette' | 'stars' | 'flash' | 'final'>('silhouette');
   const character = getCharacterById(result.characterId) as GachaCharacter | undefined;
-  const sceneUrl = character?.gachaBackgroundUrl || character?.gachaPortraitUrl || character?.portraitUrl;
+  const backgroundUrl = character?.gachaBackgroundUrl;
+  const sceneUrl = backgroundUrl || character?.gachaPortraitUrl || character?.portraitUrl;
+  const silhouetteUrl = getGachaSilhouetteUrl(backgroundUrl);
   const resolvedSceneUrl = assetUrl(sceneUrl);
+  const resolvedSilhouetteUrl = assetUrl(silhouetteUrl);
   const composition = gachaSceneComposition[result.characterId] ?? {
     mobileFocus: '50% 50%',
     desktopFocus: '50% 50%',
@@ -105,8 +112,6 @@ function HighRarityReveal({
   } as CSSProperties;
   const isSSR = result.rarity === 'SSR';
   const starCount = rarityStars[result.rarity];
-  const accent = isSSR ? '#fbbf24' : '#c084fc';
-  const softAccent = isSSR ? 'rgba(251,191,36,0.42)' : 'rgba(192,132,252,0.38)';
 
   useEffect(() => {
     playSound('gacha-riser');
@@ -161,41 +166,38 @@ function HighRarityReveal({
             initial={{ scale: 1.06, opacity: 0 }}
             animate={{
               scale: stage === 'stars' ? 1.03 : 1.06,
-              opacity: stage === 'final' ? 0 : 1,
+              opacity: stage === 'final' ? 0 : 0.72,
             }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="absolute inset-0 h-full w-full object-cover [object-position:var(--intro-focus-mobile)] md:[object-position:var(--intro-focus-desktop)]"
-            style={{ filter: 'brightness(0.03) grayscale(1) contrast(1.5) saturate(0)' }}
-          />
-          <motion.img
-            src={resolvedSceneUrl}
-            alt=""
-            aria-hidden="true"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: stage === 'final' ? 0 : 0.46 }}
-            transition={{ duration: 0.45 }}
-            className="absolute inset-0 h-full w-full object-cover blur-[2px] [object-position:var(--intro-focus-mobile)] md:[object-position:var(--intro-focus-desktop)]"
-            style={{
-              filter: `brightness(0) grayscale(1) contrast(1.6) drop-shadow(0 0 18px ${accent})`,
-            }}
+            style={{ filter: 'brightness(0.34) saturate(0.82) contrast(1.08)' }}
           />
         </>
       ) : (
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(255,255,255,0.1),transparent_28%),linear-gradient(180deg,#02050d,#0f172a)]" />
       )}
 
+      {resolvedSilhouetteUrl && (
+        <motion.img
+          src={resolvedSilhouetteUrl}
+          alt=""
+          aria-hidden="true"
+          initial={{ opacity: 0, scale: 0.96, y: 18 }}
+          animate={{
+            opacity: stage === 'final' ? 0 : 1,
+            scale: stage === 'stars' ? 1.02 : 1,
+            y: stage === 'stars' ? 0 : 10,
+          }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute inset-0 z-10 h-full w-full object-cover [object-position:var(--intro-focus-mobile)] md:[object-position:var(--intro-focus-desktop)]"
+        />
+      )}
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: stage === 'final' ? 0 : 1 }}
         transition={{ duration: 0.35 }}
-        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,5,13,0.25)_0%,rgba(2,5,13,0.05)_46%,rgba(2,5,13,0.78)_100%)]"
-      />
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: stage === 'silhouette' ? 0.5 : stage === 'stars' ? 0.78 : 0 }}
-        transition={{ duration: 0.35 }}
-        className="absolute left-1/2 top-[52%] h-[42vmin] w-[64vmin] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
-        style={{ background: `radial-gradient(circle, ${softAccent} 0%, transparent 66%)` }}
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,5,13,0.10)_0%,rgba(2,5,13,0.02)_46%,rgba(2,5,13,0.48)_100%)]"
       />
 
       <motion.div
@@ -414,7 +416,7 @@ function GachaCard({
 
 /* ────── 余韵：结算展示 ────── */
 function GachaShowcase({
-  results, activeIndex, onPrev, onNext, onComplete, onShake,
+  results, activeIndex, onPrev, onNext, onComplete, onShake, showCompleteButton = true, showSwitchControls = true,
 }: {
   results: GachaResult[];
   activeIndex: number;
@@ -422,6 +424,8 @@ function GachaShowcase({
   onNext: () => void;
   onComplete: () => void;
   onShake: (mag: number) => void;
+  showCompleteButton?: boolean;
+  showSwitchControls?: boolean;
 }) {
   const result = results[activeIndex];
   const isSSR = result.rarity === 'SSR';
@@ -433,7 +437,7 @@ function GachaShowcase({
   const hasSceneArt = Boolean(backgroundUrl);
   const quote = character?.gachaQuote || character?.dialogues?.[0]?.text || '你抽到了新的羁绊。';
   const tags = character?.gachaTags || [character?.element, result.title].filter(Boolean);
-  const canSwitch = results.length > 1;
+  const canSwitch = showSwitchControls && results.length > 1;
   const composition = gachaSceneComposition[result.characterId] ?? {
     mobileFocus: '50% 50%',
     desktopFocus: '50% 50%',
@@ -573,7 +577,16 @@ function GachaShowcase({
               initial={{ y: -22, scale: 2, opacity: 0 }}
               animate={{ y: 0, scale: 1, opacity: 1 }}
               transition={{ delay: 0.28 + i * 0.14, type: 'spring', damping: 13, stiffness: 420 }}
-              className="text-2xl text-amber-200 drop-shadow-[0_0_10px_rgba(251,191,36,0.75)] md:text-4xl"
+              className={cn(
+                'text-2xl md:text-4xl',
+                result.rarity === 'SSR'
+                  ? 'text-amber-200 drop-shadow-[0_0_10px_rgba(251,191,36,0.75)]'
+                  : result.rarity === 'SR'
+                    ? 'text-purple-200 drop-shadow-[0_0_10px_rgba(192,132,252,0.75)]'
+                    : result.rarity === 'R'
+                      ? 'text-blue-200 drop-shadow-[0_0_10px_rgba(96,165,250,0.65)]'
+                      : 'text-slate-200 drop-shadow-[0_0_10px_rgba(226,232,240,0.5)]',
+              )}
             >
               ★
             </motion.span>
@@ -610,7 +623,18 @@ function GachaShowcase({
         )}
 
         <div className={cn('mt-3 flex flex-wrap gap-1.5 md:mt-5 md:gap-3', panelOnRight && 'justify-end')}>
-          <span className="rounded-full bg-amber-300/90 px-3 py-1 text-xs font-black text-slate-950 shadow-[0_0_18px_rgba(251,191,36,0.36)] md:px-5 md:py-2 md:text-base">
+          <span
+            className={cn(
+              'rounded-full px-3 py-1 text-xs font-black shadow-[0_0_18px_rgba(255,255,255,0.24)] md:px-5 md:py-2 md:text-base',
+              result.rarity === 'SSR'
+                ? 'bg-amber-300/90 text-slate-950 shadow-[0_0_18px_rgba(251,191,36,0.36)]'
+                : result.rarity === 'SR'
+                  ? 'bg-purple-300/90 text-purple-950 shadow-[0_0_18px_rgba(192,132,252,0.34)]'
+                  : result.rarity === 'R'
+                    ? 'bg-blue-300/90 text-blue-950'
+                    : 'bg-slate-300/90 text-slate-950',
+            )}
+          >
             {result.rarity}
           </span>
           {tags.map((tag) => (
@@ -644,17 +668,19 @@ function GachaShowcase({
         </div>
       </motion.div>
 
-      <motion.button
-        onClick={onComplete}
-        initial={{ y: 16, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.28, duration: 0.38, ease: 'easeOut' }}
-        className="group absolute bottom-4 left-1/2 z-40 flex h-10 -translate-x-1/2 items-center gap-3 rounded-full border border-white/20 bg-slate-950/30 px-4 text-sm font-bold text-white/88 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-md transition hover:border-amber-200/70 hover:bg-slate-950/44 hover:text-amber-100 md:bottom-7 md:h-11 md:px-5"
-      >
-        <span className="h-px w-7 bg-gradient-to-r from-transparent via-amber-200/75 to-amber-200/20" />
-        <span className="tracking-[0.18em]">收下羁绊</span>
-        <ChevronRight size={17} strokeWidth={2.2} className="-ml-1 text-amber-200/90 transition-transform group-hover:translate-x-0.5" />
-      </motion.button>
+      {showCompleteButton && (
+        <motion.button
+          onClick={onComplete}
+          initial={{ y: 16, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.28, duration: 0.38, ease: 'easeOut' }}
+          className="group absolute bottom-4 left-1/2 z-40 flex h-10 -translate-x-1/2 items-center gap-3 rounded-full border border-white/20 bg-slate-950/30 px-4 text-sm font-bold text-white/88 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-md transition hover:border-amber-200/70 hover:bg-slate-950/44 hover:text-amber-100 md:bottom-7 md:h-11 md:px-5"
+        >
+          <span className="h-px w-7 bg-gradient-to-r from-transparent via-amber-200/75 to-amber-200/20" />
+          <span className="tracking-[0.18em]">收下羁绊</span>
+          <ChevronRight size={17} strokeWidth={2.2} className="-ml-1 text-amber-200/90 transition-transform group-hover:translate-x-0.5" />
+        </motion.button>
+      )}
 
       {canSwitch && (
         <>
@@ -688,7 +714,7 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
     () => indexedResults
       .filter(({ result }) => result.rarity === 'SR' || result.rarity === 'SSR')
       .sort((a, b) => {
-        const byRarity = rarityRank[a.result.rarity] - rarityRank[b.result.rarity];
+        const byRarity = rarityRank[b.result.rarity] - rarityRank[a.result.rarity];
         return byRarity === 0 ? a.index - b.index : byRarity;
       })
       .map(({ index }) => index),
@@ -698,7 +724,7 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
     () => indexedResults
       .filter(({ result }) => result.rarity === 'N' || result.rarity === 'R')
       .sort((a, b) => {
-        const byRarity = rarityRank[a.result.rarity] - rarityRank[b.result.rarity];
+        const byRarity = rarityRank[b.result.rarity] - rarityRank[a.result.rarity];
         return byRarity === 0 ? a.index - b.index : byRarity;
       })
       .map(({ index }) => index),
@@ -717,13 +743,16 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
       : 'done';
 
   const [revealedIndices, setRevealedIndices] = useState<Set<number>>(new Set());
-  const [phase, setPhase] = useState<'highReveal' | 'reveal' | 'done'>(initialPhase);
+  const [phase, setPhase] = useState<'highReveal' | 'highShowcase' | 'reveal' | 'done'>(initialPhase);
   const [activeHighRevealIndex, setActiveHighRevealIndex] = useState(0);
   const [activeResultIndex, setActiveResultIndex] = useState(featuredIndex);
   const [skipped, setSkipped] = useState(false);
   const revealTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const skipTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const shakeControls = useAnimationControls();
+  const hasHighReveal = highRevealOrder.length > 0;
+  const allNormalsRevealed = normalRevealOrder.length > 0
+    && normalRevealOrder.every((index) => revealedIndices.has(index));
 
   const doShake = useCallback((mag: number) => {
     void shakeControls.start(shakeKeyframes(mag), { duration: 0.38 });
@@ -741,6 +770,9 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
     });
   }, []);
 
+  const activeHighResultIndex = highRevealOrder[activeHighRevealIndex];
+  const activeHighResult = activeHighResultIndex === undefined ? undefined : results[activeHighResultIndex];
+
   useEffect(() => {
     revealTimersRef.current.forEach(clearTimeout);
     clearTimeout(skipTimerRef.current);
@@ -753,8 +785,21 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
 
   const finishHighReveal = useCallback(() => {
     const nextHighRevealIndex = activeHighRevealIndex + 1;
+    setActiveResultIndex(highRevealOrder[activeHighRevealIndex] ?? featuredIndex);
+
+    if (nextHighRevealIndex < highRevealOrder.length || normalRevealOrder.length > 0) {
+      setPhase('highShowcase');
+      return;
+    }
+
+    setPhase('done');
+  }, [activeHighRevealIndex, featuredIndex, highRevealOrder, normalRevealOrder.length]);
+
+  const continueAfterHighShowcase = useCallback(() => {
+    const nextHighRevealIndex = activeHighRevealIndex + 1;
     if (nextHighRevealIndex < highRevealOrder.length) {
       setActiveHighRevealIndex(nextHighRevealIndex);
+      setPhase('highReveal');
       return;
     }
 
@@ -762,7 +807,13 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
     setPhase(normalRevealOrder.length > 0 ? 'reveal' : 'done');
   }, [activeHighRevealIndex, featuredIndex, highRevealOrder.length, normalRevealOrder.length]);
 
-  /* 普通卡揭晓排程：N/R 直接砸卡面；SR/SSR 已经在高稀有流程里揭晓。 */
+  useEffect(() => {
+    if (phase !== 'highShowcase') return;
+    const timer = setTimeout(continueAfterHighShowcase, 1800);
+    return () => clearTimeout(timer);
+  }, [continueAfterHighShowcase, phase]);
+
+  /* 普通卡揭晓排程：R/N 直接砸卡面；SR/SSR 已经按 SSR → SR 的顺序揭晓。 */
   useEffect(() => {
     if (phase !== 'reveal' || skipped) return;
     if (normalRevealOrder.length === 0) return;
@@ -776,7 +827,7 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
     return () => timers.forEach(clearTimeout);
   }, [phase, skipped, normalRevealOrder, handleReveal]);
 
-  /* 普通卡全部揭晓 → 进入结算展示；高稀有优先展示最终背景图。 */
+  /* 普通卡全部揭晓：纯普通池进结算展示；已有高稀有展示时只等待用户收下，避免本体二次播放。 */
   useEffect(() => {
     if (phase !== 'reveal') return;
     if (normalRevealOrder.length === 0) {
@@ -784,15 +835,15 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
       setPhase('done');
       return;
     }
-    const allNormalsRevealed = normalRevealOrder.every((index) => revealedIndices.has(index));
     if (allNormalsRevealed) {
+      if (hasHighReveal) return;
       const timer = setTimeout(() => {
         setActiveResultIndex(featuredIndex);
         setPhase('done');
       }, skipped ? 250 : 760);
       return () => clearTimeout(timer);
     }
-  }, [featuredIndex, normalRevealOrder, phase, revealedIndices, skipped]);
+  }, [allNormalsRevealed, featuredIndex, hasHighReveal, normalRevealOrder.length, phase, skipped]);
 
   /* 长按跳过（防误触） */
   const doSkip = useCallback(() => {
@@ -822,9 +873,6 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
     setActiveResultIndex((index) => (index + 1) % results.length);
   }, [results.length]);
 
-  const activeHighResultIndex = highRevealOrder[activeHighRevealIndex];
-  const activeHighResult = activeHighResultIndex === undefined ? undefined : results[activeHighResultIndex];
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -841,6 +889,19 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
             result={activeHighResult}
             onShake={doShake}
             onDone={finishHighReveal}
+          />
+        )}
+
+        {phase === 'highShowcase' && activeHighResultIndex !== undefined && (
+          <GachaShowcase
+            results={results}
+            activeIndex={activeHighResultIndex}
+            onPrev={showPreviousResult}
+            onNext={showNextResult}
+            onComplete={continueAfterHighShowcase}
+            onShake={doShake}
+            showCompleteButton={false}
+            showSwitchControls={false}
           />
         )}
 
@@ -862,6 +923,19 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
                 );
               })}
             </div>
+            {hasHighReveal && allNormalsRevealed && (
+              <motion.button
+                onClick={onComplete}
+                initial={{ y: 18, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: skipped ? 0 : 0.45, duration: 0.32, ease: 'easeOut' }}
+                className="group absolute bottom-8 left-1/2 z-40 flex h-10 -translate-x-1/2 items-center gap-3 rounded-full border border-white/20 bg-slate-950/44 px-4 text-sm font-bold text-white/88 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-md transition hover:border-amber-200/70 hover:bg-slate-950/58 hover:text-amber-100 md:h-11 md:px-5"
+              >
+                <span className="h-px w-7 bg-gradient-to-r from-transparent via-amber-200/75 to-amber-200/20" />
+                <span className="tracking-[0.18em]">收下羁绊</span>
+                <ChevronRight size={17} strokeWidth={2.2} className="-ml-1 text-amber-200/90 transition-transform group-hover:translate-x-0.5" />
+              </motion.button>
+            )}
           </div>
         )}
 
@@ -878,7 +952,7 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
       </motion.div>
 
       {/* 长按跳过 */}
-      {(phase === 'highReveal' || phase === 'reveal') && !skipped && (
+      {(phase === 'highReveal' || (phase === 'reveal' && !allNormalsRevealed)) && !skipped && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
