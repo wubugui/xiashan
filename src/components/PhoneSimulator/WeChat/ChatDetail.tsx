@@ -50,7 +50,9 @@ export default function ChatDetail({ characterId, onBack, hideHeader = false }: 
   const [isTyping, setIsTyping] = useState(false);
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
 
+  const displayAvatar = usePlayerStore((s) => s.displayAvatar);
   const character = getCharacterById(characterId);
+  const avatarSrc = displayAvatar[characterId] || character?.avatarUrl;
   const color = avatarColors[characterId] || '#999';
 
   const messages = phoneMessages
@@ -136,7 +138,7 @@ export default function ChatDetail({ characterId, onBack, hideHeader = false }: 
               content={msg.content}
               type="text"
               sender={isPlayer ? 'player' : 'character'}
-              avatarUrl={isPlayer ? undefined : character?.avatarUrl}
+              avatarUrl={isPlayer ? undefined : avatarSrc}
               fallbackInitial={character?.name.charAt(0) ?? ''}
               isNew={newMessageIds.has(msg.id)}
             />
@@ -153,7 +155,7 @@ export default function ChatDetail({ characterId, onBack, hideHeader = false }: 
               className="flex items-center gap-2 px-4 py-2"
             >
               {character?.avatarUrl ? (
-                <img src={assetUrl(character.avatarUrl)} alt={character.name} className="h-9 w-9 flex-shrink-0 rounded-lg object-cover" />
+                <img src={assetUrl(avatarSrc)} alt={character.name} className="h-9 w-9 flex-shrink-0 rounded-lg object-cover" />
               ) : (
                 <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white" style={{ backgroundColor: color }}>
                   {character?.name.charAt(0)}

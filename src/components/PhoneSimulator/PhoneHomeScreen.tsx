@@ -19,6 +19,7 @@ export default function PhoneHomeScreen({ onOpenContact, onOpenBrowser }: PhoneH
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
   const affinityMap = usePlayerStore((s) => s.affinityMap);
   const phoneMessages = usePlayerStore((s) => s.phoneMessages);
+  const displayAvatar = usePlayerStore((s) => s.displayAvatar);
 
   const contacts = ownedCharacters
     .map((oc) => {
@@ -80,7 +81,7 @@ export default function PhoneHomeScreen({ onOpenContact, onOpenBrowser }: PhoneH
               >
                 <div className="relative shrink-0">
                   {char.avatarUrl ? (
-                    <img src={assetUrl(char.avatarUrl)} alt={char.name} className="h-12 w-12 rounded-2xl object-cover" loading="lazy" />
+                    <img src={assetUrl(displayAvatar[char.id] || char.avatarUrl)} alt={char.name} className="h-12 w-12 rounded-2xl object-cover" loading="lazy" />
                   ) : (
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-600 text-lg font-bold text-white">{char.name.charAt(0)}</div>
                   )}

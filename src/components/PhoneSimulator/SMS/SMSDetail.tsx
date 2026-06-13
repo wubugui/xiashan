@@ -52,7 +52,9 @@ export default function SMSDetail({ characterId, onBack, hideHeader = false, wil
   const scrollRef = useRef<HTMLDivElement>(null);
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
 
+  const displayAvatar = usePlayerStore((s) => s.displayAvatar);
   const character = getCharacterById(characterId);
+  const avatarSrc = displayAvatar[characterId] || character?.avatarUrl;
   const color = avatarColors[characterId] || '#999';
 
   const messages = phoneMessages
@@ -141,7 +143,7 @@ export default function SMSDetail({ characterId, onBack, hideHeader = false, wil
             >
               {!isPlayer && (
                 character?.avatarUrl ? (
-                  <img src={assetUrl(character.avatarUrl)} alt="" className="mr-2 mt-1 h-8 w-8 flex-shrink-0 rounded-full object-cover" loading="lazy" />
+                  <img src={assetUrl(avatarSrc)} alt="" className="mr-2 mt-1 h-8 w-8 flex-shrink-0 rounded-full object-cover" loading="lazy" />
                 ) : (
                   <div className="mr-2 mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: color }}>
                     {character?.name.charAt(0)}

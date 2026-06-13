@@ -68,6 +68,8 @@ export default function CharacterDetail() {
   const addMomo = usePlayerStore((s) => s.addMomo);
   const displayPortrait = usePlayerStore((s) => s.displayPortrait);
   const setDisplayPortrait = usePlayerStore((s) => s.setDisplayPortrait);
+  const displayAvatar = usePlayerStore((s) => s.displayAvatar);
+  const setDisplayAvatar = usePlayerStore((s) => s.setDisplayAvatar);
   const setFlag = usePlayerStore((s) => s.setFlag);
   const addPhoneMessage = usePlayerStore((s) => s.addPhoneMessage);
 
@@ -354,16 +356,23 @@ export default function CharacterDetail() {
           return (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
               <p className="text-xs text-slate-400">收藏 {unlockedCount}/{items.length} · 刷得越多，集得越全</p>
-              <p className="text-[11px] text-slate-500">点已解锁的立绘/表情可「设为展示」当主视觉；带 📖 的短篇点开回看剧情。</p>
+              <p className="text-[11px] text-slate-500">立绘点「设为展示」当主视觉，表情点「设为头像」上手机，带 📖 的短篇点开回看剧情。</p>
               <div className="grid grid-cols-3 gap-2">
                 {items.map((it) => {
                   const unlocked = evaluateAll(it.unlock, condState);
                   const isCg = it.kind === 'cg';
-                  const showing = unlocked && !isCg && heroArtUrl === it.asset;
+                  const isExpr = it.kind === 'expr';
+                  // 当前是否正被采用：表情看头像槽，立绘看主视觉槽
+                  const active = unlocked && (isExpr
+                    ? (id ? displayAvatar[id] === it.asset : false)
+                    : (!isCg && heroArtUrl === it.asset));
+                  const actionLabel = isCg ? '回看' : isExpr ? '设为头像' : '设为展示';
+                  const activeLabel = isExpr ? '头像中' : '展示中';
                   const onClick = () => {
                     if (!unlocked || !id) return;
                     playSound('btn-confirm');
                     if (isCg && it.cg) setOpenCg(it.cg);
+                    else if (isExpr) setDisplayAvatar(id, it.asset);
                     else setDisplayPortrait(id, it.asset);
                   };
                   return (
@@ -374,8 +383,8 @@ export default function CharacterDetail() {
                       onClick={onClick}
                       className={cn(
                         'group overflow-hidden rounded-lg border bg-slate-900/60 text-left transition-all',
-                        showing ? 'border-amber-400/70 shadow-[0_0_14px_rgba(251,191,36,0.25)]' : 'border-white/10',
-                        unlocked && !showing && 'hover:border-amber-300/40 active:scale-[0.98]',
+                        active ? 'border-amber-400/70 shadow-[0_0_14px_rgba(251,191,36,0.25)]' : 'border-white/10',
+                        unlocked && !active && 'hover:border-amber-300/40 active:scale-[0.98]',
                         !unlocked && 'cursor-default',
                       )}
                     >
@@ -386,11 +395,11 @@ export default function CharacterDetail() {
                             {isCg && (
                               <span className="absolute right-1 top-1 rounded bg-rose-500/85 px-1 py-0.5 text-[9px] font-bold text-white">📖</span>
                             )}
-                            {showing ? (
-                              <span className="absolute left-1 top-1 rounded bg-amber-400/90 px-1.5 py-0.5 text-[9px] font-bold text-amber-950">展示中</span>
+                            {active ? (
+                              <span className="absolute left-1 top-1 rounded bg-amber-400/90 px-1.5 py-0.5 text-[9px] font-bold text-amber-950">{activeLabel}</span>
                             ) : (
                               <span className="absolute inset-x-0 bottom-0 bg-black/55 py-1 text-center text-[10px] font-medium text-amber-200 opacity-0 transition-opacity group-hover:opacity-100">
-                                {isCg ? '回看' : '设为展示'}
+                                {actionLabel}
                               </span>
                             )}
                           </>
@@ -404,7 +413,7 @@ export default function CharacterDetail() {
                           </>
                         )}
                       </div>
-                      <p className={cn('px-1.5 py-1 text-center text-[11px]', showing ? 'text-amber-300' : unlocked ? 'text-slate-200' : 'text-slate-600')}>
+                      <p className={cn('px-1.5 py-1 text-center text-[11px]', active ? 'text-amber-300' : unlocked ? 'text-slate-200' : 'text-slate-600')}>
                         {unlocked ? it.name : '???'}
                       </p>
                     </button>

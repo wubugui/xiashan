@@ -3,6 +3,7 @@ import { getCharacterById } from '@/data/characters';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { assetUrl } from '@/lib/assets';
+import { usePlayerStore } from '@/store/usePlayerStore';
 
 interface InCallProps {
   characterId: string;
@@ -26,7 +27,9 @@ const avatarColors: Record<string, string> = {
 type Phase = 'ringing' | 'connected' | 'noanswer';
 
 export default function InCall({ characterId, dialogueLines, onEnd, willAnswer = true }: InCallProps) {
+  const displayAvatar = usePlayerStore((s) => s.displayAvatar);
   const character = getCharacterById(characterId);
+  const avatarSrc = displayAvatar[characterId] || character?.avatarUrl;
   const color = avatarColors[characterId] || '#999';
 
   const [phase, setPhase] = useState<Phase>('ringing');
@@ -93,7 +96,7 @@ export default function InCall({ characterId, dialogueLines, onEnd, willAnswer =
       <div className="mt-12">
         {character?.avatarUrl ? (
           <motion.img
-            src={assetUrl(character.avatarUrl)}
+            src={assetUrl(avatarSrc)}
             alt={character.name}
             animate={phase === 'ringing' ? { scale: [1, 1.06, 1] } : { scale: 1 }}
             transition={{ repeat: phase === 'ringing' ? Infinity : 0, duration: 1.2, ease: 'easeInOut' }}

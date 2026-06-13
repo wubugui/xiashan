@@ -26,7 +26,10 @@ interface ContactScreenProps {
 export default function ContactScreen({ characterId, initialTab = 'wechat', onBack, onCall }: ContactScreenProps) {
   const affinityMap = usePlayerStore((s) => s.affinityMap);
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
+  const displayAvatar = usePlayerStore((s) => s.displayAvatar);
   const character = getCharacterById(characterId);
+  // 手机头像：玩家在收藏里「设为头像」过就用她选的表情，否则用默认
+  const avatarSrc = displayAvatar[characterId] || character?.avatarUrl;
   const owned = ownedCharacters.some((c) => c.characterId === characterId);
   const affinity = affinityMap[characterId] ?? 0;
   const tier = commsTier(characterId, owned, affinity);
@@ -55,7 +58,7 @@ export default function ContactScreen({ characterId, initialTab = 'wechat', onBa
   const CallPanel = () => (
     <div className="flex h-full flex-col items-center justify-center gap-5 px-8 text-center">
       {character.avatarUrl ? (
-        <img src={assetUrl(character.avatarUrl)} alt={character.name} className="h-24 w-24 rounded-full object-cover ring-2 ring-white/15" />
+        <img src={assetUrl(avatarSrc)} alt={character.name} className="h-24 w-24 rounded-full object-cover ring-2 ring-white/15" />
       ) : (
         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-slate-600 text-2xl font-bold text-white">{character.name.charAt(0)}</div>
       )}
@@ -82,7 +85,7 @@ export default function ContactScreen({ characterId, initialTab = 'wechat', onBa
           <ChevronLeft size={20} />
         </button>
         {character.avatarUrl ? (
-          <img src={assetUrl(character.avatarUrl)} alt={character.name} className="h-9 w-9 rounded-xl object-cover" />
+          <img src={assetUrl(avatarSrc)} alt={character.name} className="h-9 w-9 rounded-xl object-cover" />
         ) : (
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-600 text-sm font-bold text-white">{character.name.charAt(0)}</div>
         )}
