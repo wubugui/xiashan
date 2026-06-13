@@ -82,6 +82,8 @@ interface PlayerState {
   xinyiTarget: string | null;
   /** 隐藏「默契」值：恋爱节点选项喂养，分支她的反应 */
   momo: Record<string, number>;
+  /** 设为展示：玩家为每个角色选定的专属页主视觉（收藏里解锁后可设）：charId → 资源路径 */
+  displayPortrait: Record<string, string>;
   /** 缘分 UP 截止日（completedCommission → 限时权重 ×4）：characterId → 'YYYY-MM-DD' 含当日 */
   rateUpUntil: Record<string, string>;
   /** 冷淡截止日（放弃委托 → 限时权重 ×0.25 + 委托不上板）：characterId → 'YYYY-MM-DD' 含当日 */
@@ -129,6 +131,8 @@ interface PlayerState {
   setXinyiTarget: (characterId: string) => void;
   /** 累加隐藏默契值 */
   addMomo: (characterId: string, amount: number) => void;
+  /** 设为展示：把某张已解锁立绘/表情设为她专属页主视觉 */
+  setDisplayPortrait: (characterId: string, asset: string) => void;
   tryDailyAction: (key: string) => boolean;
   addExp: (characterId: string, amount: number) => void;
   addGachaResult: (characterId: string, rarity: string) => void;
@@ -163,6 +167,7 @@ const initialState = {
   romanceProgress: {} as Record<string, number>,
   xinyiTarget: null as string | null,
   momo: {} as Record<string, number>,
+  displayPortrait: {} as Record<string, string>,
   rateUpUntil: {} as Record<string, string>,
   coldUntil: {} as Record<string, string>,
   totalGachaCount: 0,
@@ -267,6 +272,9 @@ export const usePlayerStore = create<PlayerState>()(
       addMomo: (characterId, amount) => set(s => ({
         momo: { ...s.momo, [characterId]: (s.momo[characterId] ?? 0) + amount },
       })),
+      setDisplayPortrait: (characterId, asset) => set(s => ({
+        displayPortrait: { ...s.displayPortrait, [characterId]: asset },
+      })),
       tryDailyAction: (key) => {
         const today = new Date().toISOString().slice(0, 10);
         if (get().dailyActions[key] === today) return false;
@@ -312,7 +320,7 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'xiashan-player-store',
-      version: 7,
+      version: 8,
       storage: createJSONStorage(() => safeStorage),
       // 旧版本存档可能缺字段、字段为 null 或类型不符（项目从 AVG 改版而来），
       // 合并时丢弃所有与默认值类型不符的项，避免启动即崩、全页空白。
@@ -337,6 +345,11 @@ export const usePlayerStore = create<PlayerState>()(
           personTickets?: number;
           commissionTickets?: number;
         };
+        if (version < 8) {
+          // 设为展示新增字段：老存档补空对象（merge 也会兜底）
+          const s8 = state as typeof state & { displayPortrait?: Record<string, string> };
+          s8.displayPortrait = s8.displayPortrait ?? {};
+        }
         if (version < 7) {
           // 心动系统新增字段：老存档补空，merge 也会兜底（这里显式置，稳妥）
           const s7 = state as typeof state & { romanceProgress?: Record<string, number>; xinyiTarget?: string | null; momo?: Record<string, number> };

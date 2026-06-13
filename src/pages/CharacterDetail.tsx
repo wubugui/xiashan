@@ -65,6 +65,8 @@ export default function CharacterDetail() {
   const xinyiTarget = usePlayerStore((s) => s.xinyiTarget);
   const advanceRomance = usePlayerStore((s) => s.advanceRomance);
   const addMomo = usePlayerStore((s) => s.addMomo);
+  const displayPortrait = usePlayerStore((s) => s.displayPortrait);
+  const setDisplayPortrait = usePlayerStore((s) => s.setDisplayPortrait);
   const setFlag = usePlayerStore((s) => s.setFlag);
   const addPhoneMessage = usePlayerStore((s) => s.addPhoneMessage);
 
@@ -172,7 +174,9 @@ export default function CharacterDetail() {
     );
   }
 
-  const heroArtUrl = character.gachaBackgroundUrl || character.portraitUrl;
+  const defaultHeroArt = character.gachaBackgroundUrl || character.portraitUrl;
+  // 设为展示：玩家选过就用她选的那张，否则用默认主视觉
+  const heroArtUrl = (id && displayPortrait[id]) || defaultHeroArt;
   const pageBackdrop = backdropForCharacter(character.id);
 
   return (
@@ -347,14 +351,34 @@ export default function CharacterDetail() {
           return (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
               <p className="text-xs text-slate-400">收藏 {unlockedCount}/{items.length} · 刷得越多，集得越全</p>
+              <p className="text-[11px] text-slate-500">点已解锁的图，可「设为展示」当她专属页的主视觉。</p>
               <div className="grid grid-cols-3 gap-2">
                 {items.map((it) => {
                   const unlocked = evaluateAll(it.unlock, condState);
+                  const showing = unlocked && heroArtUrl === it.asset;
                   return (
-                    <div key={it.id} className="overflow-hidden rounded-lg border border-white/10 bg-slate-900/60">
+                    <button
+                      key={it.id}
+                      type="button"
+                      disabled={!unlocked}
+                      onClick={() => { if (!unlocked || !id) return; playSound('btn-confirm'); setDisplayPortrait(id, it.asset); }}
+                      className={cn(
+                        'group overflow-hidden rounded-lg border bg-slate-900/60 text-left transition-all',
+                        showing ? 'border-amber-400/70 shadow-[0_0_14px_rgba(251,191,36,0.25)]' : 'border-white/10',
+                        unlocked && !showing && 'hover:border-amber-300/40 active:scale-[0.98]',
+                        !unlocked && 'cursor-default',
+                      )}
+                    >
                       <div className="relative aspect-[3/4] overflow-hidden bg-slate-800">
                         {unlocked ? (
-                          <img src={assetUrl(it.asset)} alt={it.name} className="h-full w-full object-cover object-top" loading="lazy" />
+                          <>
+                            <img src={assetUrl(it.asset)} alt={it.name} className="h-full w-full object-cover object-top" loading="lazy" />
+                            {showing ? (
+                              <span className="absolute left-1 top-1 rounded bg-amber-400/90 px-1.5 py-0.5 text-[9px] font-bold text-amber-950">展示中</span>
+                            ) : (
+                              <span className="absolute inset-x-0 bottom-0 bg-black/55 py-1 text-center text-[10px] font-medium text-amber-200 opacity-0 transition-opacity group-hover:opacity-100">设为展示</span>
+                            )}
+                          </>
                         ) : (
                           <>
                             <img src={assetUrl(it.asset)} alt="" aria-hidden className="h-full w-full object-cover object-top opacity-15 blur-md grayscale" />
@@ -365,10 +389,10 @@ export default function CharacterDetail() {
                           </>
                         )}
                       </div>
-                      <p className={cn('px-1.5 py-1 text-center text-[11px]', unlocked ? 'text-slate-200' : 'text-slate-600')}>
+                      <p className={cn('px-1.5 py-1 text-center text-[11px]', showing ? 'text-amber-300' : unlocked ? 'text-slate-200' : 'text-slate-600')}>
                         {unlocked ? it.name : '???'}
                       </p>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
