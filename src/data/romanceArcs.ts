@@ -15,6 +15,8 @@ export interface RomanceChoiceOption {
   momo: number;
   /** 她的反应对白 */
   reaction: RomanceLine[];
+  /** 仅告白门:选它 = 确认心意(过门 + 排他锁定);不选则留在门前可重来 */
+  gateConfirm?: boolean;
 }
 
 export interface RomanceScene {

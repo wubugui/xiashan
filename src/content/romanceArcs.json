@@ -71,10 +71,43 @@
           "scene": {
             "location": "store",
             "lines": [
-              { "text": "（这段故事还在写——熟络相位。）" }
-            ]
+              { "text": "深夜，便利屋打烊后。江夏把最后一箱货归位，没急着走，反而在收银台边坐下，揉了揉发酸的肩。" },
+              { "speaker": "linxia", "text": "今天……比想象中顺利。第一次一整天没出错。" },
+              { "text": "她说着，却没什么得意，反而有点出神。" },
+              { "speaker": "linxia", "text": "其实我以前特别怕做事。怕一出错，就被人记住「那个搞砸的人」。所以我就拼命列清单，把每一步都钉死——这样至少不会塌。" },
+              { "speaker": "linxia", "text": "（忽然回神）啊，对不起，我说这些干嘛……你别往心里去。" }
+            ],
+            "choice": {
+              "prompt": "她难得露了点底。你怎么接？",
+              "options": [
+                {
+                  "text": "清单也救不了的时候，还有我呢。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "linxia", "text": "……（愣了一下）嗯。" },
+                    { "text": "她低下头，耳尖悄悄红了，没让你看见。" }
+                  ]
+                },
+                {
+                  "text": "我觉得你今天做得挺好的，真的。",
+                  "momo": 1,
+                  "reaction": [
+                    { "speaker": "linxia", "text": "真、真的吗？那我……明天会更好的！" },
+                    { "text": "她忽然来了精神，腰板都挺直了。" }
+                  ]
+                },
+                {
+                  "text": "谁还没搞砸过几次，习惯就好。",
+                  "momo": 1,
+                  "reaction": [
+                    { "speaker": "linxia", "text": "你这么一说……好像也是。" },
+                    { "text": "她笑了一下，绷着的肩膀松了下来。" }
+                  ]
+                }
+              ]
+            }
           },
-          "reward": { "affinity": 4, "unlockFlag": "romance_linxia_b2" }
+          "reward": { "affinity": 4, "unlockFlag": "romance_linxia_b2", "wechat": "今天谢谢你听我念叨。（这条不用回啦，晚安。）" }
         },
         {
           "id": "linxia_b3",
@@ -87,10 +120,44 @@
           "scene": {
             "location": "store",
             "lines": [
-              { "text": "（这段故事还在写——暧昧相位，第一次心跳。）" }
-            ]
+              { "text": "你来得早，后仓的灯还没全开。江夏背对着你核今天的补给清单，没听见你进来。" },
+              { "text": "你一眼瞥见清单最底下多了一行字，被她的笔尖反复描过，墨都重了——" },
+              { "speaker": "linxia", "text": "（小声自言自语）给店长……留……" },
+              { "text": "她猛地察觉身后有人，整个人弹起来，清单「啪」地扣在胸前。" },
+              { "speaker": "linxia", "text": "你、你什么时候进来的！这不是——我是说，这是补给单，正常的工作记录！" },
+              { "text": "可她越解释，脸越红，一直红到耳根。那行字写着：「给店长留：他昨天说嗓子干 → 胖大海 ×2」。" }
+            ],
+            "choice": {
+              "prompt": "你怎么办？",
+              "options": [
+                {
+                  "text": "原来在你清单里，我有专属一栏。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "linxia", "text": "那、那是因为你需求多！不许乱解读！" },
+                    { "text": "她跺脚，可压不住翘起来的嘴角。" }
+                  ]
+                },
+                {
+                  "text": "谢谢你记着。胖大海我收下了。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "linxia", "text": "……嗯。记着，是应该的。" },
+                    { "text": "她声音越来越小，到最后几乎听不见。" }
+                  ]
+                },
+                {
+                  "text": "（什么也不说，只是看着她笑）",
+                  "momo": 1,
+                  "reaction": [
+                    { "speaker": "linxia", "text": "你别这样看着我啦！" },
+                    { "text": "她把脸埋进清单，只露出一双躲闪的眼睛。" }
+                  ]
+                }
+              ]
+            }
           },
-          "reward": { "affinity": 5, "unlockFlag": "romance_linxia_b3" }
+          "reward": { "affinity": 5, "unlockFlag": "romance_linxia_b3", "wechat": "今天的事……你别到处说。（那个胖大海，记得泡。）" }
         },
         {
           "id": "linxia_b4",
@@ -104,8 +171,35 @@
           "scene": {
             "location": "subway",
             "lines": [
-              { "text": "（这段故事还在写——确认心意门。）" }
-            ]
+              { "text": "你约她来地铁站。还是那个闸机口——你们第一次见面的地方，热风里她攥着文件袋急得直跺脚的地方。" },
+              { "speaker": "linxia", "text": "你怎么突然约我来这儿……（她看着那排闸机，怔住了）" },
+              { "speaker": "linxia", "text": "那天……要不是你，我现在大概还在别的什么地方，重复着把人生搞砸吧。" },
+              { "text": "她从包里取出一个透明文件夹，里面是那张被你帮她重排过的简历，边角都磨毛了。" },
+              { "speaker": "linxia", "text": "我把它裱起来了。每次想退缩，就看一眼。它提醒我——有人愿意为我，多管一次闲事。" },
+              { "speaker": "linxia", "text": "（她抬头看你，深吸一口气，声音发抖）我想说的是……" }
+            ],
+            "choice": {
+              "prompt": "她站在你们初遇的地方，等着。你的心意——",
+              "options": [
+                {
+                  "text": "江夏，我喜欢你。",
+                  "momo": 3,
+                  "gateConfirm": true,
+                  "reaction": [
+                    { "text": "她捂住嘴，眼睛一下子红了，用力点头，点到最后扑进你怀里。" },
+                    { "speaker": "linxia", "text": "我也是……我早就……（剩下的话埋进你肩膀，听不清了）" }
+                  ]
+                },
+                {
+                  "text": "再等等，让我把这份心意攒得更稳一点。",
+                  "momo": 0,
+                  "reaction": [
+                    { "speaker": "linxia", "text": "……好。我等你。" },
+                    { "text": "她笑着，眼里有点失落，又有点释然。「反正……我跑不掉啦。」" }
+                  ]
+                }
+              ]
+            }
           },
           "reward": { "unlockFlag": "romance_linxia_b4" }
         },
@@ -120,10 +214,27 @@
           "scene": {
             "location": "store",
             "lines": [
-              { "text": "（这段故事还在写——深耕终幕。）" }
-            ]
+              { "text": "又是一个打烊后的夜晚。江夏神神秘秘地把你拉到收银台，献宝似的推过来一个新本子。" },
+              { "speaker": "linxia", "text": "给你看个东西。我新列的清单。" },
+              { "text": "封面上写着两个名字，并排。翻开第一页——" },
+              { "speaker": "linxia", "text": "「一起：把二十五时开到天亮。一起：周末去看那家新开的店。一起……」（她脸红，飞快跳过几行）反正，都是一起。" },
+              { "speaker": "linxia", "text": "以前我列清单，是怕一个人撑不住。现在……是因为想和你一起，把这些都做完。" }
+            ],
+            "choice": {
+              "prompt": "她把笔递给你。",
+              "options": [
+                {
+                  "text": "那第一条，我来写。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "linxia", "text": "写什么？" },
+                    { "text": "你写下：「一起，很久很久。」她看着那行字，眼睛弯成月牙，把本子紧紧抱进怀里。" }
+                  ]
+                }
+              ]
+            }
           },
-          "reward": { "unlockFlag": "romance_linxia_b5" }
+          "reward": { "affinity": 10, "unlockFlag": "romance_linxia_b5" }
         }
       ]
     }

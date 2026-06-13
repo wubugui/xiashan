@@ -26,13 +26,20 @@ export function beatStatus(
   beatIndex: number,
   progress: number,
   state: RomanceCondState,
+  /** 确认心意的对象（排他）：给了别人后，这个人的告白门及之后节点锁死 */
+  xinyiTarget?: string | null,
 ): BeatStatus {
   if (beatIndex < progress) return 'done';
   if (beatIndex > progress) return 'locked';
   // 正好是下一个待解锁节点：trigger 满足才可进
   const arc = getRomanceArc(characterId);
   const beat = arc?.beats[beatIndex];
-  if (!beat) return 'locked';
+  if (!arc || !beat) return 'locked';
+  // 排他：心意已确认给别人，则此人的告白门及之后全锁
+  if (xinyiTarget && xinyiTarget !== characterId) {
+    const gateIdx = arc.beats.findIndex((b) => b.isGate);
+    if (gateIdx >= 0 && beatIndex >= gateIdx) return 'locked';
+  }
   return evaluateAll(beat.trigger, state) ? 'available' : 'locked';
 }
 

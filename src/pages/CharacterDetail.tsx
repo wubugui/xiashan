@@ -74,6 +74,7 @@ export default function CharacterDetail() {
   const completedNodes = usePlayerStore((s) => s.completedNodes);
   const flags = usePlayerStore((s) => s.flags);
   const romanceProgress = usePlayerStore((s) => s.romanceProgress);
+  const xinyiTarget = usePlayerStore((s) => s.xinyiTarget);
   const advanceRomance = usePlayerStore((s) => s.advanceRomance);
   const addMomo = usePlayerStore((s) => s.addMomo);
   const setFlag = usePlayerStore((s) => s.setFlag);
@@ -191,6 +192,8 @@ export default function CharacterDetail() {
     setPlayingBeat(null);
     if (!beat || !id) return;
     if (chosen?.momo) addMomo(id, chosen.momo);
+    // 告白门：没确认心意就不过门——留在门前，可重来
+    if (beat.isGate && !chosen?.gateConfirm) return;
     const r = beat.reward;
     if (r?.affinity) addAffinity(id, r.affinity);
     if (r?.advanceStage) advanceRelationshipStage(id);
@@ -331,7 +334,7 @@ export default function CharacterDetail() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
             <p className="text-xs leading-relaxed text-rose-200/70">{romanceArc.theme}</p>
             {romanceArc.beats.map((beat, i) => {
-              const status = id ? beatStatus(id, i, progress, condState) : 'locked';
+              const status = id ? beatStatus(id, i, progress, condState, xinyiTarget) : 'locked';
               const done = status === 'done';
               const available = status === 'available';
               return (
