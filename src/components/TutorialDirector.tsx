@@ -124,14 +124,14 @@ export function TutorialSpotlight({
           transition={{ duration: 0.4 }}
           className={`mx-auto max-w-md rounded-2xl border bg-slate-900/95 backdrop-blur-xl p-3 shadow-2xl ${nudge ? 'border-amber-400' : 'border-amber-400/40'}`}
         >
-          <div className="flex items-start gap-2.5">
-            {/* 无框大半身像：探出气泡边缘，像人站在面前说话 */}
+          <div className="flex gap-2.5">
+            {/* 无框大半身像：独占左列、只向气泡外侧溢出——永远不侵入右列的文字和按钮 */}
             <img
               src={assetUrl(linxiaFace(nudge ? 'angry' : expression))}
               alt="江夏"
               className={cn(
-                'pointer-events-none w-20 shrink-0 select-none object-cover object-top drop-shadow-[0_8px_18px_rgba(0,0,0,0.65)]',
-                bubbleOnTop ? 'h-32 -mb-10 -ml-1' : 'h-32 -mt-12 -ml-1',
+                'pointer-events-none h-32 w-20 shrink-0 select-none object-cover object-top drop-shadow-[0_8px_18px_rgba(0,0,0,0.65)]',
+                bubbleOnTop ? 'self-end -mb-9 -ml-1' : 'self-start -mt-12 -ml-1',
               )}
               style={{
                 WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
@@ -147,16 +147,16 @@ export function TutorialSpotlight({
                   <p key={line.id} className="text-xs leading-relaxed text-slate-100 mb-1 last:mb-0">{line.text}</p>
                 ))
               )}
+              {button && onButton && (
+                <button
+                  onClick={() => { playSound('tutorial-next'); onButton(); }}
+                  className="mt-2 w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-2.5 text-sm font-black text-amber-950 shadow-[0_0_16px_rgba(251,191,36,0.3)] active:scale-[0.99] transition-all"
+                >
+                  {button}
+                </button>
+              )}
             </div>
           </div>
-          {button && onButton && (
-            <button
-              onClick={() => { playSound('tutorial-next'); onButton(); }}
-              className="mt-2 w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-2.5 text-sm font-black text-amber-950 shadow-[0_0_16px_rgba(251,191,36,0.3)] active:scale-[0.99] transition-all"
-            >
-              {button}
-            </button>
-          )}
         </motion.div>
       </motion.div>
     </>
