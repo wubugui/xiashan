@@ -95,7 +95,6 @@ interface ShopState {
   applyDelta: (delta: Partial<{ time: number; energy: number; fatigue: number; money: number; trust: number; rep: number }>) => void;
   markSpotDone: (locId: string, spotIndex: number) => void;
   finishLocation: () => void;
-  normalAdvance: () => void;
   /** 买咖啡缓解疲劳（同一自然日递减），返回本杯缓解量（0 = 今天喝不下了/钱不够） */
   buyCoffee: () => number;
   /** 热点结算后记录本次行动是否推进了委托子目标（驱动手机轻催促） */
@@ -363,18 +362,6 @@ export const useShopStore = create<ShopState>()(
         });
         get().applyDelta({ fatigue: 10 });
         get().addLog('离开当前地点，进入下一段路线。疲劳 +10。');
-      },
-
-      normalAdvance: () => {
-        const s = get();
-        if (!s.commission) {
-          get().applyDelta({ fatigue: 10, money: 2 });
-          get().addLog('普通跑腿：资金 +2，疲劳 +10。');
-        } else {
-          const who = getCharacterById(s.commission.client ?? s.commission.target)?.name ?? '她';
-          get().applyDelta({ fatigue: 14, trust: 1 });
-          get().addLog(`为${who}的事四处奔走打点：信任 +1，疲劳 +14。`);
-        }
       },
 
       buyCoffee: () => {

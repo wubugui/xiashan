@@ -8,6 +8,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import DialogueBox from '@/components/DialogueBox';
+import { useCssVarFromHeight } from '@/hooks/useCssVarFromHeight';
 import { getCharacterById } from '@/data/characters';
 import { getLocationById } from '@/data/locations';
 import { isMatch, scoreCard } from '@/engine/shopEngine';
@@ -78,6 +79,9 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
 
   const trustRef = useRef(initialTrust ?? 0); // 供 branch 即时读取最新信任
   const resolving = useRef(false);      // 出牌锁：一幕只结算一次
+  /** 出牌面板实测高度 → --theater-panel-h：立绘自适应让位（与 --dlg-h 取大者） */
+  const challengePanelRef = useRef<HTMLDivElement>(null);
+  useCssVarFromHeight('--theater-panel-h', challengePanelRef);
 
   const node = nodesById.get(nodeId);
 
@@ -259,21 +263,25 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
         </div>
       </div>
 
-      {/* 客户立绘 */}
+      {/* 客户立绘：站在底部 UI（对白框/出牌面板）正上方。
+          位置全程用实测高度变量计算（--dlg-h / --theater-panel-h），随平台、字数、面板伸缩自适应；
+          不加 key——同一元素平滑过渡明暗，避免重挂载打断渐变导致卡在半透明 */}
       {client && (
-        <div className="absolute inset-0 flex items-end justify-center pointer-events-none">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-[13vh] z-10 flex items-end justify-center"
+          style={{ bottom: 'calc(max(var(--dlg-h, 0px), var(--theater-panel-h, 0px)) - 14px)' }}
+        >
+          {/* 居中由外层 flex 负责——motion 接管 img 的 transform，Tailwind translate 会被覆盖 */}
           <motion.img
-            key={clientSpeaking ? 'active' : 'idle'}
             src={assetUrl(client.portraitUrl)}
             alt={client.name}
             animate={{
-              opacity: clientSpeaking || inChallenge ? 1 : 0.6,
-              scale: clientSpeaking ? 1 : 0.97,
-              filter: clientSpeaking ? 'brightness(1)' : 'brightness(0.7)',
+              opacity: clientSpeaking || inChallenge ? 1 : 0.82,
+              scale: clientSpeaking ? 1 : 0.985,
+              filter: clientSpeaking || inChallenge ? 'brightness(1)' : 'brightness(0.8)',
             }}
-            transition={{ duration: 0.4 }}
-            className="max-h-[72%] w-auto object-contain drop-shadow-2xl"
-            style={{ marginBottom: inChallenge ? '38%' : '24%' }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className="max-h-full max-w-[92vw] object-contain object-bottom drop-shadow-2xl"
           />
         </div>
       )}
@@ -297,6 +305,7 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
       <AnimatePresence>
         {inChallenge && node?.type === 'challenge' && (
           <motion.div
+            ref={challengePanelRef}
             initial={{ y: 120, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 120, opacity: 0 }}
@@ -326,9 +335,17 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
               return (
                 <>
                   {locked && (
-                    <div className="mb-2 flex items-center gap-2 rounded-lg border border-amber-400/40 bg-amber-500/10 px-2.5 py-1.5">
-                      <img src={assetUrl('/characters/face/linxia/avatar.png')} alt="江夏" className="h-6 w-6 rounded-full object-cover border border-amber-400/40" />
-                      <p className="text-[10px] font-bold text-amber-200">江夏：打出带 ✨ 的卡——类型对上，判定才是「完美」！</p>
+                    <div className="mb-2 flex items-end gap-2 rounded-lg border border-amber-400/40 bg-amber-500/10 px-2.5 py-1.5">
+                      <img
+                        src={assetUrl('/characters/face/linxia/smile.png')}
+                        alt="江夏"
+                        className="pointer-events-none -mt-5 -mb-1.5 h-14 w-10 shrink-0 select-none object-cover object-top drop-shadow-lg"
+                        style={{
+                          WebkitMaskImage: 'linear-gradient(to bottom, black 78%, transparent 100%)',
+                          maskImage: 'linear-gradient(to bottom, black 78%, transparent 100%)',
+                        }}
+                      />
+                      <p className="pb-1 text-[10px] font-bold text-amber-200">江夏：打出带 ✨ 的卡——类型对上，判定才是「完美」！</p>
                     </div>
                   )}
                   <CardTray need={node.need} personCards={personCards} hand={hand} onPlay={playChoice} lockToMatched={locked} />

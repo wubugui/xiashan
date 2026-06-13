@@ -33,7 +33,7 @@ import ResetSaveButton from '@/components/ResetSaveButton';
 import SupplyReveal, { type RevealItem } from '@/components/SupplyReveal';
 import { useCssVarFromHeight } from '@/hooks/useCssVarFromHeight';
 import PageBackdrop from '@/components/PageBackdrop';
-import type { Commission, CommissionObjective, Spot } from '@/data/types';
+import type { Commission, CommissionObjective, GameLocation, Spot } from '@/data/types';
 import { backdropForLocation, SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 
 /** GachaAnimation 内部格式（与 engine 的 GachaResult 不同） */
@@ -183,12 +183,52 @@ function StatusBar({
 /* ────── 子组件：当前目标条（常驻导航：始终告诉玩家下一步去哪、做什么） ────── */
 function GoalBar({
   commission, trust, commissionNeed, objectives, objectivesDone, nextObjective, commissionReady, gameOver,
+  loc, sideJobs,
 }: {
   commission: Commission | null; trust: number; commissionNeed: number;
   objectives: { id: string }[]; objectivesDone: string[];
   nextObjective: CommissionObjective | null; commissionReady: boolean; gameOver: boolean;
+  loc: GameLocation | null; sideJobs: { id: string; done: boolean }[];
 }) {
   if (gameOver) return null;
+
+  /* 身处地点时：列出「本地能推进」的委托子目标与顺手单 */
+  if (loc) {
+    const localObjectives = (commission?.objectives ?? []).filter(
+      o => !objectivesDone.includes(o.id) && (!o.locTag || loc.tags.includes(o.locTag)),
+    );
+    const localJobs = sideJobs
+      .filter(j => !j.done)
+      .map(j => getSideJobById(j.id))
+      .filter((t): t is NonNullable<ReturnType<typeof getSideJobById>> => !!t)
+      .filter(t => !t.locTag || loc.tags.includes(t.locTag));
+    if (localObjectives.length > 0 || localJobs.length > 0) {
+      return (
+        <div className="mx-3 mt-2 mb-0.5 space-y-0.5 rounded-lg border border-amber-500/30 bg-amber-500/8 px-3 py-1.5">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-amber-300/80">📍 本地能推进</p>
+          {localObjectives.map(o => (
+            <p key={o.id} className="text-xs font-medium text-amber-200">
+              📋 {o.desc}——在匹配热点打出 {o.need.join('/')} 卡
+            </p>
+          ))}
+          {localJobs.map(t => (
+            <p key={t.id} className="text-xs font-medium text-emerald-200">
+              🧾 {t.title}——打出 {t.need.join('/')} 卡
+            </p>
+          ))}
+        </div>
+      );
+    }
+    if (commission && (commission.objectives?.length ?? 0) > 0) {
+      return (
+        <div className="mx-3 mt-2 mb-0.5 rounded-lg border border-slate-600/40 bg-slate-800/40 px-3 py-1.5 text-xs font-medium text-slate-300">
+          📍 这里没有委托相关目标——处理热点攒信任，或「完成当前地点」换地方
+        </div>
+      );
+    }
+    return null;
+  }
+
   if (!commission) {
     return (
       <div className="mx-3 mt-2 mb-0.5 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-medium text-rose-200 animate-pulse">
@@ -232,7 +272,7 @@ export default function Shop() {
     startDay, startTutorialDay, refreshRoutes, acceptCommission, abandonCommission, clearCommission,
     completeObjective, completeSideJob, noteCommissionFocus,
     setPendingScene, chooseLocation, leaveLocation, addHandCard, consumeHandCard,
-    applyDelta, markSpotDone, finishLocation, normalAdvance, buyCoffee, addLog, setGameOver, resetDay,
+    applyDelta, markSpotDone, finishLocation, buyCoffee, addLog, setGameOver, resetDay,
     setLastCardType,
   } = shopStore;
 
@@ -736,19 +776,19 @@ export default function Shop() {
           normalTickets={normalTickets}
         />
 
-        {/* 当前目标提示（引导期由江夏解说接管，避免双重指挥） */}
-        {!tutorialActive && (
-          <GoalBar
-            commission={commission}
-            trust={trust}
-            commissionNeed={commissionNeed}
-            objectives={objectives}
-            objectivesDone={objectivesDone}
-            nextObjective={nextObjective}
-            commissionReady={commissionReady}
-            gameOver={gameOver}
-          />
-        )}
+        {/* 当前目标提示（引导期也显示——教学会引导玩家认识它） */}
+        <GoalBar
+          commission={commission}
+          trust={trust}
+          commissionNeed={commissionNeed}
+          objectives={objectives}
+          objectivesDone={objectivesDone}
+          nextObjective={nextObjective}
+          commissionReady={commissionReady}
+          gameOver={gameOver}
+          loc={loc}
+          sideJobs={sideJobs}
+        />
 
         {/* 今日待办 + 便利屋补给 */}
         <div className="px-3 pt-2 pb-2">
@@ -1257,7 +1297,7 @@ export default function Shop() {
 
       {/* ── 底部操作区 ── */}
       <div ref={actionBarRef} style={{ bottom: 'var(--nav-h, 0px)' }} className="fixed left-0 right-0 z-50 border-t border-white/10 bg-slate-950/95 backdrop-blur-xl px-3 py-2 flex flex-wrap gap-2">
-        {loc ? (
+        {loc && (
           <>
             {!handledThisLocation && (
               <button
@@ -1277,15 +1317,6 @@ export default function Shop() {
               ✅ 完成当前地点
             </button>
           </>
-        ) : (
-          !gameOver && (
-            <button
-              onClick={() => { normalAdvance(); checkAndFail(); }}
-              className="flex-1 rounded-xl bg-slate-800 border border-white/10 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700"
-            >
-              普通推进
-            </button>
-          )
         )}
         {(() => {
           const today = new Date().toISOString().slice(0, 10);
@@ -1305,7 +1336,10 @@ export default function Shop() {
           );
         })()}
         {!gameOver && (
-          <button onClick={handleEndDay} className="rounded-xl bg-indigo-700 px-3 py-2.5 text-xs font-bold text-white hover:bg-indigo-600">
+          <button
+            onClick={handleEndDay}
+            className={cn('rounded-xl bg-indigo-700 px-3 py-2.5 text-xs font-bold text-white hover:bg-indigo-600', !loc && 'flex-1')}
+          >
             🌙 打烊休息
           </button>
         )}

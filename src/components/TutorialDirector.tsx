@@ -11,6 +11,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import { assetUrl } from '@/lib/assets';
 import { playSound } from '@/lib/sound';
 import { TUTORIAL_NUDGES } from '@/lib/tutorialFlow';
@@ -124,10 +125,18 @@ export function TutorialSpotlight({
           className={`mx-auto max-w-md rounded-2xl border bg-slate-900/95 backdrop-blur-xl p-3 shadow-2xl ${nudge ? 'border-amber-400' : 'border-amber-400/40'}`}
         >
           <div className="flex items-start gap-2.5">
+            {/* 无框大半身像：探出气泡边缘，像人站在面前说话 */}
             <img
               src={assetUrl(linxiaFace(nudge ? 'angry' : expression))}
               alt="江夏"
-              className="h-12 w-12 shrink-0 rounded-full border-2 border-amber-400/50 object-cover object-top bg-slate-800"
+              className={cn(
+                'pointer-events-none w-20 shrink-0 select-none object-cover object-top drop-shadow-[0_8px_18px_rgba(0,0,0,0.65)]',
+                bubbleOnTop ? 'h-32 -mb-10 -ml-1' : 'h-32 -mt-12 -ml-1',
+              )}
+              style={{
+                WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+                maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+              }}
             />
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-bold tracking-wide text-amber-300 mb-0.5">江夏</p>
