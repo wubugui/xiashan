@@ -34,3 +34,9 @@ backups/
 *.njsproj
 *.sln
 *.sw?
+
+# 部署 / 宣传产物（不进仓库）
+deploy/
+promo-clips/
+xiashan-deploy.zip
+xiashan-promo-draft.mp4
