@@ -9,6 +9,8 @@ import { dupesNeededForStage } from '@/engine/bondEngine';
 import { expForLevel } from '@/engine/shopEngine';
 import { getRomanceArc, type RomanceBeat, type RomanceChoiceOption } from '@/data/romanceArcs';
 import { beatStatus } from '@/engine/romanceEngine';
+import { getCollectibles } from '@/data/collectibles';
+import { evaluateAll } from '@/engine/conditionEngine';
 import RomanceScene from '@/components/RomanceScene';
 import { cn } from '@/lib/utils';
 import { playSound } from '@/lib/sound';
@@ -16,7 +18,7 @@ import { assetUrl } from '@/lib/assets';
 import PageBackdrop from '@/components/PageBackdrop';
 import { backdropForCharacter } from '@/lib/pageBackdrops';
 
-type TabType = 'info' | 'interact' | 'upgrade' | 'romance';
+type TabType = 'info' | 'interact' | 'upgrade' | 'romance' | 'collect';
 
 const rarityGradient = {
   N: 'from-slate-600 to-slate-800',
@@ -299,6 +301,7 @@ export default function CharacterDetail() {
         {([
           ...(romanceArc ? [{ id: 'romance' as TabType, label: '心动' }] : []),
           { id: 'info' as TabType, label: '信息' },
+          { id: 'collect' as TabType, label: '收藏' },
           { id: 'interact' as TabType, label: '互动' },
           { id: 'upgrade' as TabType, label: '升级' },
         ]).map((tab) => (
@@ -366,6 +369,42 @@ export default function CharacterDetail() {
             })}
           </motion.div>
         )}
+
+        {/* 收藏标签：她的表情/立绘，靠刷主流程解锁。锁着=剪影+指引 */}
+        {activeTab === 'collect' && (() => {
+          const items = character ? getCollectibles(character) : [];
+          const unlockedCount = items.filter((it) => evaluateAll(it.unlock, condState)).length;
+          return (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+              <p className="text-xs text-slate-400">收藏 {unlockedCount}/{items.length} · 刷得越多，集得越全</p>
+              <div className="grid grid-cols-3 gap-2">
+                {items.map((it) => {
+                  const unlocked = evaluateAll(it.unlock, condState);
+                  return (
+                    <div key={it.id} className="overflow-hidden rounded-lg border border-white/10 bg-slate-900/60">
+                      <div className="relative aspect-[3/4] overflow-hidden bg-slate-800">
+                        {unlocked ? (
+                          <img src={assetUrl(it.asset)} alt={it.name} className="h-full w-full object-cover object-top" loading="lazy" />
+                        ) : (
+                          <>
+                            <img src={assetUrl(it.asset)} alt="" aria-hidden className="h-full w-full object-cover object-top opacity-15 blur-md grayscale" />
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-1 text-center">
+                              <span className="text-lg">🔒</span>
+                              <span className="text-[10px] leading-tight text-amber-300/80">{it.hint}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      <p className={cn('px-1.5 py-1 text-center text-[11px]', unlocked ? 'text-slate-200' : 'text-slate-600')}>
+                        {unlocked ? it.name : '???'}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          );
+        })()}
 
         {/* 信息标签 */}
         {activeTab === 'info' && (
