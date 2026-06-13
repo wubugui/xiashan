@@ -301,6 +301,7 @@ export default function Shop() {
   const [handledThisLocation, setHandledThisLocation] = useState(false);
   /** 补给池非人物出货的开箱演出（人物走全屏 GachaAnimation） */
   const [revealItem, setRevealItem] = useState<RevealItem | null>(null);
+  const drawCooldownUntilRef = useRef(0);
   /** 地图 NPC 闲聊气泡 */
   const [npcTalk, setNpcTalk] = useState<{ name: string; emoji: string; line: string } | null>(null);
   /** 底部操作条实测高度 → --bar-h（浮层/内容留白据此自动适配） */
@@ -335,6 +336,7 @@ export default function Shop() {
   };
   /** 引导浮层让位于全屏演出（剧场分幕 / 补给开箱 / 抽卡动画 / 结算弹窗） */
   const tutorialOverlayHidden = !!pendingScene || showTheater || !!revealItem || showGacha || !!endDayResult;
+  const drawBusy = showGacha || gachaResults.length > 0 || !!revealItem;
 
   const lastAdvancedRef = useRef(0);
   const advanceTutorial = useCallback(() => {
@@ -384,6 +386,7 @@ export default function Shop() {
 
   /* ────── 抽卡 ────── */
   const handleDraw = useCallback((pool: PoolId) => {
+    if (drawBusy || Date.now() < drawCooldownUntilRef.current) return;
     if (gameOver) return toast('今日已结束。');
 
     if (pool === 'board') {
@@ -393,6 +396,7 @@ export default function Shop() {
       // 引导教学抽卡：固定出货 SR 万能卡【临时人脉电话】，补上剧本里故意缺失的「流程」需求
       if (tutorialActive && tutStep?.id === 'supply_draw') {
         if (!spendNormalTickets(1)) return toast('普通券不足。');
+        drawCooldownUntilRef.current = Date.now() + 700;
         const phone = allServiceCards.find(c => c.id === TUTORIAL_DRAW_CARD);
         if (phone) {
           addHandCard(phone);
@@ -410,6 +414,7 @@ export default function Shop() {
         return;
       }
       if (!spendNormalTickets(1)) return toast('普通券不足。');
+      drawCooldownUntilRef.current = Date.now() + 700;
       const ownedIds = ownedCharacters.map(o => o.characterId);
       const { result, newPity } = pullSupply(ownedIds, affinityMap, supplyPityCounter, { rateUpUntil, coldUntil });
       setSupplyPityCounter(newPity);
@@ -462,7 +467,24 @@ export default function Shop() {
         }
       }
     }
-  }, [gameOver, tutorialActive, tutStep, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, rateUpUntil, coldUntil, setSupplyPityCounter, addCharacter, addGachaResult, addHandCard, addHintTokens, addSpiritStones, addLog]);
+  }, [drawBusy, gameOver, tutorialActive, tutStep, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, rateUpUntil, coldUntil, setSupplyPityCounter, addCharacter, addGachaResult, addHandCard, addHintTokens, addSpiritStones, addLog]);
+
+  const closeRevealItem = useCallback(() => {
+    drawCooldownUntilRef.current = Date.now() + 700;
+    setRevealItem(null);
+  }, []);
+
+  const handleGachaComplete = useCallback(() => {
+    drawCooldownUntilRef.current = Date.now() + 900;
+    setShowGacha(false);
+    setGachaResults([]);
+    // 引导终幕：江夏入伙演出结束 → 引导完成，结算当日
+    if (tutorialActive) {
+      setTutorialStep(-1);
+      setEndDayResult('success');
+      setGameOver(true);
+    }
+  }, [tutorialActive, setTutorialStep, setGameOver]);
 
   /* ────── 热点点击 ────── */
   const handleSpotClick = useCallback((spot: Spot, spotIndex: number) => {
@@ -801,8 +823,8 @@ export default function Shop() {
                 <button
                   key={pool.id}
                   data-tut={pool.id === 'supply' ? 'btn-supply' : 'btn-board'}
-                  onClick={() => handleDraw(pool.id)}
-                  disabled={gameOver}
+	                  onClick={() => handleDraw(pool.id)}
+	                  disabled={gameOver || drawBusy}
                   className={cn(
                     'flex items-center gap-2.5 rounded-xl border bg-slate-900/60 py-2.5 px-3 text-left',
                     'disabled:opacity-40 hover:border-white/20 active:scale-95 transition-all',
@@ -1596,23 +1618,14 @@ export default function Shop() {
       {/* ── 抽卡动画 ── */}
       {/* ── 补给开箱演出（非人物出货） ── */}
       <AnimatePresence>
-        {revealItem && <SupplyReveal item={revealItem} onClose={() => setRevealItem(null)} />}
+        {revealItem && <SupplyReveal item={revealItem} onClose={closeRevealItem} />}
       </AnimatePresence>
 
       {showGacha && gachaResults.length > 0 && (
         <GachaAnimation
           results={gachaResults}
           isTenPull={false}
-          onComplete={() => {
-            setShowGacha(false);
-            setGachaResults([]);
-            // 引导终幕：江夏入伙演出结束 → 引导完成，结算当日
-            if (tutorialActive) {
-              setTutorialStep(-1);
-              setEndDayResult('success');
-              setGameOver(true);
-            }
-          }}
+          onComplete={handleGachaComplete}
         />
       )}
 

@@ -33,7 +33,6 @@ interface GachaHistoryEntry {
 }
 
 const DEFAULT_TUTORIAL_STEP = import.meta.env.DEV ? -1 : 0;
-const DEV_SPIRIT_STONES = 999_999_999;
 
 /** N 个自然日后的日期（'YYYY-MM-DD'），用于缘分 UP / 冷淡的限时计时 */
 function dateAfterDays(days: number): string {
@@ -133,7 +132,7 @@ interface PlayerState {
 
 const initialState = {
   tutorialStep: DEFAULT_TUTORIAL_STEP,
-  spiritStones: import.meta.env.DEV ? DEV_SPIRIT_STONES : 500,
+  spiritStones: 500,
   reputation: 0,
   normalTickets: 7,
   supplyPityCounter: 0,
@@ -305,10 +304,6 @@ export const usePlayerStore = create<PlayerState>()(
           if (typeof def === 'string' && typeof v !== 'string') continue;
           out[k] = v;
         }
-        if (import.meta.env.DEV) out.tutorialStep = -1;
-        if (import.meta.env.DEV && typeof out.spiritStones === 'number') {
-          out.spiritStones = Math.max(out.spiritStones, DEV_SPIRIT_STONES);
-        }
         return out as unknown as PlayerState;
       },
       migrate: (persisted, version) => {
@@ -377,10 +372,6 @@ export const usePlayerStore = create<PlayerState>()(
           state.affinityMap = affinityMap;
           state.relationshipStages = state.relationshipStages ?? {};
           state.dailyActions = state.dailyActions ?? {};
-        }
-        if (import.meta.env.DEV) {
-          state.tutorialStep = -1;
-          state.spiritStones = Math.max(state.spiritStones ?? 0, DEV_SPIRIT_STONES);
         }
         return state as PlayerState;
       },

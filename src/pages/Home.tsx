@@ -207,10 +207,9 @@ export default function Home() {
     {
       id: 'minigame',
       label: '星夜小憩',
-      hint: '夜班里的小消遣',
+      hint: '理货赚灵石',
       icon: Gamepad2,
       color: 'from-emerald-500 to-teal-700',
-      full: true,
       art: {
         scene: '/bg/scene/studio-room.jpg',
         sceneOpacity: 'opacity-30',

@@ -79,6 +79,10 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/suli/smile.png",
+      "gachaQuote": "睡不着的话——零点，调到我的频段……",
+      "gachaVoiceUrls": [
+        "/audio/gacha-voice/suli-03.mp3"
+      ],
       "expressionUrls": {
         "smile": "/characters/face/suli/smile.png",
         "shy": "/characters/face/suli/shy.png",
@@ -168,6 +172,9 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/aruo/smile.png",
+      "gachaVoiceUrls": [
+        "/audio/gacha-voice/aruo-01.mp3"
+      ],
       "expressionUrls": {
         "smile": "/characters/face/aruo/smile.png",
         "shy": "/characters/face/aruo/shy.png",
@@ -257,6 +264,9 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/sangluo/smile.png",
+      "gachaVoiceUrls": [
+        "/audio/gacha-voice/sangluo-01.mp3"
+      ],
       "expressionUrls": {
         "smile": "/characters/face/sangluo/smile.png",
         "shy": "/characters/face/sangluo/shy.png",
@@ -346,6 +356,10 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/aman/smile.png",
+      "gachaQuote": "小动物害怕的时候，追得越急、越躲。人有时候……也一样。",
+      "gachaVoiceUrls": [
+        "/audio/gacha-voice/aman-01.mp3"
+      ],
       "expressionUrls": {
         "smile": "/characters/face/aman/smile.png",
         "shy": "/characters/face/aman/shy.png",
@@ -431,6 +445,7 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/shenzhaoning/smile.png",
+      "gachaVoiceUrls": [],
       "expressionUrls": {
         "smile": "/characters/face/shenzhaoning/smile.png",
         "shy": "/characters/face/shenzhaoning/shy.png",
@@ -516,6 +531,7 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/murongxue/smile.png",
+      "gachaVoiceUrls": [],
       "expressionUrls": {
         "smile": "/characters/face/murongxue/smile.png",
         "shy": "/characters/face/murongxue/shy.png",
@@ -601,6 +617,7 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/yunzhiyi/smile.png",
+      "gachaVoiceUrls": [],
       "expressionUrls": {
         "smile": "/characters/face/yunzhiyi/smile.png",
         "shy": "/characters/face/yunzhiyi/shy.png",
@@ -686,6 +703,7 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/linxia/smile.png",
+      "gachaVoiceUrls": [],
       "expressionUrls": {
         "smile": "/characters/face/linxia/smile.png",
         "shy": "/characters/face/linxia/shy.png",

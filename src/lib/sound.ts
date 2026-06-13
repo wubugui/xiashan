@@ -3,8 +3,10 @@
  * 所有音效在浏览器端即时生成。iOS/Android/桌面全平台支持。
  */
 
+import { safeStorage } from '@/lib/safeStorage';
+
 let _ctx: AudioContext | null = null;
-let _enabled: boolean = localStorage.getItem('xiashan-sfx') !== '0';
+let _enabled: boolean = safeStorage.getItem('xiashan-sfx') !== '0';
 
 function ctx(): AudioContext | null {
   if (!_enabled) return null;
@@ -22,7 +24,7 @@ function ctx(): AudioContext | null {
 
 export function setSoundEnabled(on: boolean) {
   _enabled = on;
-  localStorage.setItem('xiashan-sfx', on ? '1' : '0');
+  safeStorage.setItem('xiashan-sfx', on ? '1' : '0');
 }
 
 export function isSoundEnabled(): boolean {

@@ -8,6 +8,7 @@ import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getCharacterById } from '@/data/characters';
 import { playSound } from '@/lib/sound';
+import { playGachaVoice, stopGachaVoice } from '@/lib/gachaVoice';
 import {
   vibrate, VIBE, shakeKeyframes, dustAt, burstPurpleSides, burstGoldCelebration,
 } from '@/lib/fx';
@@ -34,6 +35,7 @@ type GachaCharacter = Character & {
   gachaBackgroundUrl?: string;
   gachaQuote?: string;
   gachaTags?: string[];
+  gachaVoiceUrls?: string[];
 };
 
 type Rarity = GachaResult['rarity'];
@@ -112,6 +114,10 @@ function HighRarityReveal({
   } as CSSProperties;
   const isSSR = result.rarity === 'SSR';
   const starCount = rarityStars[result.rarity];
+  const starDelay = isSSR ? 1040 : 680;
+  const flashDelay = isSSR ? 1980 : 1450;
+  const finalDelay = isSSR ? 2160 : 1580;
+  const doneDelay = isSSR ? 3320 : 2380;
 
   useEffect(() => {
     playSound('gacha-riser');
@@ -122,15 +128,21 @@ function HighRarityReveal({
       playSound('gacha-impact');
       onShake(isSSR ? 13 : 9);
       vibrate(isSSR ? VIBE.mid : VIBE.light);
-    }, 680));
+      if (isSSR) {
+        for (let i = 0; i < starCount; i++) {
+          timers.push(setTimeout(() => playSound('star-pin'), i * 115));
+        }
+      }
+    }, starDelay));
     timers.push(setTimeout(() => {
       setStage('flash');
       playSound(isSSR ? 'gacha-ssr' : 'gacha-upgrade');
-      onShake(isSSR ? 16 : 11);
+      onShake(isSSR ? 24 : 11);
       vibrate(isSSR ? VIBE.heavy : VIBE.mid);
-    }, 1450));
-    timers.push(setTimeout(() => setStage('final'), 1580));
-    timers.push(setTimeout(onDone, 2380));
+      if (isSSR) burstGoldCelebration(900);
+    }, flashDelay));
+    timers.push(setTimeout(() => setStage('final'), finalDelay));
+    timers.push(setTimeout(onDone, doneDelay));
     return () => timers.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result.characterId]);
@@ -203,21 +215,36 @@ function HighRarityReveal({
       <motion.div
         initial={{ scaleX: 0, opacity: 0 }}
         animate={{
-          scaleX: stage === 'silhouette' ? 0.35 : stage === 'stars' ? 1 : 0.25,
-          opacity: stage === 'final' ? 0 : 0.9,
+          scaleX: stage === 'silhouette' ? (isSSR ? 0.14 : 0.35) : stage === 'stars' ? 1 : 0.25,
+          opacity: stage === 'final' ? 0 : isSSR && stage === 'silhouette' ? 0.48 : 0.9,
         }}
         transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute left-1/2 top-1/2 h-px w-[82vw] max-w-[760px] -translate-x-1/2 bg-gradient-to-r from-transparent via-white to-transparent"
+        className={cn(
+          'absolute left-1/2 top-1/2 h-px w-[82vw] max-w-[760px] -translate-x-1/2 bg-gradient-to-r from-transparent to-transparent',
+          isSSR ? 'via-amber-100' : 'via-white',
+        )}
       />
       <motion.div
         initial={{ x: '-52vw', opacity: 0 }}
         animate={{
           x: stage === 'silhouette' ? '-12vw' : '58vw',
-          opacity: stage === 'final' ? 0 : stage === 'silhouette' ? 0.38 : 0.85,
+          opacity: stage === 'final' ? 0 : stage === 'silhouette' ? (isSSR ? 0.2 : 0.38) : 0.85,
         }}
         transition={{ duration: stage === 'silhouette' ? 0.62 : 0.32, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute top-[16%] h-[72vh] w-[2px] rotate-[18deg] bg-white/95 shadow-[0_0_26px_rgba(255,255,255,0.85)]"
+        className={cn(
+          'absolute top-[16%] h-[72vh] w-[2px] rotate-[18deg] shadow-[0_0_26px_rgba(255,255,255,0.85)]',
+          isSSR ? 'bg-amber-100/95' : 'bg-white/95',
+        )}
       />
+
+      {isSSR && stage === 'silhouette' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0.42, 0.16] }}
+          transition={{ duration: 1.1, ease: 'easeInOut' }}
+          className="absolute inset-0 z-20 bg-[radial-gradient(circle_at_50%_46%,rgba(255,244,214,0.16),transparent_18%),linear-gradient(180deg,rgba(0,0,0,0.36),rgba(0,0,0,0.12),rgba(0,0,0,0.46))]"
+        />
+      )}
 
       <AnimatePresence>
         {(stage === 'stars' || stage === 'flash') && (
@@ -231,16 +258,21 @@ function HighRarityReveal({
             {Array.from({ length: starCount }).map((_, i) => (
               <motion.span
                 key={i}
-                initial={{ scale: 2.3, opacity: 0, y: -18 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.09, type: 'spring', damping: 13, stiffness: 430 }}
+                initial={{ scale: isSSR ? 3.4 : 2.3, opacity: 0, y: isSSR ? -36 : -18, rotate: isSSR ? -14 : 0 }}
+                animate={{
+                  scale: isSSR ? [1.38, 0.92, 1] : 1,
+                  opacity: 1,
+                  y: 0,
+                  rotate: 0,
+                }}
+                transition={{ delay: i * (isSSR ? 0.13 : 0.09), type: 'spring', damping: isSSR ? 10 : 13, stiffness: isSSR ? 520 : 430 }}
                 className={cn(
-                  'text-5xl font-black leading-none md:text-7xl',
-                  isSSR ? 'text-amber-200' : 'text-purple-200',
+                  'font-black leading-none',
+                  isSSR ? 'text-6xl text-amber-100 md:text-8xl' : 'text-5xl text-purple-200 md:text-7xl',
                 )}
                 style={{
                   textShadow: isSSR
-                    ? '0 0 18px rgba(251,191,36,0.9), 0 0 34px rgba(255,255,255,0.38)'
+                    ? '0 0 16px rgba(255,255,255,0.92), 0 0 30px rgba(251,191,36,0.92), 0 0 58px rgba(245,158,11,0.72)'
                     : '0 0 18px rgba(192,132,252,0.9), 0 0 34px rgba(255,255,255,0.3)',
                 }}
               >
@@ -252,12 +284,22 @@ function HighRarityReveal({
       </AnimatePresence>
 
       {stage === 'flash' && (
-        <motion.div
-          initial={{ opacity: 0.92 }}
-          animate={{ opacity: 0 }}
-          transition={{ duration: 0.32 }}
-          className="absolute inset-0 z-30 bg-white"
-        />
+        <>
+          {isSSR && (
+            <motion.div
+              initial={{ scale: 0.08, opacity: 0.95 }}
+              animate={{ scale: 2.8, opacity: 0 }}
+              transition={{ duration: 0.58, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute left-1/2 top-1/2 z-30 h-[56vmin] w-[56vmin] -translate-x-1/2 -translate-y-1/2 rounded-full border-[10px] border-amber-100/90"
+            />
+          )}
+          <motion.div
+            initial={{ opacity: isSSR ? 1 : 0.92 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: isSSR ? 0.48 : 0.32 }}
+            className={cn('absolute inset-0 z-30', isSSR ? 'bg-amber-50' : 'bg-white')}
+          />
+        </>
       )}
 
       {stage === 'final' && (
@@ -458,20 +500,29 @@ function GachaShowcase({
       y: (e.clientY / window.innerHeight - 0.5) * 2,
     });
   }, []);
+  const handleCompleteClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onComplete();
+  }, [onComplete]);
 
   /* 台词打字机 */
   const [typed, setTyped] = useState(0);
   useEffect(() => {
     setTyped(0);
+    let iv: ReturnType<typeof setInterval> | undefined;
     const start = setTimeout(() => {
-      const iv = setInterval(() => {
+      iv = setInterval(() => {
         setTyped(n => {
           if (n >= quote.length) { clearInterval(iv); return n; }
           return n + 1;
         });
       }, 30);
     }, 850);
-    return () => clearTimeout(start);
+    return () => {
+      clearTimeout(start);
+      if (iv) clearInterval(iv);
+    };
   }, [quote, activeIndex]);
 
   /* 入场音效编排：星星逐颗钉入；SSR 名字逐字砸出 */
@@ -490,6 +541,14 @@ function GachaShowcase({
     return () => ts.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIndex]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => playGachaVoice(character?.gachaVoiceUrls), isSSR ? 1120 : 780);
+    return () => {
+      window.clearTimeout(timer);
+      stopGachaVoice();
+    };
+  }, [activeIndex, character?.gachaVoiceUrls, isSSR]);
 
   return (
     <motion.div
@@ -595,14 +654,18 @@ function GachaShowcase({
 
         {/* 角色名：SSR 逐字砸出 */}
         {isSSR ? (
-          <div className="flex bg-gradient-to-r from-amber-100 to-amber-500 bg-clip-text text-4xl font-black leading-none text-transparent drop-shadow-[0_4px_18px_rgba(0,0,0,0.95)] md:text-7xl">
+          <div className="flex text-4xl font-black leading-none drop-shadow-[0_4px_18px_rgba(0,0,0,0.95)] md:text-7xl">
             {result.name.split('').map((ch, i) => (
               <motion.span
                 key={i}
                 initial={{ scale: 2.6, opacity: 0, y: -14 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 transition={{ delay: 0.62 + i * 0.085, type: 'spring', damping: 13, stiffness: 500 }}
-                className="inline-block"
+                className="inline-block bg-gradient-to-r from-amber-50 via-yellow-200 to-amber-500 bg-clip-text text-transparent"
+                style={{
+                  WebkitTextStroke: '1px rgba(120,53,15,0.22)',
+                  textShadow: '0 0 16px rgba(251,191,36,0.52), 0 4px 18px rgba(0,0,0,0.96)',
+                }}
               >
                 {ch}
               </motion.span>
@@ -670,7 +733,9 @@ function GachaShowcase({
 
       {showCompleteButton && (
         <motion.button
-          onClick={onComplete}
+          onPointerDown={(event) => event.stopPropagation()}
+          onPointerUp={(event) => event.stopPropagation()}
+          onClick={handleCompleteClick}
           initial={{ y: 16, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.28, duration: 0.38, ease: 'easeOut' }}
@@ -743,14 +808,14 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
       : 'done';
 
   const [revealedIndices, setRevealedIndices] = useState<Set<number>>(new Set());
-  const [phase, setPhase] = useState<'highReveal' | 'highShowcase' | 'reveal' | 'done'>(initialPhase);
+  const [phase, setPhase] = useState<'highReveal' | 'reveal' | 'done'>(initialPhase);
   const [activeHighRevealIndex, setActiveHighRevealIndex] = useState(0);
   const [activeResultIndex, setActiveResultIndex] = useState(featuredIndex);
   const [skipped, setSkipped] = useState(false);
   const revealTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const skipTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const completedRef = useRef(false);
   const shakeControls = useAnimationControls();
-  const hasHighReveal = highRevealOrder.length > 0;
   const allNormalsRevealed = normalRevealOrder.length > 0
     && normalRevealOrder.every((index) => revealedIndices.has(index));
 
@@ -776,6 +841,7 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
   useEffect(() => {
     revealTimersRef.current.forEach(clearTimeout);
     clearTimeout(skipTimerRef.current);
+    completedRef.current = false;
     setRevealedIndices(new Set());
     setActiveHighRevealIndex(0);
     setActiveResultIndex(featuredIndex);
@@ -783,37 +849,24 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
     setPhase(initialPhase);
   }, [featuredIndex, initialPhase, results]);
 
+  useEffect(() => () => {
+    revealTimersRef.current.forEach(clearTimeout);
+    clearTimeout(skipTimerRef.current);
+  }, []);
+
   const finishHighReveal = useCallback(() => {
     const nextHighRevealIndex = activeHighRevealIndex + 1;
     setActiveResultIndex(highRevealOrder[activeHighRevealIndex] ?? featuredIndex);
 
-    if (nextHighRevealIndex < highRevealOrder.length || normalRevealOrder.length > 0) {
-      setPhase('highShowcase');
+    if (nextHighRevealIndex < highRevealOrder.length) {
+      setActiveHighRevealIndex(nextHighRevealIndex);
       return;
     }
 
     setPhase('done');
-  }, [activeHighRevealIndex, featuredIndex, highRevealOrder, normalRevealOrder.length]);
+  }, [activeHighRevealIndex, featuredIndex, highRevealOrder]);
 
-  const continueAfterHighShowcase = useCallback(() => {
-    const nextHighRevealIndex = activeHighRevealIndex + 1;
-    if (nextHighRevealIndex < highRevealOrder.length) {
-      setActiveHighRevealIndex(nextHighRevealIndex);
-      setPhase('highReveal');
-      return;
-    }
-
-    setActiveResultIndex(featuredIndex);
-    setPhase(normalRevealOrder.length > 0 ? 'reveal' : 'done');
-  }, [activeHighRevealIndex, featuredIndex, highRevealOrder.length, normalRevealOrder.length]);
-
-  useEffect(() => {
-    if (phase !== 'highShowcase') return;
-    const timer = setTimeout(continueAfterHighShowcase, 1800);
-    return () => clearTimeout(timer);
-  }, [continueAfterHighShowcase, phase]);
-
-  /* 普通卡揭晓排程：R/N 直接砸卡面；SR/SSR 已经按 SSR → SR 的顺序揭晓。 */
+  /* 普通卡揭晓排程：只有整次没有 SR/SSR 时，R/N 才直接砸卡面。 */
   useEffect(() => {
     if (phase !== 'reveal' || skipped) return;
     if (normalRevealOrder.length === 0) return;
@@ -827,7 +880,7 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
     return () => timers.forEach(clearTimeout);
   }, [phase, skipped, normalRevealOrder, handleReveal]);
 
-  /* 普通卡全部揭晓：纯普通池进结算展示；已有高稀有展示时只等待用户收下，避免本体二次播放。 */
+  /* 普通卡全部揭晓后统一进入结算。高稀有路径不进入这里，避免 R/N 插队。 */
   useEffect(() => {
     if (phase !== 'reveal') return;
     if (normalRevealOrder.length === 0) {
@@ -836,32 +889,45 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
       return;
     }
     if (allNormalsRevealed) {
-      if (hasHighReveal) return;
       const timer = setTimeout(() => {
         setActiveResultIndex(featuredIndex);
         setPhase('done');
       }, skipped ? 250 : 760);
       return () => clearTimeout(timer);
     }
-  }, [allNormalsRevealed, featuredIndex, hasHighReveal, normalRevealOrder.length, phase, skipped]);
+  }, [allNormalsRevealed, featuredIndex, normalRevealOrder.length, phase, skipped]);
 
   /* 长按跳过（防误触） */
   const doSkip = useCallback(() => {
     setSkipped(true);
     revealTimersRef.current.forEach(clearTimeout);
-    setRevealedIndices(new Set(normalRevealOrder));
     setActiveResultIndex(featuredIndex);
-    setPhase((currentPhase) => {
-      if (currentPhase === 'done') return currentPhase;
-      return normalRevealOrder.length > 0 ? 'reveal' : 'done';
-    });
-  }, [featuredIndex, normalRevealOrder]);
+    if (highRevealOrder.length > 0) {
+      setPhase('done');
+      return;
+    }
+    setRevealedIndices(new Set(normalRevealOrder));
+    setPhase((currentPhase) => (currentPhase === 'done' ? currentPhase : 'reveal'));
+  }, [featuredIndex, highRevealOrder.length, normalRevealOrder]);
 
-  const startSkipHold = useCallback(() => {
+  const completeOnce = useCallback(() => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    revealTimersRef.current.forEach(clearTimeout);
+    clearTimeout(skipTimerRef.current);
+    onComplete();
+  }, [onComplete]);
+
+  const startSkipHold = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    clearTimeout(skipTimerRef.current);
     skipTimerRef.current = setTimeout(doSkip, 600);
   }, [doSkip]);
 
-  const cancelSkipHold = useCallback(() => {
+  const cancelSkipHold = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
     clearTimeout(skipTimerRef.current);
   }, []);
 
@@ -892,19 +958,6 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
           />
         )}
 
-        {phase === 'highShowcase' && activeHighResultIndex !== undefined && (
-          <GachaShowcase
-            results={results}
-            activeIndex={activeHighResultIndex}
-            onPrev={showPreviousResult}
-            onNext={showNextResult}
-            onComplete={continueAfterHighShowcase}
-            onShake={doShake}
-            showCompleteButton={false}
-            showSwitchControls={false}
-          />
-        )}
-
         {phase === 'reveal' && (
           <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-4 py-6">
             <div className={cn('flex flex-wrap items-center justify-center gap-3', isTenPull ? 'max-w-md' : '')}>
@@ -923,19 +976,6 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
                 );
               })}
             </div>
-            {hasHighReveal && allNormalsRevealed && (
-              <motion.button
-                onClick={onComplete}
-                initial={{ y: 18, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: skipped ? 0 : 0.45, duration: 0.32, ease: 'easeOut' }}
-                className="group absolute bottom-8 left-1/2 z-40 flex h-10 -translate-x-1/2 items-center gap-3 rounded-full border border-white/20 bg-slate-950/44 px-4 text-sm font-bold text-white/88 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-md transition hover:border-amber-200/70 hover:bg-slate-950/58 hover:text-amber-100 md:h-11 md:px-5"
-              >
-                <span className="h-px w-7 bg-gradient-to-r from-transparent via-amber-200/75 to-amber-200/20" />
-                <span className="tracking-[0.18em]">收下羁绊</span>
-                <ChevronRight size={17} strokeWidth={2.2} className="-ml-1 text-amber-200/90 transition-transform group-hover:translate-x-0.5" />
-              </motion.button>
-            )}
           </div>
         )}
 
@@ -945,7 +985,7 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
             activeIndex={activeResultIndex}
             onPrev={showPreviousResult}
             onNext={showNextResult}
-            onComplete={onComplete}
+            onComplete={completeOnce}
             onShake={doShake}
           />
         )}
@@ -963,6 +1003,10 @@ export default function GachaAnimation({ results, isTenPull, onComplete }: Gacha
             onPointerDown={startSkipHold}
             onPointerUp={cancelSkipHold}
             onPointerLeave={cancelSkipHold}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            }}
             className={cn(
               'select-none rounded-lg px-6 py-2.5 text-sm font-medium',
               'bg-slate-800/80 text-gray-300',
