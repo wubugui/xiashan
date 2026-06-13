@@ -1,0 +1,131 @@
+{
+  "_comment": "恋爱线/心动系统数据。每个角色一条 arc，beats 顺序解锁：只有 romanceProgress==index 且 trigger 满足时该节点才可进。trigger 复用 conditionEngine。详见 docs/恋爱线设计-心动系统.md",
+  "arcs": [
+    {
+      "characterId": "linxia",
+      "theme": "她靠清单武装自己，慢慢敢把没整理好的慌乱交给你",
+      "beats": [
+        {
+          "id": "linxia_b1",
+          "phase": "共事",
+          "title": "搭档第一天",
+          "guide": "她刚进店当后勤搭档——接她的委托、跑一趟回店打烊，看看她怎么干活。",
+          "trigger": [
+            { "type": "has_character", "characterId": "linxia" },
+            { "type": "flag_set", "flag": "commission_interview_done" }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "江夏当后勤搭档的第一天。她比约定时间早到了四十分钟，桌上摊着三份清单。" },
+              { "speaker": "linxia", "text": "物资我对过三遍了！呃……应该、应该没问题。" },
+              { "text": "她蹲在货箱前数补给，手指一箱一箱点过去——数到一半，眉头皱起来，又从头数。" },
+              { "speaker": "linxia", "text": "奇怪……怎么少一箱？是我记错了，还是……（声音越来越小）" },
+              { "text": "她翻出清单逐行核对，终于找到那箱被挪到角落的货。整个人松下来，又赶紧端正表情。" },
+              { "speaker": "linxia", "text": "找、找到了！对不起，我不是故意数错的，我马上重新核一遍——" }
+            ],
+            "choice": {
+              "prompt": "她紧张得耳朵都红了。你怎么接？",
+              "options": [
+                {
+                  "text": "（笑）你这清单比我家账本还细。",
+                  "momo": 1,
+                  "reaction": [
+                    { "speaker": "linxia", "text": "……你别笑啦！细一点，才不会出错嘛。" },
+                    { "text": "她嘟囔着，可绷紧的肩膀明显松了下来。" }
+                  ]
+                },
+                {
+                  "text": "别急，第一天都这样。慢慢来。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "linxia", "text": "……嗯。谢谢。" },
+                    { "text": "她低下头，飞快地在清单角落记了一笔，没让你看清写了什么。" }
+                  ]
+                },
+                {
+                  "text": "我不看，你自己核完告诉我。",
+                  "momo": 1,
+                  "reaction": [
+                    { "speaker": "linxia", "text": "好！交给我！" },
+                    { "text": "被你这么一信，她忽然有了底气，数得又快又稳。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": {
+            "affinity": 3,
+            "unlockFlag": "romance_linxia_b1",
+            "wechat": "明天的物资我列好了，你过目下。"
+          }
+        },
+        {
+          "id": "linxia_b2",
+          "phase": "熟络",
+          "title": "加班的闲聊",
+          "guide": "多和她共事、攒点好感（约 25），某个加班的深夜你们会有机会聊点工作之外的事。",
+          "trigger": [
+            { "type": "affinity", "characterId": "linxia", "minValue": 25 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "（这段故事还在写——熟络相位。）" }
+            ]
+          },
+          "reward": { "affinity": 4, "unlockFlag": "romance_linxia_b2" }
+        },
+        {
+          "id": "linxia_b3",
+          "phase": "暧昧",
+          "title": "清单上的胖大海",
+          "guide": "你们更近了（好感约 45）。某天你会瞥见她清单上，多了一行只跟你有关的字。",
+          "trigger": [
+            { "type": "affinity", "characterId": "linxia", "minValue": 45 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "（这段故事还在写——暧昧相位，第一次心跳。）" }
+            ]
+          },
+          "reward": { "affinity": 5, "unlockFlag": "romance_linxia_b3" }
+        },
+        {
+          "id": "linxia_b4",
+          "phase": "告白门",
+          "title": "闸机口",
+          "guide": "回到你们初遇的地铁闸机口（好感约 70）。有些话，她想说，你也是。",
+          "trigger": [
+            { "type": "affinity", "characterId": "linxia", "minValue": 70 }
+          ],
+          "isGate": true,
+          "scene": {
+            "location": "subway",
+            "lines": [
+              { "text": "（这段故事还在写——确认心意门。）" }
+            ]
+          },
+          "reward": { "unlockFlag": "romance_linxia_b4" }
+        },
+        {
+          "id": "linxia_b5",
+          "phase": "终幕",
+          "title": "两个人的清单",
+          "guide": "确认心意之后，慢慢走到这里（好感约 110）。",
+          "trigger": [
+            { "type": "affinity", "characterId": "linxia", "minValue": 110 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "（这段故事还在写——深耕终幕。）" }
+            ]
+          },
+          "reward": { "unlockFlag": "romance_linxia_b5" }
+        }
+      ]
+    }
+  ]
+}

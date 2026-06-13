@@ -76,6 +76,12 @@ interface PlayerState {
   dupeCount: Record<string, number>;
   /** 缘分碎片（引荐系统通货，溢出卡折算所得） */
   bondShards: number;
+  /** 心动系统：每个角色已走到第几个恋爱节点（== 下一个待解锁节点序号） */
+  romanceProgress: Record<string, number>;
+  /** 确认心意的对象（排他锁定）：null = 还没确认 */
+  xinyiTarget: string | null;
+  /** 隐藏「默契」值：恋爱节点选项喂养，分支她的反应 */
+  momo: Record<string, number>;
   /** 缘分 UP 截止日（completedCommission → 限时权重 ×4）：characterId → 'YYYY-MM-DD' 含当日 */
   rateUpUntil: Record<string, string>;
   /** 冷淡截止日（放弃委托 → 限时权重 ×0.25 + 委托不上板）：characterId → 'YYYY-MM-DD' 含当日 */
@@ -117,6 +123,12 @@ interface PlayerState {
   /** 放弃她的委托：冷淡若干自然日 */
   setCharacterCold: (characterId: string, days: number) => void;
   advanceRelationshipStage: (characterId: string) => void;
+  /** 心动系统：推进一个恋爱节点（进度 +1） */
+  advanceRomance: (characterId: string) => void;
+  /** 确认心意（排他锁定对象） */
+  setXinyiTarget: (characterId: string) => void;
+  /** 累加隐藏默契值 */
+  addMomo: (characterId: string, amount: number) => void;
   tryDailyAction: (key: string) => boolean;
   addExp: (characterId: string, amount: number) => void;
   addGachaResult: (characterId: string, rarity: string) => void;
@@ -148,6 +160,9 @@ const initialState = {
   dailyActions: {} as Record<string, string>,
   dupeCount: {} as Record<string, number>,
   bondShards: 0,
+  romanceProgress: {} as Record<string, number>,
+  xinyiTarget: null as string | null,
+  momo: {} as Record<string, number>,
   rateUpUntil: {} as Record<string, string>,
   coldUntil: {} as Record<string, string>,
   totalGachaCount: 0,
@@ -242,6 +257,16 @@ export const usePlayerStore = create<PlayerState>()(
           [characterId]: (s.relationshipStages[characterId] ?? 0) + 1,
         },
       })),
+      advanceRomance: (characterId) => set(s => ({
+        romanceProgress: {
+          ...s.romanceProgress,
+          [characterId]: (s.romanceProgress[characterId] ?? 0) + 1,
+        },
+      })),
+      setXinyiTarget: (characterId) => set({ xinyiTarget: characterId }),
+      addMomo: (characterId, amount) => set(s => ({
+        momo: { ...s.momo, [characterId]: (s.momo[characterId] ?? 0) + amount },
+      })),
       tryDailyAction: (key) => {
         const today = new Date().toISOString().slice(0, 10);
         if (get().dailyActions[key] === today) return false;
@@ -287,7 +312,7 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'xiashan-player-store',
-      version: 6,
+      version: 7,
       storage: createJSONStorage(() => safeStorage),
       // 旧版本存档可能缺字段、字段为 null 或类型不符（项目从 AVG 改版而来），
       // 合并时丢弃所有与默认值类型不符的项，避免启动即崩、全页空白。
@@ -312,6 +337,13 @@ export const usePlayerStore = create<PlayerState>()(
           personTickets?: number;
           commissionTickets?: number;
         };
+        if (version < 7) {
+          // 心动系统新增字段：老存档补空，merge 也会兜底（这里显式置，稳妥）
+          const s7 = state as typeof state & { romanceProgress?: Record<string, number>; xinyiTarget?: string | null; momo?: Record<string, number> };
+          s7.romanceProgress = s7.romanceProgress ?? {};
+          s7.xinyiTarget = s7.xinyiTarget ?? null;
+          s7.momo = s7.momo ?? {};
+        }
         if (version < 6) {
           // 引导系统改版（强制锁定式 19 步）：旧版进行中的引导（1-6）无法续接，重新开始；
           // 已完成（-1）和未开始（0）的存档不受影响

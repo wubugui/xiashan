@@ -7,13 +7,16 @@ import { getCharacterById } from '@/data/characters';
 import { getRelationshipStages, getStageInfo, getNextStage } from '@/data/relationship';
 import { dupesNeededForStage } from '@/engine/bondEngine';
 import { expForLevel } from '@/engine/shopEngine';
+import { getRomanceArc, type RomanceBeat, type RomanceChoiceOption } from '@/data/romanceArcs';
+import { beatStatus } from '@/engine/romanceEngine';
+import RomanceScene from '@/components/RomanceScene';
 import { cn } from '@/lib/utils';
 import { playSound } from '@/lib/sound';
 import { assetUrl } from '@/lib/assets';
 import PageBackdrop from '@/components/PageBackdrop';
 import { backdropForCharacter } from '@/lib/pageBackdrops';
 
-type TabType = 'info' | 'interact' | 'upgrade';
+type TabType = 'info' | 'interact' | 'upgrade' | 'romance';
 
 const rarityGradient = {
   N: 'from-slate-600 to-slate-800',
@@ -64,9 +67,19 @@ export default function CharacterDetail() {
   const advanceRelationshipStage = usePlayerStore((s) => s.advanceRelationshipStage);
   const tryDailyAction = usePlayerStore((s) => s.tryDailyAction);
   const dupeCount = usePlayerStore((s) => s.dupeCount);
+  // 心动系统
+  const reputation = usePlayerStore((s) => s.reputation);
+  const completedNodes = usePlayerStore((s) => s.completedNodes);
+  const flags = usePlayerStore((s) => s.flags);
+  const romanceProgress = usePlayerStore((s) => s.romanceProgress);
+  const advanceRomance = usePlayerStore((s) => s.advanceRomance);
+  const addMomo = usePlayerStore((s) => s.addMomo);
+  const setFlag = usePlayerStore((s) => s.setFlag);
+  const addPhoneMessage = usePlayerStore((s) => s.addPhoneMessage);
 
   const [activeTab, setActiveTab] = useState<TabType>('info');
   const [interactionResponse, setInteractionResponse] = useState<string | null>(null);
+  const [playingBeat, setPlayingBeat] = useState<RomanceBeat | null>(null);
 
   const character = id ? getCharacterById(id) : undefined;
   const ownedChar = ownedCharacters.find((c) => c.characterId === id);
@@ -159,6 +172,32 @@ export default function CharacterDetail() {
     if (!id || spiritStones < UPGRADE_COST) return;
     addSpiritStones(-UPGRADE_COST);
     addExp(id, 50); // store.addExp 内部自动连升级，无需在此手动 levelUp
+  };
+
+  /* ── 心动线 ── */
+  const romanceArc = id ? getRomanceArc(id) : undefined;
+  const progress = id ? romanceProgress[id] ?? 0 : 0;
+  const condState = {
+    spiritStones, reputation,
+    ownedCharacters: ownedCharacters.map((c) => ({ characterId: c.characterId, level: c.level })),
+    affinityMap, relationshipStages, completedNodes, flags, dupeCount,
+  };
+
+  /** 节点演完落幕：结算默契 + 奖励 + 进度 +1 */
+  const handleBeatComplete = (chosen: RomanceChoiceOption | null) => {
+    const beat = playingBeat;
+    setPlayingBeat(null);
+    if (!beat || !id) return;
+    if (chosen?.momo) addMomo(id, chosen.momo);
+    const r = beat.reward;
+    if (r?.affinity) addAffinity(id, r.affinity);
+    if (r?.advanceStage) advanceRelationshipStage(id);
+    if (r?.unlockFlag) setFlag(r.unlockFlag);
+    if (r?.wechat) {
+      addPhoneMessage({ id: `romance_${beat.id}_${Date.now()}`, characterId: id, type: 'wechat', content: r.wechat, timestamp: Date.now(), read: false });
+    }
+    if (beat.isGate) usePlayerStore.getState().setXinyiTarget(id);
+    advanceRomance(id);
   };
 
   if (!character) {
@@ -258,6 +297,7 @@ export default function CharacterDetail() {
       {/* 标签栏 */}
       <div className="relative z-10 mt-5 flex border-b border-white/10 px-5">
         {([
+          ...(romanceArc ? [{ id: 'romance' as TabType, label: '心动' }] : []),
           { id: 'info' as TabType, label: '信息' },
           { id: 'interact' as TabType, label: '互动' },
           { id: 'upgrade' as TabType, label: '升级' },
@@ -283,6 +323,50 @@ export default function CharacterDetail() {
 
       {/* 标签内容 */}
       <div className="relative z-10 px-5 pt-4">
+        {/* 心动标签：逐格解锁的成就墙 + 路线图 */}
+        {activeTab === 'romance' && romanceArc && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+            <p className="text-xs leading-relaxed text-rose-200/70">{romanceArc.theme}</p>
+            {romanceArc.beats.map((beat, i) => {
+              const status = id ? beatStatus(id, i, progress, condState) : 'locked';
+              const done = status === 'done';
+              const available = status === 'available';
+              return (
+                <div
+                  key={beat.id}
+                  className={cn(
+                    'rounded-xl border p-3',
+                    done ? 'border-rose-400/40 bg-rose-500/10'
+                      : available ? 'border-amber-400/60 bg-amber-500/10 shadow-[0_0_16px_rgba(251,191,36,0.2)]'
+                        : 'border-white/10 bg-slate-800/30',
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={cn('text-sm font-bold', done ? 'text-rose-200' : available ? 'text-amber-200' : 'text-slate-500')}>
+                      {done || available ? `${beat.phase} · ${beat.title}` : `${beat.phase} · ???`}
+                    </span>
+                    <span className="shrink-0 text-[10px]">
+                      {done ? '💗 已解锁' : available ? '✨ 可进行' : '🔒'}
+                    </span>
+                  </div>
+                  {/* 指引：锁着/可进时显示怎么挣到；已完成显示标题即可 */}
+                  {!done && (
+                    <p className="mt-1 text-xs leading-relaxed text-slate-400">{beat.guide}</p>
+                  )}
+                  {available && (
+                    <button
+                      onClick={() => { playSound('challenge-appear'); setPlayingBeat(beat); }}
+                      className="mt-2.5 w-full rounded-lg bg-gradient-to-r from-rose-500 to-pink-600 py-2 text-xs font-black text-white active:scale-[0.99] transition-all"
+                    >
+                      ▶ 去见她
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </motion.div>
+        )}
+
         {/* 信息标签 */}
         {activeTab === 'info' && (
           <motion.div
@@ -566,6 +650,11 @@ export default function CharacterDetail() {
           </motion.div>
         )}
       </div>
+
+      {/* 心动场景演出 */}
+      {playingBeat && id && (
+        <RomanceScene characterId={id} beat={playingBeat} onComplete={handleBeatComplete} />
+      )}
     </div>
   );
 }
