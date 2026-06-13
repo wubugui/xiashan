@@ -13,6 +13,8 @@ import { safeStorage } from '@/lib/safeStorage';
 import ResetSaveButton from '@/components/ResetSaveButton';
 import PageBackdrop from '@/components/PageBackdrop';
 import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
+import { TutorialSpotlight } from '@/components/TutorialDirector';
+import { TUTORIAL_HOME_ENTRY, TUTORIAL_HOME_RESUME } from '@/lib/tutorialFlow';
 
 type HomeAction = {
   id: string;
@@ -98,6 +100,11 @@ export default function Home() {
   const normalTickets = usePlayerStore((s) => s.normalTickets);
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
   const addSpiritStones = usePlayerStore((s) => s.addSpiritStones);
+  const unreadCounts = usePlayerStore((s) => s.unreadCounts);
+  const totalUnread = unreadCounts.wechat + unreadCounts.sms + unreadCounts.call;
+  const tutorialStep = usePlayerStore((s) => s.tutorialStep);
+  /** 引导未完成：首页锁定「月光开店」入口（江夏聚光灯），其余区域不可点 */
+  const tutorialPending = tutorialStep !== -1;
 
   const [showDailyReward, setShowDailyReward] = useState(false);
 
@@ -105,12 +112,13 @@ export default function Home() {
   const totalCharacters = characters.length;
 
   useEffect(() => {
+    if (tutorialPending) return; // 引导期不弹每日奖励，避免与强制引导冲突
     const lastClaimDate = safeStorage.getItem('xiashan_daily_claim');
     const today = new Date().toDateString();
     if (lastClaimDate !== today) {
       setShowDailyReward(true);
     }
-  }, []);
+  }, [tutorialPending]);
 
   const claimDailyReward = () => {
     addSpiritStones(REWARDS.daily_login);
@@ -199,10 +207,9 @@ export default function Home() {
     {
       id: 'minigame',
       label: '星夜小憩',
-      hint: '夜班里的小消遣',
+      hint: '理货赚灵石',
       icon: Gamepad2,
       color: 'from-emerald-500 to-teal-700',
-      full: true,
       art: {
         scene: '/bg/scene/studio-room.jpg',
         sceneOpacity: 'opacity-30',
@@ -225,7 +232,8 @@ export default function Home() {
         overlayClassName="from-slate-950/30 via-slate-950/50 to-slate-950/80"
       />
 
-      <div className="absolute right-4 top-4 z-20">
+      {/* 引导期提到聚光灯遮罩之上：存档异常卡引导时的唯一逃生口 */}
+      <div className={cn('absolute right-4 top-4', tutorialPending ? 'z-[163]' : 'z-20')}>
         <ResetSaveButton compact />
       </div>
 
@@ -309,6 +317,7 @@ export default function Home() {
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
             onClick={primaryAction.onClick}
+            data-tut="home-shop"
             className={cn(
               'group relative flex h-24 w-full items-center overflow-hidden rounded-[1.6rem] px-6 text-left',
               'border border-amber-200/35 bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500',
@@ -381,12 +390,28 @@ export default function Home() {
                       {action.hint}
                     </span>
                   </div>
+
+                  {/* 手机未读角标（底部导航栏已移除，未读提醒落在这里） */}
+                  {action.id === 'phone' && totalUnread > 0 && (
+                    <span className="absolute right-2 top-2 z-20 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-black text-white shadow-lg">
+                      {totalUnread > 99 ? '99+' : totalUnread}
+                    </span>
+                  )}
                 </motion.button>
               );
             })}
           </div>
         </div>
       </div>
+
+      {/* 强制引导：未完成时只能进店（其余入口被遮罩拦截） */}
+      {tutorialPending && (
+        <TutorialSpotlight
+          targetKey="home-shop"
+          lines={tutorialStep === 0 ? TUTORIAL_HOME_ENTRY.lines : TUTORIAL_HOME_RESUME.lines}
+          expression={tutorialStep === 0 ? TUTORIAL_HOME_ENTRY.expression : TUTORIAL_HOME_RESUME.expression}
+        />
+      )}
 
       <AnimatePresence>
         {showDailyReward && (

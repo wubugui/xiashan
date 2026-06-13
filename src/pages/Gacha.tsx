@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Info, History } from 'lucide-react';
@@ -41,13 +41,17 @@ export default function Gacha() {
   const [cardResults, setCardResults] = useState<{ icon: string; name: string; sub: string; tier: 'normal' | 'rare' }[] | null>(null);
   /** 单抽非人物的开箱演出 */
   const [revealItem, setRevealItem] = useState<RevealItem | null>(null);
+  const pullCooldownUntilRef = useRef(0);
 
   const pityRemaining = GACHA_CONFIG.supplyPool.characterPity - supplyPityCounter;
+  const pullBusy = showAnimation || gachaResults.length > 0 || !!cardResults || !!revealItem;
 
   const handlePull = useCallback(
     (isTen: boolean) => {
+      if (pullBusy || Date.now() < pullCooldownUntilRef.current) return;
       const cost = isTen ? GACHA_CONFIG.tenCost : GACHA_CONFIG.singleCost;
       if (spiritStones < cost) return;
+      pullCooldownUntilRef.current = Date.now() + 700;
 
       addSpiritStones(-cost);
       // 与店内「便利屋补给」同一卡池、同一保底计数
@@ -113,7 +117,7 @@ export default function Gacha() {
         }
       }
     },
-    [spiritStones, ownedCharacters, affinityMap, supplyPityCounter, rateUpUntil, coldUntil, addCharacter, addSpiritStones, addGachaResult, setSupplyPityCounter, addHandCard, addHintTokens],
+    [pullBusy, spiritStones, ownedCharacters, affinityMap, supplyPityCounter, rateUpUntil, coldUntil, addCharacter, addSpiritStones, addGachaResult, setSupplyPityCounter, addHandCard, addHintTokens],
   );
 
   // 心动 UP：好感已达标但尚未入伙的角色（同稀有度内权重提升）
@@ -122,8 +126,19 @@ export default function Gacha() {
   );
 
   const handleAnimationComplete = useCallback(() => {
+    pullCooldownUntilRef.current = Date.now() + 900;
     setShowAnimation(false);
     setGachaResults([]);
+  }, []);
+
+  const closeRevealItem = useCallback(() => {
+    pullCooldownUntilRef.current = Date.now() + 700;
+    setRevealItem(null);
+  }, []);
+
+  const closeCardResults = useCallback(() => {
+    pullCooldownUntilRef.current = Date.now() + 700;
+    setCardResults(null);
   }, []);
 
   return (
@@ -365,7 +380,7 @@ export default function Gacha() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => handlePull(false)}
-            disabled={spiritStones < GACHA_CONFIG.singleCost}
+            disabled={pullBusy || spiritStones < GACHA_CONFIG.singleCost}
             className={cn(
               'flex flex-1 flex-col items-center gap-1 rounded-xl py-4',
               'bg-gradient-to-r from-slate-700 to-slate-800',
@@ -373,7 +388,7 @@ export default function Gacha() {
               'text-white',
               'shadow-lg',
               'transition-all duration-200',
-              spiritStones < GACHA_CONFIG.singleCost && 'cursor-not-allowed opacity-50',
+              (pullBusy || spiritStones < GACHA_CONFIG.singleCost) && 'cursor-not-allowed opacity-50',
             )}
           >
             <span className="text-base font-bold">单抽</span>
@@ -387,7 +402,7 @@ export default function Gacha() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => handlePull(true)}
-            disabled={spiritStones < GACHA_CONFIG.tenCost}
+            disabled={pullBusy || spiritStones < GACHA_CONFIG.tenCost}
             className={cn(
               'flex flex-1 flex-col items-center gap-1 rounded-xl py-4',
               'bg-gradient-to-r from-purple-600 to-purple-700',
@@ -395,7 +410,7 @@ export default function Gacha() {
               'text-white',
               'shadow-[0_0_20px_rgba(147,51,234,0.3)]',
               'transition-all duration-200',
-              spiritStones < GACHA_CONFIG.tenCost && 'cursor-not-allowed opacity-50',
+              (pullBusy || spiritStones < GACHA_CONFIG.tenCost) && 'cursor-not-allowed opacity-50',
             )}
           >
             <span className="text-base font-bold">十连</span>
@@ -408,7 +423,7 @@ export default function Gacha() {
 
       {/* 单抽开箱演出 */}
       <AnimatePresence>
-        {revealItem && <SupplyReveal item={revealItem} onClose={() => setRevealItem(null)} />}
+        {revealItem && <SupplyReveal item={revealItem} onClose={closeRevealItem} />}
       </AnimatePresence>
 
       {/* 消耗卡汇总弹窗 */}
@@ -419,7 +434,7 @@ export default function Gacha() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 px-5 backdrop-blur-sm"
-            onClick={() => setCardResults(null)}
+            onClick={closeCardResults}
           >
             <motion.div
               initial={{ scale: 0.9, y: 20, opacity: 0 }}
@@ -446,7 +461,7 @@ export default function Gacha() {
               </div>
               <p className="mt-3 text-center text-[10px] font-bold text-pink-300">💗 距人物保底还剩 {pityRemaining} 抽</p>
               <button
-                onClick={() => setCardResults(null)}
+                onClick={closeCardResults}
                 className="mt-3 w-full rounded-xl bg-gradient-to-r from-purple-500 to-violet-600 py-2.5 text-sm font-black text-white"
               >
                 收下

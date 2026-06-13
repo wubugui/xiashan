@@ -1,0 +1,197 @@
+{
+  "_comment": "新手引导剧本：全程江夏（linxia）解说。每句台词带稳定 id，供后续语音文件按 id 挂载（如 /voice/tutorial/{id}.mp3）。步骤机制（锁定目标/推进条件/奖励）在 src/lib/tutorialFlow.ts。",
+  "nudges": [
+    { "id": "nudge_1", "text": "那边现在不用管～先点我圈出来的地方！" },
+    { "id": "nudge_2", "text": "诶诶，这边这边！亮着金圈的才是下一步～" },
+    { "id": "nudge_3", "text": "别乱跑啦，跟着我走准没错……拜托了！" }
+  ],
+  "home": {
+    "entry": {
+      "expression": "smile",
+      "lines": [
+        { "id": "home_entry_1", "text": "欢迎来到二十五时便利屋！我是江夏～先推开店门吧，我在里面等你！" }
+      ]
+    },
+    "resume": {
+      "expression": "calm",
+      "lines": [
+        { "id": "home_resume_1", "text": "我们的第一单还没跑完呢！回店里继续吧～" }
+      ]
+    }
+  },
+  "start": {
+    "expression": "smile",
+    "lines": [
+      { "id": "start_1", "text": "点「开始营业」！今晚由我手把手带你跑完第一单。" }
+    ]
+  },
+  "steps": [
+    {
+      "id": "welcome",
+      "kind": "modal",
+      "expression": "smile",
+      "button": "继续",
+      "lines": [
+        { "id": "welcome_1", "text": "你好呀！我是江夏——二十五时便利屋的后勤搭档。" },
+        { "id": "welcome_2", "text": "这家店专收「时间表漏掉的麻烦」：深夜急件、凌晨找钥匙、早六点修灯……都接。" },
+        { "id": "welcome_3", "text": "接下来由我带你完整跑一单。放心，跟着我亮起来的地方点就行！" }
+      ]
+    },
+    {
+      "id": "trouble",
+      "kind": "modal",
+      "expression": "shy",
+      "button": "交给我吧！",
+      "lines": [
+        { "id": "trouble_1", "text": "不过……第一单有点特殊，委托人是我自己。" },
+        { "id": "trouble_2", "text": "我下午有个重要面试，但地铁把我的交通卡吞了！简历、工牌全在卡包里！" },
+        { "id": "trouble_3", "text": "求你了——帮帮我！" }
+      ]
+    },
+    {
+      "id": "accept",
+      "kind": "spot",
+      "expression": "calm",
+      "lines": [
+        { "id": "accept_1", "text": "我的求助单已经挂在委托板上了。打开「委托」面板，点「接单」！" }
+      ]
+    },
+    {
+      "id": "objectives",
+      "kind": "spot",
+      "expression": "calm",
+      "button": "明白了",
+      "lines": [
+        { "id": "objectives_1", "text": "接单后看这里——子目标清单。三件事全办妥才能交付：拿回卡包、补登记、还有……让我别那么紧张。" },
+        { "id": "objectives_2", "text": "第一件【拿回被吞的卡包】：去【通勤】类地点，打出「观察/情报」类型的卡。" }
+      ]
+    },
+    {
+      "id": "goto_map",
+      "kind": "spot",
+      "expression": "calm",
+      "lines": [
+        { "id": "goto_map_1", "text": "行动都发生在地图上。切到「地图」，选【地铁站】——它带着「通勤」标签，还亮着「📍 委托相关」。" }
+      ]
+    },
+    {
+      "id": "first_action",
+      "kind": "spot",
+      "expression": "calm",
+      "lines": [
+        { "id": "first_action_1", "text": "进入地点后，看最上面的金色目标条——「本地能推进」的任务全列在那里，以后去哪、打什么卡，看它就不会迷路！" },
+        { "id": "first_action_2", "text": "场景里发光的标记叫「热点」——点【遗失物柜】，然后打出「快速检索」。卡的类型对上热点的推荐，信任加得最多！" }
+      ]
+    },
+    {
+      "id": "lack_card",
+      "kind": "modal",
+      "expression": "cry",
+      "button": "这就去！",
+      "lines": [
+        { "id": "lack_card_1", "text": "卡包找回来了！谢礼灵石 +100，请收下！✨" },
+        { "id": "lack_card_2", "text": "但下一件事麻烦了——【访客通道补登记】需要「流程」类的卡，你手上一张都没有……" },
+        { "id": "lack_card_3", "text": "别慌，便利屋的规矩：没卡就去赚！委托板下面挂着「顺手单」，先做【代喂橘猫】赚一张普通券，我教你白嫖补给。" }
+      ]
+    },
+    {
+      "id": "leave_subway",
+      "kind": "spot",
+      "expression": "calm",
+      "lines": [
+        { "id": "leave_subway_1", "text": "这里的事办完了。点「完成当前地点」，我们换个地方。" }
+      ]
+    },
+    {
+      "id": "goto_apartment",
+      "kind": "spot",
+      "expression": "calm",
+      "lines": [
+        { "id": "goto_apartment_1", "text": "顺手单【代喂橘猫】在【公寓楼】——3 楼住户出差，猫粮见底啦。" }
+      ]
+    },
+    {
+      "id": "do_side_job",
+      "kind": "spot",
+      "expression": "smile",
+      "lines": [
+        { "id": "do_side_job_1", "text": "听，楼道里有猫叫。点【楼道猫叫】，打出「猫条」！顺手单不挑委托，做完直接发奖——这单给 1 张普通券。" }
+      ]
+    },
+    {
+      "id": "supply_draw",
+      "kind": "spot",
+      "expression": "smile",
+      "lines": [
+        { "id": "supply_draw_1", "text": "普通券到手！它是「便利屋补给」的门票。点上面的【便利屋补给】抽一发——手气好的话，会出稀有货哦✨" }
+      ]
+    },
+    {
+      "id": "leave_apartment",
+      "kind": "spot",
+      "expression": "laugh",
+      "lines": [
+        { "id": "leave_apartment_1", "text": "出货了！！SR 便利卡【临时人脉电话】——「万能」类型，打哪个热点都算完美匹配！补登记有着落了，点「完成当前地点」出发！" }
+      ]
+    },
+    {
+      "id": "goto_office",
+      "kind": "spot",
+      "expression": "calm",
+      "lines": [
+        { "id": "goto_office_1", "text": "去【写字楼大厅】——「职场」类地点，补登记就在那里办。" }
+      ]
+    },
+    {
+      "id": "register",
+      "kind": "spot",
+      "expression": "calm",
+      "lines": [
+        { "id": "register_1", "text": "点【前台】，把那张【临时人脉电话】打出去——见识一下万能卡的威力！" }
+      ]
+    },
+    {
+      "id": "leave_office",
+      "kind": "spot",
+      "expression": "shy",
+      "lines": [
+        { "id": "leave_office_1", "text": "又一件办妥，谢礼灵石再 +100！……刚收到消息，我面试完了，现在在写字楼【天台】吹风，腿还是软的。你能上来陪我一下吗？点「完成当前地点」。" }
+      ]
+    },
+    {
+      "id": "goto_rooftop",
+      "kind": "spot",
+      "expression": "calm",
+      "lines": [
+        { "id": "goto_rooftop_1", "text": "路线刷新了——选【写字楼天台】。最后一个子目标：让我深呼吸。" }
+      ]
+    },
+    {
+      "id": "calm_her",
+      "kind": "spot",
+      "expression": "shy",
+      "lines": [
+        { "id": "calm_her_1", "text": "我就在护栏边上。点【天台护栏】，打出「情绪安抚」……拜托了。" }
+      ]
+    },
+    {
+      "id": "deliver",
+      "kind": "spot",
+      "expression": "smile",
+      "lines": [
+        { "id": "deliver_1", "text": "子目标 3/3，全部完成！谢礼灵石再 +100！回「委托」面板，点【▶ 交付委托】——听我把结果告诉你！" }
+      ]
+    },
+    {
+      "id": "celebrate",
+      "kind": "modal",
+      "expression": "laugh",
+      "button": "迎接江夏入伙！",
+      "lines": [
+        { "id": "celebrate_1", "text": "面试……通过了！！通知邮件刚到，我手都在抖……" },
+        { "id": "celebrate_2", "text": "委托奖励全部到账：灵石 +300、好感 +30、普通券 +4、口碑 +1，还有「缘分UP」——接下来几天你更容易遇到我。" },
+        { "id": "celebrate_3", "text": "还有最后一件事。我决定了——正式加入二十五时便利屋！以后请多关照，店长！" }
+      ]
+    }
+  ]
+}

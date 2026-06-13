@@ -1,10 +1,11 @@
-import { HashRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { usePlayerStore } from '@/store/usePlayerStore';
-import NavBar from '@/components/NavBar';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingScreen from '@/components/LoadingScreen';
+import VideoPlayer from '@/components/VideoPlayer';
+import DevPanel from '@/components/DevPanel';
+import AudioPermissionGate from '@/components/AudioPermissionGate';
 import Home from '@/pages/Home';
 import Story from '@/pages/Story';
 import Gacha from '@/pages/Gacha';
@@ -15,49 +16,20 @@ import VideoGallery from '@/pages/VideoGallery';
 import Minigame from '@/pages/Minigame';
 import Shop from '@/pages/Shop';
 import BondGallery from '@/pages/BondGallery';
+import BackgroundMusicControl from '@/components/BackgroundMusicControl';
+import { getVideoById } from '@/data/videos';
+import { assetUrl } from '@/lib/assets';
 
 function AppContent() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const unreadCounts = usePlayerStore((s) => s.unreadCounts);
-  const totalUnread = unreadCounts.wechat + unreadCounts.sms + unreadCounts.call;
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0 });
   }, [location.pathname]);
 
-  // 根据路径确定当前标签
-  const getActiveTab = () => {
-    const path = location.pathname;
-    if (path.startsWith('/shop')) return 'shop';
-    if (path.startsWith('/gacha')) return 'gacha';
-    if (path.startsWith('/collection') || path.startsWith('/character')) return 'collection';
-    if (path.startsWith('/phone')) return 'phone';
-    return 'shop';
-  };
-
-  // 首页不显示导航栏
-  const showNavBar = location.pathname !== '/';
-
-  const handleTabChange = (tab: string) => {
-    switch (tab) {
-      case 'shop':
-        navigate('/shop');
-        break;
-      case 'gacha':
-        navigate('/gacha');
-        break;
-      case 'collection':
-        navigate('/collection');
-        break;
-      case 'phone':
-        navigate('/phone');
-        break;
-    }
-  };
-
   return (
     <div className="relative min-h-screen bg-[#050914]">
+      <BackgroundMusicControl />
       <Routes location={location}>
         <Route path="/" element={<Home />} />
         <Route path="/story" element={<Story />} />
@@ -70,32 +42,53 @@ function AppContent() {
         <Route path="/minigame" element={<Minigame />} />
         <Route path="/shop" element={<Shop />} />
       </Routes>
-
-      {/* 底部导航栏 */}
-      {showNavBar && (
-        <NavBar
-          activeTab={getActiveTab()}
-          onTabChange={handleTabChange}
-          unreadCount={totalUnread}
-        />
-      )}
     </div>
   );
 }
 
 export default function App() {
   const [assetsReady, setAssetsReady] = useState(false);
+  const [audioReady, setAudioReady] = useState(false);
+  const [showIntro, setShowIntro] = useState(false);
+  const introVideo = getVideoById('intro');
+  const introSrc = assetUrl(introVideo?.src);
 
   return (
     <ErrorBoundary>
-      <Router>
-        <AppContent />
-      </Router>
+      {audioReady && (
+        <Router>
+          <AppContent />
+        </Router>
+      )}
       <AnimatePresence>
         {!assetsReady && (
-          <LoadingScreen onComplete={() => setAssetsReady(true)} />
+          <LoadingScreen
+            onComplete={() => {
+              setAssetsReady(true);
+            }}
+          />
         )}
       </AnimatePresence>
+      <AnimatePresence>
+        {assetsReady && !audioReady && (
+          <AudioPermissionGate
+            onComplete={() => {
+              setAudioReady(true);
+              setShowIntro(Boolean(introSrc));
+            }}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {audioReady && showIntro && introSrc && (
+          <VideoPlayer
+            key="startup-intro"
+            src={introSrc}
+            onEnd={() => setShowIntro(false)}
+          />
+        )}
+      </AnimatePresence>
+      <DevPanel />
     </ErrorBoundary>
   );
 }

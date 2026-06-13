@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pause, Play, SkipForward, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { pauseBackgroundMusic, resumeBackgroundMusic } from '@/lib/backgroundMusic';
 
 interface VideoPlayerProps {
   src: string;
@@ -24,6 +25,11 @@ export default function VideoPlayer({ src, onEnd, skippable = true, className }:
   const [showControls, setShowControls] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
+
+  useEffect(() => {
+    pauseBackgroundMusic('video');
+    return () => resumeBackgroundMusic('video');
+  }, [src]);
 
   // 鼠标/触摸静止后隐藏控制提示
   useEffect(() => {

@@ -79,6 +79,10 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/suli/smile.png",
+      "gachaQuote": "睡不着的话——零点，调到我的频段……",
+      "gachaVoiceUrls": [
+        "/audio/gacha-voice/suli-03.mp3"
+      ],
       "expressionUrls": {
         "smile": "/characters/face/suli/smile.png",
         "shy": "/characters/face/suli/shy.png",
@@ -88,162 +92,6 @@
         "calm": "/characters/face/suli/calm.png"
       },
       "gachaBackgroundUrl": "/bg/gacha/suli-02.jpg"
-    },
-    {
-      "id": "chujinghong",
-      "name": "楚惊鸿",
-      "rarity": "SSR",
-      "title": "天枢阁传人",
-      "description": "天枢阁当代传人，自幼被誉为百年一遇的天才。目中无人，傲气凌云，对\"废物\"二字极度敏感——因为他也曾被人如此称呼。表面傲慢无礼，实则内心有一道无法愈合的裂痕。与主角的相遇，注定是一场宿命般的碰撞。",
-      "element": "雷",
-      "serviceType": "表达",
-      "portraitUrl": "/characters/ssr_chujinghong.svg",
-      "avatarUrl": "/avatars/ssr_chujinghong.svg",
-      "dialogues": [
-        {
-          "level": 1,
-          "text": "你也配和我说话？"
-        },
-        {
-          "level": 5,
-          "text": "哼，不过是运气好罢了。"
-        },
-        {
-          "level": 10,
-          "text": "别误会，我只是不想看你丢人。"
-        },
-        {
-          "level": 20,
-          "text": "你……还算有点骨气。"
-        },
-        {
-          "level": 30,
-          "text": "下次再输给我，可没这么好说话了。"
-        },
-        {
-          "level": 50,
-          "text": "或许……你并不是我想的那种人。"
-        }
-      ],
-      "interactions": [
-        {
-          "type": "touch",
-          "response": "楚惊鸿侧身避开，雷光在指尖跳跃：别碰我。",
-          "level": 15
-        },
-        {
-          "type": "gift",
-          "response": "这种东西也拿得出手？……放那吧。",
-          "level": 10
-        },
-        {
-          "type": "talk",
-          "response": "有话快说，我没空听废话。",
-          "level": 1
-        }
-      ],
-      "effects": [
-        {
-          "type": "passive",
-          "description": "天枢雷法：雷属性攻击有30%概率触发连击",
-          "value": 30,
-          "level": 1
-        },
-        {
-          "type": "story",
-          "description": "惊鸿一瞥：在关键剧情中可召唤楚惊鸿进行雷属性打击",
-          "value": 25,
-          "level": 25
-        }
-      ],
-      "phonePersonality": {
-        "wechatStyle": "cold",
-        "responseSpeed": "unpredictable",
-        "commonPhrases": [
-          "哼。",
-          "无聊。",
-          "……还行吧。",
-          "别烦我。"
-        ]
-      }
-    },
-    {
-      "id": "sujinli",
-      "name": "苏锦黎",
-      "rarity": "SSR",
-      "title": "幽冥司天才",
-      "description": "幽冥司最年轻的司命官，掌管生死簿副本，能窥探他人命数。性格高傲，不苟言笑，对世间万物皆持审视态度。看似冷酷无情，实则背负着无法言说的秘密。她的眼睛能看穿一切谎言，却唯独看不透自己的心。",
-      "element": "暗",
-      "serviceType": "观察",
-      "portraitUrl": "/characters/ssr_sujinli.svg",
-      "avatarUrl": "/avatars/ssr_sujinli.svg",
-      "dialogues": [
-        {
-          "level": 1,
-          "text": "你的命数……很奇怪。"
-        },
-        {
-          "level": 5,
-          "text": "别以为我不知道你在想什么。"
-        },
-        {
-          "level": 10,
-          "text": "幽冥司从不轻易出手，你该感到荣幸。"
-        },
-        {
-          "level": 20,
-          "text": "有些事，不是命数能决定的。"
-        },
-        {
-          "level": 30,
-          "text": "我看过无数人的命运，只有你……让我看不清。"
-        },
-        {
-          "level": 50,
-          "text": "如果可以，我希望永远不要在生死簿上看到你的名字。"
-        }
-      ],
-      "interactions": [
-        {
-          "type": "touch",
-          "response": "苏锦黎目光如刀：你若不想手断掉，就别动。",
-          "level": 20
-        },
-        {
-          "type": "gift",
-          "response": "……你是在贿赂幽冥司吗？不过我收下了。",
-          "level": 15
-        },
-        {
-          "type": "talk",
-          "response": "说吧，反正你的心事写在脸上。",
-          "level": 1
-        }
-      ],
-      "effects": [
-        {
-          "type": "passive",
-          "description": "幽冥之眼：战斗中有20%概率预判敌方行动",
-          "value": 20,
-          "level": 1
-        },
-        {
-          "type": "story",
-          "description": "司命之权：可改写一次剧情走向的关键选择",
-          "value": 100,
-          "level": 40
-        }
-      ],
-      "phonePersonality": {
-        "wechatStyle": "mysterious",
-        "responseSpeed": "slow",
-        "commonPhrases": [
-          "……有意思。",
-          "你的命数变了。",
-          "我看到了。",
-          "不必多言。"
-        ]
-      }
     },
     {
       "id": "aruo",
@@ -324,6 +172,9 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/aruo/smile.png",
+      "gachaVoiceUrls": [
+        "/audio/gacha-voice/aruo-01.mp3"
+      ],
       "expressionUrls": {
         "smile": "/characters/face/aruo/smile.png",
         "shy": "/characters/face/aruo/shy.png",
@@ -333,84 +184,6 @@
         "calm": "/characters/face/aruo/calm.png"
       },
       "gachaBackgroundUrl": "/bg/gacha/aruo-02.jpg"
-    },
-    {
-      "id": "huapi",
-      "name": "画皮",
-      "rarity": "SSR",
-      "title": "千面阁师姐",
-      "description": "千面阁首席弟子，天生异瞳，能变幻万千面容。没人知道她的真面目，包括她自己。她可以是任何人——温柔的、冷酷的、天真的、阴险的——但每一种都是真的，也都不是真的。她最常以一个蒙面女子的形象出现，声音轻柔如丝，却暗藏锋芒。",
-      "element": "幻",
-      "serviceType": "表达",
-      "portraitUrl": "/characters/ssr_huapi.svg",
-      "avatarUrl": "/avatars/ssr_huapi.svg",
-      "dialogues": [
-        {
-          "level": 1,
-          "text": "你看到的我是谁呢？"
-        },
-        {
-          "level": 5,
-          "text": "面具之下还是面具，你确定你想看？"
-        },
-        {
-          "level": 10,
-          "text": "我可以用任何人的脸跟你说话，但你更喜欢哪一张？"
-        },
-        {
-          "level": 20,
-          "text": "有时候我也分不清，哪个才是真正的我。"
-        },
-        {
-          "level": 30,
-          "text": "你知道吗？在你面前，我不用换脸。"
-        },
-        {
-          "level": 50,
-          "text": "如果有一天我找到了真正的自己……希望你还在。"
-        }
-      ],
-      "interactions": [
-        {
-          "type": "touch",
-          "response": "你触碰的瞬间，她的面容微微变幻：你摸到的是哪张脸？",
-          "level": 15
-        },
-        {
-          "type": "gift",
-          "response": "送给谁呢？送给这张脸，还是那张脸？",
-          "level": 10
-        },
-        {
-          "type": "talk",
-          "response": "想跟谁说话？我可以变成任何人。",
-          "level": 1
-        }
-      ],
-      "effects": [
-        {
-          "type": "passive",
-          "description": "千面幻术：幻属性技能有25%概率造成额外效果",
-          "value": 25,
-          "level": 1
-        },
-        {
-          "type": "story",
-          "description": "画皮之术：可伪装成任何NPC获取隐藏信息",
-          "value": 30,
-          "level": 25
-        }
-      ],
-      "phonePersonality": {
-        "wechatStyle": "mysterious",
-        "responseSpeed": "unpredictable",
-        "commonPhrases": [
-          "你猜我是谁？",
-          "……",
-          "这张脸好看吗？",
-          "嘘。"
-        ]
-      }
     },
     {
       "id": "sangluo",
@@ -491,6 +264,9 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/sangluo/smile.png",
+      "gachaVoiceUrls": [
+        "/audio/gacha-voice/sangluo-01.mp3"
+      ],
       "expressionUrls": {
         "smile": "/characters/face/sangluo/smile.png",
         "shy": "/characters/face/sangluo/shy.png",
@@ -580,6 +356,10 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/aman/smile.png",
+      "gachaQuote": "小动物害怕的时候，追得越急、越躲。人有时候……也一样。",
+      "gachaVoiceUrls": [
+        "/audio/gacha-voice/aman-01.mp3"
+      ],
       "expressionUrls": {
         "smile": "/characters/face/aman/smile.png",
         "shy": "/characters/face/aman/shy.png",
@@ -665,6 +445,7 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/shenzhaoning/smile.png",
+      "gachaVoiceUrls": [],
       "expressionUrls": {
         "smile": "/characters/face/shenzhaoning/smile.png",
         "shy": "/characters/face/shenzhaoning/shy.png",
@@ -674,154 +455,6 @@
         "calm": "/characters/face/shenzhaoning/calm.png"
       },
       "gachaBackgroundUrl": "/bg/gacha/shenzhaoning-03.jpg"
-    },
-    {
-      "id": "peiyanzhi",
-      "name": "裴砚之",
-      "rarity": "SR",
-      "title": "裴家天才",
-      "description": "裴家最出色的年轻一代，文武双全，风度翩翩。表面上温文尔雅，骨子里却极度自负。他看不起任何不靠天赋而靠努力的人，认为那是\"低等生物的挣扎\"。对主角的态度从轻蔑到好奇，再到……一种复杂的认可。",
-      "element": "木",
-      "serviceType": "技术",
-      "portraitUrl": "/characters/sr_peiyanzhi.svg",
-      "avatarUrl": "/avatars/sr_peiyanzhi.svg",
-      "dialogues": [
-        {
-          "level": 1,
-          "text": "努力？那是弱者的借口。"
-        },
-        {
-          "level": 5,
-          "text": "你的坚持，不过是徒劳罢了。"
-        },
-        {
-          "level": 10,
-          "text": "有意思……你居然还没放弃。"
-        },
-        {
-          "level": 20,
-          "text": "我承认，你有些不同。但仅此而已。"
-        },
-        {
-          "level": 30,
-          "text": "或许……努力本身也是一种天赋。"
-        }
-      ],
-      "interactions": [
-        {
-          "type": "touch",
-          "response": "裴砚之优雅地后退一步：请自重。",
-          "level": 15
-        },
-        {
-          "type": "gift",
-          "response": "哦？你的品味倒是出乎意料。",
-          "level": 10
-        },
-        {
-          "type": "talk",
-          "response": "你想说什么？我时间有限。",
-          "level": 1
-        }
-      ],
-      "effects": [
-        {
-          "type": "passive",
-          "description": "木灵之心：木属性技能有20%概率恢复生命值",
-          "value": 20,
-          "level": 1
-        },
-        {
-          "type": "story",
-          "description": "裴家秘术：解锁裴家独门功法的学习权限",
-          "value": 25,
-          "level": 25
-        }
-      ],
-      "phonePersonality": {
-        "wechatStyle": "formal",
-        "responseSpeed": "fast",
-        "commonPhrases": [
-          "嗯。",
-          "有趣。",
-          "不过如此。",
-          "我考虑一下。"
-        ]
-      }
-    },
-    {
-      "id": "zhoulei",
-      "name": "周磊",
-      "rarity": "SR",
-      "title": "纵横猎聘销冠",
-      "description": "纵横猎聘的明星员工，连续三年销冠。精明强干，八面玲珑，在客户面前是笑脸迎人的好猎头，在同事面前是冷酷无情的竞争者。他把职场当战场，把同事当对手。对主角这个\"空降废物\"充满了敌意和轻蔑。",
-      "element": "火",
-      "serviceType": "表达",
-      "portraitUrl": "/characters/sr_zhoulei.svg",
-      "avatarUrl": "/avatars/sr_zhoulei.svg",
-      "dialogues": [
-        {
-          "level": 1,
-          "text": "新人？呵，又一个来送死的。"
-        },
-        {
-          "level": 5,
-          "text": "别以为有人罩着就能混日子，业绩说话。"
-        },
-        {
-          "level": 10,
-          "text": "你最近表现还行……别得意，我随时能超过你。"
-        },
-        {
-          "level": 20,
-          "text": "行，你有点本事。但销冠的位置是我的。"
-        },
-        {
-          "level": 30,
-          "text": "也许……我们可以合作一次。就一次。"
-        }
-      ],
-      "interactions": [
-        {
-          "type": "touch",
-          "response": "周磊不耐烦地挥手：别碰我，忙着呢。",
-          "level": 10
-        },
-        {
-          "type": "gift",
-          "response": "什么意思？收买我？……行吧，我收了。",
-          "level": 15
-        },
-        {
-          "type": "talk",
-          "response": "有话快说，客户还等着呢。",
-          "level": 1
-        }
-      ],
-      "effects": [
-        {
-          "type": "passive",
-          "description": "销冠气场：火属性技能有15%概率使敌方降低攻击力",
-          "value": 15,
-          "level": 1
-        },
-        {
-          "type": "story",
-          "description": "职场情报：可获取客户隐藏需求信息",
-          "value": 20,
-          "level": 15
-        }
-      ],
-      "phonePersonality": {
-        "wechatStyle": "casual",
-        "responseSpeed": "fast",
-        "commonPhrases": [
-          "忙。",
-          "回头说。",
-          "这单我拿了。",
-          "别拖后腿。"
-        ]
-      }
     },
     {
       "id": "murongxue",
@@ -898,6 +531,7 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/murongxue/smile.png",
+      "gachaVoiceUrls": [],
       "expressionUrls": {
         "smile": "/characters/face/murongxue/smile.png",
         "shy": "/characters/face/murongxue/shy.png",
@@ -983,6 +617,7 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/yunzhiyi/smile.png",
+      "gachaVoiceUrls": [],
       "expressionUrls": {
         "smile": "/characters/face/yunzhiyi/smile.png",
         "shy": "/characters/face/yunzhiyi/shy.png",
@@ -1068,6 +703,7 @@
         ]
       },
       "gachaPortraitUrl": "/characters/face/linxia/smile.png",
+      "gachaVoiceUrls": [],
       "expressionUrls": {
         "smile": "/characters/face/linxia/smile.png",
         "shy": "/characters/face/linxia/shy.png",
@@ -1077,326 +713,6 @@
         "calm": "/characters/face/linxia/calm.png"
       },
       "gachaBackgroundUrl": "/bg/gacha/linxia-06.jpg"
-    },
-    {
-      "id": "jinmantang",
-      "name": "金满堂",
-      "rarity": "R",
-      "title": "暴发户老板",
-      "description": "白手起家的暴发户，说话粗声大气，出手阔绰。不懂什么修仙什么宗门，只知道钱能解决99%的问题，剩下1%是因为钱不够。对主角的态度取决于主角能给他带来多少利益，但偶尔也会流露出市井之人的义气。",
-      "element": "金",
-      "serviceType": "补给",
-      "portraitUrl": "/characters/r_jinmantang.svg",
-      "avatarUrl": "/avatars/r_jinmantang.svg",
-      "dialogues": [
-        {
-          "level": 1,
-          "text": "小伙子，想赚钱不？跟金爷干！"
-        },
-        {
-          "level": 5,
-          "text": "什么修仙不修仙的，能当饭吃吗？"
-        },
-        {
-          "level": 10,
-          "text": "你这人还行，比那些装模作样的强。"
-        },
-        {
-          "level": 20,
-          "text": "金爷我别的没有，就是讲义气！"
-        }
-      ],
-      "interactions": [
-        {
-          "type": "touch",
-          "response": "金满堂拍拍你的肩：够哥们！",
-          "level": 1
-        },
-        {
-          "type": "gift",
-          "response": "哎呀，还给我送礼？够意思！",
-          "level": 1
-        },
-        {
-          "type": "talk",
-          "response": "来来来，坐下聊，金爷请你喝茶！",
-          "level": 1
-        }
-      ],
-      "effects": [
-        {
-          "type": "passive",
-          "description": "财大气粗：金属性技能有10%概率获得额外灵石",
-          "value": 10,
-          "level": 1
-        },
-        {
-          "type": "story",
-          "description": "金爷赞助：在需要资金时，金满堂可提供一次性资助",
-          "value": 500,
-          "level": 15
-        }
-      ],
-      "phonePersonality": {
-        "wechatStyle": "casual",
-        "responseSpeed": "fast",
-        "commonPhrases": [
-          "赚钱！",
-          "金爷说了算！",
-          "小意思！",
-          "够哥们！"
-        ]
-      }
-    },
-    {
-      "id": "wanjia",
-      "name": "万家",
-      "rarity": "R",
-      "title": "万家商行",
-      "description": "万家商行的代表，精于算计，善于经营。他们不是一个人，而是一个家族的缩影——每一个万家人的血液里都流淌着商人的基因。他们看中的不是你的能力，而是你的价值。但商人重信，一旦结盟，便不会轻易背叛。",
-      "element": "金",
-      "serviceType": "流程",
-      "portraitUrl": "/characters/r_wanjia.svg",
-      "avatarUrl": "/avatars/r_wanjia.svg",
-      "dialogues": [
-        {
-          "level": 1,
-          "text": "合作？可以谈谈，但你要先证明你的价值。"
-        },
-        {
-          "level": 5,
-          "text": "万家做生意，最讲究的就是信用。"
-        },
-        {
-          "level": 10,
-          "text": "你比我想的有潜力，可以考虑长期合作。"
-        },
-        {
-          "level": 20,
-          "text": "万家的大门，为你敞开。"
-        }
-      ],
-      "interactions": [
-        {
-          "type": "touch",
-          "response": "万家代表礼貌地后退：请保持社交距离。",
-          "level": 10
-        },
-        {
-          "type": "gift",
-          "response": "嗯，这个礼尚往来，我记下了。",
-          "level": 5
-        },
-        {
-          "type": "talk",
-          "response": "有生意就谈，没生意就别浪费彼此时间。",
-          "level": 1
-        }
-      ],
-      "effects": [
-        {
-          "type": "passive",
-          "description": "商道精通：交易时获得10%折扣",
-          "value": 10,
-          "level": 1
-        },
-        {
-          "type": "story",
-          "description": "万家商路：解锁特殊商品的购买渠道",
-          "value": 15,
-          "level": 15
-        }
-      ],
-      "phonePersonality": {
-        "wechatStyle": "formal",
-        "responseSpeed": "fast",
-        "commonPhrases": [
-          "合作愉快。",
-          "考虑一下。",
-          "有商机。",
-          "信用第一。"
-        ]
-      }
-    },
-    {
-      "id": "youhun",
-      "name": "游魂",
-      "rarity": "N",
-      "title": "徘徊之灵",
-      "description": "城市角落里游荡的孤魂野鬼，生前是谁已经没人记得。它们没有恶意，只是找不到回家的路。偶尔会出现在深夜的街角，用空洞的眼神看着来往的行人。如果你愿意停下来跟它们说话，也许会听到一些有趣的往事。",
-      "element": "暗",
-      "serviceType": "情报",
-      "portraitUrl": "/characters/n_youhun.svg",
-      "avatarUrl": "/avatars/n_youhun.svg",
-      "dialogues": [
-        {
-          "level": 1,
-          "text": "……你看得见我？"
-        },
-        {
-          "level": 5,
-          "text": "好久没人跟我说话了……"
-        },
-        {
-          "level": 10,
-          "text": "谢谢你愿意听我说。"
-        }
-      ],
-      "interactions": [
-        {
-          "type": "touch",
-          "response": "你的手穿过了游魂的身体，只感到一阵凉意。",
-          "level": 1
-        },
-        {
-          "type": "gift",
-          "response": "游魂怔怔地看着礼物，仿佛想起了什么……",
-          "level": 1
-        },
-        {
-          "type": "talk",
-          "response": "你……愿意听我说吗？",
-          "level": 1
-        }
-      ],
-      "effects": [
-        {
-          "type": "passive",
-          "description": "幽灵感应：暗属性技能有5%概率获得额外信息",
-          "value": 5,
-          "level": 1
-        }
-      ],
-      "phonePersonality": {
-        "wechatStyle": "mysterious",
-        "responseSpeed": "slow",
-        "commonPhrases": [
-          "……",
-          "你还记得我吗？",
-          "好冷……",
-          "回家……"
-        ]
-      }
-    },
-    {
-      "id": "lurenjia",
-      "name": "路人甲",
-      "rarity": "N",
-      "title": "普通路人",
-      "description": "这座城市里最普通的人，每天上班下班，买菜做饭。他们不知道修仙界的存在，不知道暗流涌动的阴谋，只关心今天的菜价和明天的天气。但正是这些普通人，构成了这个世界最真实的底色。",
-      "element": "无",
-      "serviceType": "万能",
-      "portraitUrl": "/characters/n_lurenjia.svg",
-      "avatarUrl": "/avatars/n_lurenjia.svg",
-      "dialogues": [
-        {
-          "level": 1,
-          "text": "嗯？你叫我？"
-        },
-        {
-          "level": 5,
-          "text": "今天天气不错啊。"
-        },
-        {
-          "level": 10,
-          "text": "你看起来挺面善的。"
-        }
-      ],
-      "interactions": [
-        {
-          "type": "touch",
-          "response": "路人甲疑惑地看着你：你谁啊？",
-          "level": 1
-        },
-        {
-          "type": "gift",
-          "response": "啊？给我的？你人怪好的。",
-          "level": 1
-        },
-        {
-          "type": "talk",
-          "response": "有什么事吗？",
-          "level": 1
-        }
-      ],
-      "effects": [
-        {
-          "type": "passive",
-          "description": "市井消息：有5%概率在日常对话中获得有用情报",
-          "value": 5,
-          "level": 1
-        }
-      ],
-      "phonePersonality": {
-        "wechatStyle": "casual",
-        "responseSpeed": "slow",
-        "commonPhrases": [
-          "哦。",
-          "是吗？",
-          "还行吧。",
-          "回头聊。"
-        ]
-      }
-    },
-    {
-      "id": "xiaogui",
-      "name": "小鬼",
-      "rarity": "N",
-      "title": "顽皮小鬼",
-      "description": "幽冥司管不住的小鬼，喜欢恶作剧，经常偷吃供品、吓唬路人。虽然调皮捣蛋，但本性不坏，偶尔还会帮迷路的人指路——虽然指的路十有八九是错的。它最怕苏锦黎，一看到她就跑得比兔子还快。",
-      "element": "暗",
-      "serviceType": "宠物",
-      "portraitUrl": "/characters/n_xiaogui.svg",
-      "avatarUrl": "/avatars/n_xiaogui.svg",
-      "dialogues": [
-        {
-          "level": 1,
-          "text": "嘿嘿嘿！吓你一跳！"
-        },
-        {
-          "level": 5,
-          "text": "别告诉苏锦黎我来过这里！"
-        },
-        {
-          "level": 10,
-          "text": "好吧好吧，我帮你就是了……但你要给我糖吃！"
-        }
-      ],
-      "interactions": [
-        {
-          "type": "touch",
-          "response": "小鬼灵活地躲开了：抓不到我！嘿嘿！",
-          "level": 1
-        },
-        {
-          "type": "gift",
-          "response": "哇！糖！给我给我给我！",
-          "level": 1
-        },
-        {
-          "type": "talk",
-          "response": "你找我？是不是又想让我帮忙？",
-          "level": 1
-        }
-      ],
-      "effects": [
-        {
-          "type": "passive",
-          "description": "小鬼捣蛋：暗属性技能有5%概率使敌方混乱一回合",
-          "value": 5,
-          "level": 1
-        }
-      ],
-      "phonePersonality": {
-        "wechatStyle": "playful",
-        "responseSpeed": "instant",
-        "commonPhrases": [
-          "嘿嘿！",
-          "才不要！",
-          "给我糖！",
-          "苏锦黎来了？！跑！"
-        ]
-      }
     }
   ]
 }

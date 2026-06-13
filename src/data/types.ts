@@ -21,6 +21,7 @@ export interface Character {
   gachaBackgroundUrl?: string;
   gachaQuote?: string;
   gachaTags?: string[];
+  gachaVoiceUrls?: string[];
   dialogues: { level: number; text: string }[];
   interactions: { type: 'touch' | 'gift' | 'talk'; response: string; level: number }[];
   effects: { type: 'story' | 'passive'; description: string; value: number; level: number }[];

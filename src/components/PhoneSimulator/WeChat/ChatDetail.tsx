@@ -13,34 +13,25 @@ interface ChatDetailProps {
 
 const avatarColors: Record<string, string> = {
   suli: '#4FC3F7',
-  chujinghong: '#AB47BC',
-  sujinli: '#7E57C2',
   aruo: '#66BB6A',
-  huapi: '#EC407A',
   sangluo: '#5C6BC0',
   aman: '#FF7043',
   shenzhaoning: '#FFA726',
-  peiyanzhi: '#26A69A',
-  zhoulei: '#EF5350',
   murongxue: '#42A5F5',
   yunzhiyi: '#8D6E63',
   linxia: '#FFCA28',
-  jinmantang: '#FFD54F',
-  wanjia: '#78909C',
-  youhun: '#B0BEC5',
-  lurenjia: '#90A4AE',
-  xiaogui: '#CE93D8',
 };
 
-// 模拟回复选项
+// 模拟回复选项（按当前 8 位角色人设）
 const quickReplies: Record<string, string[]> = {
-  suli: ['宗主，我回来了。', '我没事。', '……知道了。'],
-  chujinghong: ['你才无聊。', '哼。', '有本事来比试。'],
-  sujinli: ['你看到什么了？', '我不信命。', '……'],
-  aruo: ['师姐！', '我想你了~', '又来捉弄我？'],
-  huapi: ['你到底是谁？', '哪张脸都是你。', '……'],
-  sangluo: ['别睡了！', '起来吃饭了。', '……'],
-  aman: ['师姐好~', '没人欺负我啦。', '嘻嘻~'],
+  suli: ['……还没睡？', '今晚的节目放了你点的歌。', '零点，频段见。'],
+  aruo: ['直播马上开！来捧场！', '今天弹幕全在问你是谁哦~', '救场之恩，请你喝奶茶！'],
+  sangluo: ['店里给你留了位子。', '别熬太晚。', '咖啡煮上了，慢慢来。'],
+  aman: ['团子今天很乖哦。', '你也要按时吃饭呀。', '带了猫条，要来摸猫吗？'],
+  shenzhaoning: ['收到。', '流程我来对，你别管。', '十分钟后给你结果。'],
+  murongxue: ['我记了点东西，你可能用得上。', '细节对不上，回头细说。', '嗯，在听。'],
+  yunzhiyi: ['马上到！！', '跑这趟算我的！', '今天也是元气满满的一天！'],
+  linxia: ['清单我列好了！', '收到收到，马上办！', '那个……谢谢你今天。'],
   default: ['嗯。', '好的。', '知道了。'],
 };
 

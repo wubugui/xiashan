@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useCssVarFromHeight } from '@/hooks/useCssVarFromHeight';
 
 interface DialogueBoxProps {
   speaker?: string;
@@ -19,6 +20,9 @@ export default function DialogueBox({
 }: DialogueBoxProps) {
   const [displayedText, setDisplayedText] = useState('');
   const [charIndex, setCharIndex] = useState(0);
+  /** 对白框实测高度 → --dlg-h：剧场立绘等浮层据此自适应定位（随平台/字数变化，禁止硬编码） */
+  const boxRef = useRef<HTMLDivElement>(null);
+  useCssVarFromHeight('--dlg-h', boxRef);
 
   useEffect(() => {
     setDisplayedText('');
@@ -53,6 +57,7 @@ export default function DialogueBox({
   return (
     <AnimatePresence>
       <motion.div
+        ref={boxRef}
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}

@@ -3,8 +3,10 @@
  * 所有音效在浏览器端即时生成。iOS/Android/桌面全平台支持。
  */
 
+import { safeStorage } from '@/lib/safeStorage';
+
 let _ctx: AudioContext | null = null;
-let _enabled: boolean = localStorage.getItem('xiashan-sfx') !== '0';
+let _enabled: boolean = safeStorage.getItem('xiashan-sfx') !== '0';
 
 function ctx(): AudioContext | null {
   if (!_enabled) return null;
@@ -22,7 +24,7 @@ function ctx(): AudioContext | null {
 
 export function setSoundEnabled(on: boolean) {
   _enabled = on;
-  localStorage.setItem('xiashan-sfx', on ? '1' : '0');
+  safeStorage.setItem('xiashan-sfx', on ? '1' : '0');
 }
 
 export function isSoundEnabled(): boolean {
@@ -227,6 +229,52 @@ const SOUNDS: Record<string, () => void> = {
     );
   },
 
+  // 抽卡蓄力：光束坠落的上升音（riser，约 1 秒）
+  'gacha-riser': () => {
+    const c = ctx(); if (!c) return;
+    tone(180, 1.0, c.currentTime, { type: 'sawtooth', freqEnd: 1100, gain: 0.1 });
+    tone(240, 1.0, c.currentTime, { type: 'triangle', freqEnd: 1400, gain: 0.12, detune: 8 });
+    noise(1.0, c.currentTime, { gain: 0.06, hpFreq: 1200 });
+  },
+
+  // 抽卡冲击帧：光束砸地 / 卡牌落地的重击
+  'gacha-impact': () => {
+    const c = ctx(); if (!c) return;
+    tone(70, 0.32, c.currentTime, { type: 'sine', freqEnd: 38, gain: 0.4 });
+    noise(0.2, c.currentTime, { gain: 0.26, lpFreq: 500 });
+    tone(420, 0.06, c.currentTime, { gain: 0.18 });
+  },
+
+  // 紫变金升变：碎裂 + 急速上行琶音
+  'gacha-upgrade': () => {
+    const c = ctx(); if (!c) return;
+    noise(0.12, c.currentTime, { gain: 0.24, hpFreq: 2600 });
+    [784, 1047, 1319, 1568, 2093].forEach((f, i) =>
+      tone(f, 0.12, c.currentTime + 0.06 + i * 0.05, { gain: 0.24 })
+    );
+    tone(60, 0.25, c.currentTime + 0.05, { gain: 0.32, freqEnd: 40 });
+  },
+
+  // 卡牌砸入屏幕
+  'card-slam': () => {
+    const c = ctx(); if (!c) return;
+    tone(130, 0.16, c.currentTime, { type: 'triangle', freqEnd: 60, gain: 0.3 });
+    noise(0.1, c.currentTime, { gain: 0.18, hpFreq: 900 });
+  },
+
+  // 结算页星星逐颗钉入
+  'star-pin': () => {
+    const c = ctx(); if (!c) return;
+    tone(1568, 0.09, c.currentTime, { gain: 0.2 });
+    noise(0.05, c.currentTime, { gain: 0.08, hpFreq: 5000 });
+  },
+
+  // SSR 角色名逐字砸出
+  'name-hit': () => {
+    const c = ctx(); if (!c) return;
+    tone(300, 0.07, c.currentTime, { type: 'triangle', freqEnd: 180, gain: 0.22 });
+  },
+
   // 出货：道具/灵石
   'gacha-item': () => {
     const c = ctx(); if (!c) return;
@@ -324,6 +372,9 @@ const SOUNDS: Record<string, () => void> = {
 // ─── 防连击：同一音效的最小间隔（ms） ────────────────────────────────────
 
 const COOLDOWN: Partial<Record<string, number>> = {
+  'star-pin': 60,
+  'name-hit': 55,
+  'card-slam': 80,
   'dialog-next': 80,
   'tab-switch': 100,
   'swap': 60,

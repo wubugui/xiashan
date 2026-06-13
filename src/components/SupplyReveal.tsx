@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { cn } from '@/lib/utils';
+import { playSound } from '@/lib/sound';
+import { vibrate, VIBE, shakeKeyframes } from '@/lib/fx';
 
 /**
  * 补给池非人物出货的开箱演出：悬念抖动 → 翻牌揭示。
@@ -26,8 +28,9 @@ export default function SupplyReveal({ item, onClose }: { item: RevealItem; onCl
     setRevealed(false);
     const t1 = window.setTimeout(() => {
       setRevealed(true);
-      try { navigator.vibrate?.(item.tier === 'rare' ? [40, 60, 80] : 20); } catch { /* ignore */ }
+      vibrate(item.tier === 'rare' ? VIBE.heavy : VIBE.light);
       if (item.tier === 'rare') {
+        playSound('gacha-impact');
         confetti({ particleCount: 120, spread: 80, startVelocity: 38, origin: { y: 0.5 }, scalar: 0.9 });
       }
     }, 650);
@@ -70,12 +73,14 @@ export default function SupplyReveal({ item, onClose }: { item: RevealItem; onCl
             </motion.span>
           </motion.div>
         ) : (
-          /* 揭示 */
+          /* 揭示：稀有货砸入 + 抖一下 */
           <motion.div
             key="front"
-            initial={{ rotateY: 90, scale: 0.85 }}
-            animate={{ rotateY: 0, scale: 1 }}
-            transition={{ type: 'spring', damping: 18, stiffness: 260 }}
+            initial={{ scale: 1.7, opacity: 0 }}
+            animate={item.tier === 'rare'
+              ? { scale: 1, opacity: 1, ...shakeKeyframes(7) }
+              : { scale: 1, opacity: 1 }}
+            transition={{ duration: 0.32, ease: 'easeOut' }}
             onClick={(e) => { e.stopPropagation(); onClose(); }}
             className={cn(
               'w-64 rounded-2xl border-2 p-5 text-center shadow-2xl',
