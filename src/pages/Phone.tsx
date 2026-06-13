@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import PhoneFrame from '@/components/PhoneSimulator/PhoneFrame';
@@ -11,6 +11,8 @@ import BrowserPage from '@/components/PhoneSimulator/Browser/BrowserPage';
 import PageBackdrop from '@/components/PageBackdrop';
 import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 import { getPhoneEventsByCharacter } from '@/data/phoneEvents';
+import { usePlayerStore } from '@/store/usePlayerStore';
+import { commsTier } from '@/engine/phoneAccess';
 
 type ContactTab = 'wechat' | 'sms' | 'call';
 
@@ -30,9 +32,17 @@ function callLinesFor(characterId: string): string[] {
 
 export default function Phone() {
   const navigate = useNavigate();
+  const affinityMap = usePlayerStore((s) => s.affinityMap);
+  const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
   const [screen, setScreen] = useState<PhoneScreen>({ type: 'home' });
 
   const goHome = useCallback(() => setScreen({ type: 'home' }), []);
+
+  /** 电话会不会被接：关系到「深夜长谈」(tier≥3) 才接，否则无人接听 */
+  const willAnswerCall = (characterId: string) => {
+    const owned = ownedCharacters.some((c) => c.characterId === characterId);
+    return commsTier(characterId, owned, affinityMap[characterId] ?? 0) >= 3;
+  };
 
   const renderScreen = () => {
     switch (screen.type) {
@@ -59,6 +69,7 @@ export default function Phone() {
           <InCall
             characterId={screen.characterId}
             dialogueLines={callLinesFor(screen.characterId)}
+            willAnswer={willAnswerCall(screen.characterId)}
             onEnd={() => setScreen({ type: 'contact', characterId: screen.characterId, tab: 'call' })}
           />
         );
@@ -105,21 +116,19 @@ export default function Phone() {
         </button>
       </div>
 
-      {/* 手机模拟器 */}
+      {/* 手机模拟器。屏间切换用 keyed 重挂载 + 入场动画，不用 AnimatePresence 的退出等待——
+          退出动画一旦卡住（rAF 冻结/快速导航）就会黑屏，这里直接换屏，永不卡。 */}
       <div className="relative z-10">
         <PhoneFrame onClose={() => navigate(-1)}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={screenKey}
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -20, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="h-full"
-            >
-              {renderScreen()}
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            key={screenKey}
+            initial={{ x: 16, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.18 }}
+            className="h-full"
+          >
+            {renderScreen()}
+          </motion.div>
         </PhoneFrame>
       </div>
     </motion.div>

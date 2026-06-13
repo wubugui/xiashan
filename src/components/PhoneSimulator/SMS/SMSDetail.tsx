@@ -10,6 +10,8 @@ interface SMSDetailProps {
   onBack: () => void;
   /** 嵌入 ContactScreen 时隐藏自带顶栏 */
   hideHeader?: boolean;
+  /** 关系够不够：false = 石沉大海（能发，没回音，不涨好感） */
+  willReply?: boolean;
 }
 
 const avatarColors: Record<string, string> = {
@@ -41,7 +43,7 @@ const herSms: Record<string, string[]> = {
   default: ['嗯，收到。', '好，你也是。', '改天约。'],
 };
 
-export default function SMSDetail({ characterId, onBack, hideHeader = false }: SMSDetailProps) {
+export default function SMSDetail({ characterId, onBack, hideHeader = false, willReply = true }: SMSDetailProps) {
   const phoneMessages = usePlayerStore((s) => s.phoneMessages);
   const addPhoneMessage = usePlayerStore((s) => s.addPhoneMessage);
   const markMessageRead = usePlayerStore((s) => s.markMessageRead);
@@ -83,6 +85,9 @@ export default function SMSDetail({ characterId, onBack, hideHeader = false }: S
     });
     setNewMessageIds((prev) => new Set(prev).add(msgId));
 
+    // 关系没到位：石沉大海——能发出去，但没回音、不涨好感
+    if (!willReply) return;
+
     // 每日首次短信问候 +2 好感（限频防刷）
     if (tryDailyAction(`sms_chat:${characterId}`)) {
       addAffinity(characterId, 2);
@@ -122,7 +127,7 @@ export default function SMSDetail({ characterId, onBack, hideHeader = false }: S
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
         {messages.length === 0 && (
           <p className="px-2 py-8 text-center text-xs text-white/30">
-            还没有短信——发条问候，她会回你。
+            {willReply ? '还没有短信——发条问候，她会回你。' : '还没有短信——你可以发，但她也许还不会回。'}
           </p>
         )}
         {messages.map((msg) => {

@@ -8,6 +8,8 @@ interface InCallProps {
   characterId: string;
   dialogueLines: string[];
   onEnd: () => void;
+  /** 关系够不够：false = 无人接听（响一会儿自动挂） */
+  willAnswer?: boolean;
 }
 
 const avatarColors: Record<string, string> = {
@@ -21,49 +23,58 @@ const avatarColors: Record<string, string> = {
   linxia: '#FFCA28',
 };
 
-export default function InCall({ characterId, dialogueLines, onEnd }: InCallProps) {
+type Phase = 'ringing' | 'connected' | 'noanswer';
+
+export default function InCall({ characterId, dialogueLines, onEnd, willAnswer = true }: InCallProps) {
   const character = getCharacterById(characterId);
   const color = avatarColors[characterId] || '#999';
 
-  // 通话计时
+  const [phase, setPhase] = useState<Phase>('ringing');
   const [callSeconds, setCallSeconds] = useState(0);
-  // 打字机效果
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const charIndexRef = useRef(0);
 
+  // 呼叫中 → 接通 / 无人接听
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCallSeconds((s) => s + 1);
-    }, 1000);
+    const t = setTimeout(() => setPhase(willAnswer ? 'connected' : 'noanswer'), 2600);
+    return () => clearTimeout(t);
+  }, [willAnswer]);
+
+  // 无人接听：再停 1.8s 自动挂断
+  useEffect(() => {
+    if (phase !== 'noanswer') return;
+    const t = setTimeout(onEnd, 1800);
+    return () => clearTimeout(t);
+  }, [phase, onEnd]);
+
+  // 接通后才计时
+  useEffect(() => {
+    if (phase !== 'connected') return;
+    const timer = setInterval(() => setCallSeconds((s) => s + 1), 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [phase]);
 
-  // 打字机效果
+  // 接通后才跑台词打字机
   useEffect(() => {
+    if (phase !== 'connected') return;
     if (currentLineIndex >= dialogueLines.length) return;
-
     const line = dialogueLines[currentLineIndex];
     setIsTyping(true);
     charIndexRef.current = 0;
     setDisplayedText('');
-
     const typeTimer = setInterval(() => {
       charIndexRef.current++;
       setDisplayedText(line.slice(0, charIndexRef.current));
       if (charIndexRef.current >= line.length) {
         clearInterval(typeTimer);
         setIsTyping(false);
-        // 等待一段时间后显示下一行
-        setTimeout(() => {
-          setCurrentLineIndex((i) => i + 1);
-        }, 2000);
+        setTimeout(() => setCurrentLineIndex((i) => i + 1), 2000);
       }
     }, 50);
-
     return () => clearInterval(typeTimer);
-  }, [currentLineIndex, dialogueLines]);
+  }, [phase, currentLineIndex, dialogueLines]);
 
   const formatDuration = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -71,12 +82,12 @@ export default function InCall({ characterId, dialogueLines, onEnd }: InCallProp
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  const statusText = phase === 'ringing' ? '正在呼叫…' : phase === 'noanswer' ? '无人接听' : formatDuration(callSeconds);
+
   return (
     <div
       className="flex h-full flex-col items-center"
-      style={{
-        background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f0c29 100%)',
-      }}
+      style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f0c29 100%)' }}
     >
       {/* 头像 */}
       <div className="mt-12">
@@ -84,61 +95,43 @@ export default function InCall({ characterId, dialogueLines, onEnd }: InCallProp
           <motion.img
             src={assetUrl(character.avatarUrl)}
             alt={character.name}
-            animate={{ scale: [1, 1.04, 1] }}
-            transition={{ repeat: Infinity, duration: 2.4, ease: 'easeInOut' }}
-            className="h-24 w-24 rounded-full object-cover shadow-xl ring-2 ring-white/20"
+            animate={phase === 'ringing' ? { scale: [1, 1.06, 1] } : { scale: 1 }}
+            transition={{ repeat: phase === 'ringing' ? Infinity : 0, duration: 1.2, ease: 'easeInOut' }}
+            className={`h-24 w-24 rounded-full object-cover shadow-xl ring-2 ${phase === 'noanswer' ? 'opacity-50 ring-white/10' : 'ring-white/20'}`}
           />
         ) : (
-          <div
-            className="flex h-24 w-24 items-center justify-center rounded-full text-2xl font-bold text-white shadow-xl"
-            style={{ backgroundColor: color }}
-          >
+          <div className="flex h-24 w-24 items-center justify-center rounded-full text-2xl font-bold text-white shadow-xl" style={{ backgroundColor: color }}>
             {character?.name.charAt(0) || '?'}
           </div>
         )}
       </div>
 
-      {/* 名称 */}
-      <h2 className="mt-4 text-lg font-semibold text-white">
-        {character?.name || '未知号码'}
-      </h2>
+      {/* 名称 + 状态 */}
+      <h2 className="mt-4 text-lg font-semibold text-white">{character?.name || '未知号码'}</h2>
+      <p className={`mt-1 text-sm ${phase === 'noanswer' ? 'text-white/60' : 'text-white/40'}`}>{statusText}</p>
 
-      {/* 通话时长 */}
-      <p className="mt-1 text-sm text-white/40">{formatDuration(callSeconds)}</p>
-
-      {/* 对话文本区域 */}
-      <div className="mt-8 flex-1 w-full overflow-y-auto px-6">
-        <AnimatePresence>
-          {dialogueLines.slice(0, currentLineIndex).map((line, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-3 rounded-2xl rounded-tl-sm bg-white/10 px-4 py-3"
-            >
-              <p className="text-sm leading-relaxed text-white/80">{line}</p>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-
-        {/* 当前正在打字的行 */}
-        {currentLineIndex < dialogueLines.length && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-3 rounded-2xl rounded-tl-sm bg-white/10 px-4 py-3"
-          >
-            <p className="text-sm leading-relaxed text-white/80">
-              {displayedText}
-              {isTyping && (
-                <motion.span
-                  animate={{ opacity: [1, 0] }}
-                  transition={{ repeat: Infinity, duration: 0.5 }}
-                  className="ml-0.5 inline-block h-4 w-0.5 bg-white/60 align-middle"
-                />
-              )}
-            </p>
-          </motion.div>
+      {/* 对话文本区域（仅接通后） */}
+      <div className="mt-8 w-full flex-1 overflow-y-auto px-6">
+        {phase === 'connected' && (
+          <>
+            <AnimatePresence>
+              {dialogueLines.slice(0, currentLineIndex).map((line, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-3 rounded-2xl rounded-tl-sm bg-white/10 px-4 py-3">
+                  <p className="text-sm leading-relaxed text-white/80">{line}</p>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            {currentLineIndex < dialogueLines.length && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-3 rounded-2xl rounded-tl-sm bg-white/10 px-4 py-3">
+                <p className="text-sm leading-relaxed text-white/80">
+                  {displayedText}
+                  {isTyping && (
+                    <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.5 }} className="ml-0.5 inline-block h-4 w-0.5 bg-white/60 align-middle" />
+                  )}
+                </p>
+              </motion.div>
+            )}
+          </>
         )}
       </div>
 
