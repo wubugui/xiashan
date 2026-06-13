@@ -12,6 +12,7 @@ import { beatStatus } from '@/engine/romanceEngine';
 import { getCollectibles } from '@/data/collectibles';
 import { evaluateAll } from '@/engine/conditionEngine';
 import RomanceScene from '@/components/RomanceScene';
+import StoryViewer from '@/components/StoryViewer';
 import { cn } from '@/lib/utils';
 import { playSound } from '@/lib/sound';
 import { assetUrl } from '@/lib/assets';
@@ -74,6 +75,8 @@ export default function CharacterDetail() {
   const [interactionResponse, setInteractionResponse] = useState<string | null>(null);
   // 正在演的节点；replay=true 时是「重温」已解锁的故事，不重复结算奖励
   const [playingBeat, setPlayingBeat] = useState<{ beat: RomanceBeat; replay: boolean } | null>(null);
+  // 收藏里正在回看的 CG 短篇
+  const [openCg, setOpenCg] = useState<{ title: string; image?: string; paragraphs: string[] } | null>(null);
 
   const character = id ? getCharacterById(id) : undefined;
   const ownedChar = ownedCharacters.find((c) => c.characterId === id);
@@ -351,17 +354,24 @@ export default function CharacterDetail() {
           return (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
               <p className="text-xs text-slate-400">收藏 {unlockedCount}/{items.length} · 刷得越多，集得越全</p>
-              <p className="text-[11px] text-slate-500">点已解锁的图，可「设为展示」当她专属页的主视觉。</p>
+              <p className="text-[11px] text-slate-500">点已解锁的立绘/表情可「设为展示」当主视觉；带 📖 的短篇点开回看剧情。</p>
               <div className="grid grid-cols-3 gap-2">
                 {items.map((it) => {
                   const unlocked = evaluateAll(it.unlock, condState);
-                  const showing = unlocked && heroArtUrl === it.asset;
+                  const isCg = it.kind === 'cg';
+                  const showing = unlocked && !isCg && heroArtUrl === it.asset;
+                  const onClick = () => {
+                    if (!unlocked || !id) return;
+                    playSound('btn-confirm');
+                    if (isCg && it.cg) setOpenCg(it.cg);
+                    else setDisplayPortrait(id, it.asset);
+                  };
                   return (
                     <button
                       key={it.id}
                       type="button"
                       disabled={!unlocked}
-                      onClick={() => { if (!unlocked || !id) return; playSound('btn-confirm'); setDisplayPortrait(id, it.asset); }}
+                      onClick={onClick}
                       className={cn(
                         'group overflow-hidden rounded-lg border bg-slate-900/60 text-left transition-all',
                         showing ? 'border-amber-400/70 shadow-[0_0_14px_rgba(251,191,36,0.25)]' : 'border-white/10',
@@ -373,17 +383,22 @@ export default function CharacterDetail() {
                         {unlocked ? (
                           <>
                             <img src={assetUrl(it.asset)} alt={it.name} className="h-full w-full object-cover object-top" loading="lazy" />
+                            {isCg && (
+                              <span className="absolute right-1 top-1 rounded bg-rose-500/85 px-1 py-0.5 text-[9px] font-bold text-white">📖</span>
+                            )}
                             {showing ? (
                               <span className="absolute left-1 top-1 rounded bg-amber-400/90 px-1.5 py-0.5 text-[9px] font-bold text-amber-950">展示中</span>
                             ) : (
-                              <span className="absolute inset-x-0 bottom-0 bg-black/55 py-1 text-center text-[10px] font-medium text-amber-200 opacity-0 transition-opacity group-hover:opacity-100">设为展示</span>
+                              <span className="absolute inset-x-0 bottom-0 bg-black/55 py-1 text-center text-[10px] font-medium text-amber-200 opacity-0 transition-opacity group-hover:opacity-100">
+                                {isCg ? '回看' : '设为展示'}
+                              </span>
                             )}
                           </>
                         ) : (
                           <>
                             <img src={assetUrl(it.asset)} alt="" aria-hidden className="h-full w-full object-cover object-top opacity-15 blur-md grayscale" />
                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-1 text-center">
-                              <span className="text-lg">🔒</span>
+                              <span className="text-lg">{isCg ? '📖' : '🔒'}</span>
                               <span className="text-[10px] leading-tight text-amber-300/80">{it.hint}</span>
                             </div>
                           </>
@@ -622,6 +637,11 @@ export default function CharacterDetail() {
       {/* 心动场景演出 */}
       {playingBeat && id && (
         <RomanceScene key={playingBeat.beat.id + (playingBeat.replay ? '-r' : '')} characterId={id} beat={playingBeat.beat} onComplete={handleBeatComplete} />
+      )}
+
+      {/* 收藏里回看的 CG 短篇 */}
+      {openCg && (
+        <StoryViewer title={openCg.title} image={openCg.image} paragraphs={openCg.paragraphs} onClose={() => setOpenCg(null)} />
       )}
     </div>
   );
