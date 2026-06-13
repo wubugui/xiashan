@@ -1160,6 +1160,695 @@
           "reward": { "affinity": 10, "unlockFlag": "romance_aman_b5" }
         }
       ]
+    },
+    {
+      "characterId": "shenzhaoning",
+      "theme": "她把一切——包括感情——都当成流程、权限、责任来处理，习惯不留私人距离；你成为她流程图上第一次「无法归类」的那一栏，也是她愿意跳过所有审批、为你破例的人。",
+      "beats": [
+        {
+          "id": "shenzhaoning_b1",
+          "phase": "共事",
+          "title": "晨会前九十分钟",
+          "guide": "抽到她、攒一点好感（约 8）后，接她那桩《晨会前九十分钟》——看看这位运营专员怎么把一团乱拆成流程。",
+          "trigger": [
+            { "type": "has_character", "characterId": "shenzhaoning" },
+            { "type": "affinity", "characterId": "shenzhaoning", "minValue": 8 }
+          ],
+          "scene": {
+            "location": "office",
+            "lines": [
+              { "text": "晨会前九十分钟，写字楼炸了锅：一位重要访客的门禁权限没下来，前台、保安、IT 互相踢皮球，委托人急得满头汗。" },
+              { "text": "祁宁却很平静。她扫了一眼现场，三句话把混乱拆开。" },
+              { "speaker": "shenzhaoning", "text": "别吵。这不是没办法，是没人按正确流程走。问题拆三块：权限、责任、时间。" },
+              { "speaker": "shenzhaoning", "text": "你去前台调登记表，我去开门禁后台。责任人这块——我来背。九十分钟，够了。" },
+              { "text": "她说一不二，分工清晰。八十七分钟后，访客顺利刷卡进门。她合上本子，看都没看那帮还在愣神的人。" }
+            ],
+            "choice": {
+              "prompt": "她利落得不留一丝多余。你怎么接？",
+              "options": [
+                {
+                  "text": "你这脑子，比门禁系统还快。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "shenzhaoning", "text": "系统会宕机。我不会。" },
+                    { "text": "她说得没有一丝玩笑，可你莫名觉得，那是她的冷幽默。" }
+                  ]
+                },
+                {
+                  "text": "责任你来背——你总把最重的那块留给自己。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "shenzhaoning", "text": "……（停顿半秒）责任归属清晰，事情才推得动。" },
+                    { "text": "她别开视线去合本子，动作比刚才慢了一拍。" }
+                  ]
+                },
+                {
+                  "text": "下次再有这种局，我跟你搭。",
+                  "momo": 1,
+                  "reaction": [
+                    { "speaker": "shenzhaoning", "text": "可以。你执行力达标。" },
+                    { "text": "她在本子上记了一笔。你瞥见那行写着：搭档——备选。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 3, "unlockFlag": "romance_shenzhaoning_b1", "wechat": "访客已离场，流程闭环。你执行得不错。——这句不在我的常用语里。" }
+        },
+        {
+          "id": "shenzhaoning_b2",
+          "phase": "熟络",
+          "title": "不在流程里的事",
+          "guide": "多陪她跑几桩委托、攒点好感（约 25），某天她会撞上一件流程解决不了的事。",
+          "trigger": [
+            { "type": "affinity", "characterId": "shenzhaoning", "minValue": 25 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "深夜便利屋。祁宁难得不是来谈委托的，她站在收银台前皱着眉，像在处理一个解不开的 bug。" },
+              { "speaker": "shenzhaoning", "text": "今天有个委托人，事情早解决了，她却一直哭。我把流程、补偿、后续都列清楚了，她还是哭。" },
+              { "speaker": "shenzhaoning", "text": "我不明白。需求满足了，为什么情绪不归零。" },
+              { "text": "她第一次显得有点无措——那种把世界拆成流程的人，撞上了流程之外的东西。" }
+            ],
+            "choice": {
+              "prompt": "她罕见地卡壳了。你怎么接？",
+              "options": [
+                {
+                  "text": "有些事，不需要被解决，只需要被听见。",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "shenzhaoning", "text": "……（沉默良久）这一条，不在我的手册里。" },
+                    { "text": "她拿出本子，认真地把你这句话，记了下来。" }
+                  ]
+                },
+                {
+                  "text": "你今天，是想找个人说说这件事吧？",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "shenzhaoning", "text": "（怔住）我……是来谈委托的。但是。……是的。" },
+                    { "text": "她承认得很艰难，像在跳过一道她最信的审批。" }
+                  ]
+                },
+                {
+                  "text": "她哭，是因为终于有人允许她哭了。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "shenzhaoning", "text": "允许……这个变量，我没计算过。" },
+                    { "text": "她低头看着自己列得密密麻麻的流程，第一次觉得它不够用。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 4, "unlockFlag": "romance_shenzhaoning_b2", "wechat": "你那句『被听见』，我加进备忘了。归类：待研究。（晚安。这两个字也不在常用语里。）" }
+        },
+        {
+          "id": "shenzhaoning_b3",
+          "phase": "暧昧",
+          "title": "无法归类",
+          "guide": "你们更近了（好感约 45）。某天你会瞥见她的流程图上，多了一个无法归类的方框。",
+          "trigger": [
+            { "type": "affinity", "characterId": "shenzhaoning", "minValue": 45 }
+          ],
+          "scene": {
+            "location": "office",
+            "lines": [
+              { "text": "你来找她对接委托，她正低头改一张流程图。你瞥见图的角落，多了一个孤零零的方框，连着一条没画完的线。" },
+              { "text": "那个方框里写着你的名字。分类一栏，反常地空着，旁边一个小小的问号。" },
+              { "speaker": "shenzhaoning", "text": "（飞快盖住）这是……待归档项。还没分类。" },
+              { "text": "可她耳根有点不自然。这位把一切都能归进流程的人，第一次遇到一个，她不知道该填进哪一栏的变量。" },
+              { "speaker": "shenzhaoning", "text": "权限、责任、时间，我都能算。可你这一项……我算不出归属。" }
+            ],
+            "choice": {
+              "prompt": "她盯着那个空着的分类栏。你怎么办？",
+              "options": [
+                {
+                  "text": "算不出，就别归类。让它特殊一点。",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "shenzhaoning", "text": "……特殊项。需要单独的权限等级。" },
+                    { "text": "她没有把那个方框删掉，反而，给它描了一个更清楚的边。" }
+                  ]
+                },
+                {
+                  "text": "这一栏我帮你填——「重要，最高优先级」。",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "shenzhaoning", "text": "最高优先级……（她重复了一遍）数据冲突。但我，不想驳回。" },
+                    { "text": "她耳尖红了，盯着屏幕，没敢看你。" }
+                  ]
+                },
+                {
+                  "text": "你流程图里有我一格，我很荣幸。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "shenzhaoning", "text": "别误读。只是……尚未归档。" },
+                    { "text": "可她说「尚未」的时候，声音轻得不像她。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 5, "unlockFlag": "romance_shenzhaoning_b3", "wechat": "那个待归档项……我查了一晚上手册。结论：无法归类。（我有点慌。这也不在常用语里。）" }
+        },
+        {
+          "id": "shenzhaoning_b4",
+          "phase": "告白门",
+          "title": "跳过审批",
+          "guide": "她约你来写字楼大厅（好感约 70）。这一次，她想跳过她最信的流程，直接执行一件事。",
+          "trigger": [
+            { "type": "affinity", "characterId": "shenzhaoning", "minValue": 70 }
+          ],
+          "isGate": true,
+          "scene": {
+            "location": "office",
+            "lines": [
+              { "text": "她约你来写字楼大厅。这个点，前台空着，门禁的指示灯在安静地闪。她站得笔直，像在等一场重要的会议。" },
+              { "speaker": "shenzhaoning", "text": "我这个人，凡事讲流程：先申请，再审批，确认权限，才执行。从不破例。" },
+              { "speaker": "shenzhaoning", "text": "可有一件事，我反复跑了无数遍流程，每一次的结论都一样——它不需要审批。" },
+              { "text": "她深吸一口气，第一次，没有拆解，没有分类，直直地看着你。" },
+              { "speaker": "shenzhaoning", "text": "所以这一次，我跳过所有审批，直接执行——" }
+            ],
+            "choice": {
+              "prompt": "门禁灯一闪一闪。她罕见地等着一个不在流程里的回答。你的回答——",
+              "options": [
+                {
+                  "text": "祁宁，我喜欢你。这一项，最高权限。",
+                  "momo": 3,
+                  "gateConfirm": true,
+                  "reaction": [
+                    { "text": "她绷了很久的肩膀，在这一刻，几不可察地松开了。" },
+                    { "speaker": "shenzhaoning", "text": "……执行成功。责任人：我们两个。" },
+                    { "text": "她伸出手，不是握手那种公事的姿势——她只是，轻轻扣住了你的指尖。" }
+                  ]
+                },
+                {
+                  "text": "再等等——这件事，我想跟你一起，把流程走得郑重一点。",
+                  "momo": 0,
+                  "reaction": [
+                    { "speaker": "shenzhaoning", "text": "……同意。流程郑重，结果才稳。" },
+                    { "text": "她点点头，可你看见，她飞快把今天这一栏，标成了「暂挂，勿删」。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "unlockFlag": "romance_shenzhaoning_b4" }
+        },
+        {
+          "id": "shenzhaoning_b5",
+          "phase": "终幕",
+          "title": "两个人的流程图",
+          "guide": "确认心意之后，慢慢走到这里（好感约 110）。",
+          "trigger": [
+            { "type": "affinity", "characterId": "shenzhaoning", "minValue": 110 }
+          ],
+          "scene": {
+            "location": "office",
+            "lines": [
+              { "text": "确认心意之后，祁宁递给你一份打印得整整齐齐的文件。抬头写着：《长期事项·责任分配表》。" },
+              { "text": "你往下看：每一行的责任人一栏，填的都是两个名字，并排。最后一行写着——「项目周期：长期，无截止」。" },
+              { "speaker": "shenzhaoning", "text": "我重做了我的流程图。以前，所有事的责任人都是我自己。现在——" },
+              { "speaker": "shenzhaoning", "text": "（她难得地，露出一点很浅的笑）很多栏，可以填两个人了。" }
+            ],
+            "choice": {
+              "prompt": "她把笔递给你，指了指最后的签字栏。",
+              "options": [
+                {
+                  "text": "那这份表，我签了。长期，无截止。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "shenzhaoning", "text": "签收确认。流程闭环。" },
+                    { "text": "她收起那份表，动作一如既往的利落，可这一次，她把它贴身放进了最里层的口袋。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 10, "unlockFlag": "romance_shenzhaoning_b5" }
+        }
+      ]
+    },
+    {
+      "characterId": "murongxue",
+      "theme": "她习惯观察和记录所有人、做旁观者，把自己藏在笔记本后面；你成为她笔记里反复出现、却始终「无法客观」的那条线索——她终于发现，有些事，记录者也会身在其中。",
+      "beats": [
+        {
+          "id": "murongxue_b1",
+          "phase": "共事",
+          "title": "便利店蹲守笔记",
+          "guide": "抽到她、攒一点好感（约 8）后，接她那桩《便利店蹲守笔记》——看看这位新闻系学生怎么从细节里挖出真相。",
+          "trigger": [
+            { "type": "has_character", "characterId": "murongxue" },
+            { "type": "affinity", "characterId": "murongxue", "minValue": 8 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "便利屋接了桩怪委托：连续几晚，有人在闭店后翻动门口的快递，却什么都不拿。委托人想知道是谁、为什么。" },
+              { "text": "沈疏桐没急着行动。她在监控屏前坐了一整晚，笔记本写得密密麻麻，连一个路人的鞋带都没放过。" },
+              { "speaker": "murongxue", "text": "时间点不对。他每次都在 23:47 出现，比末班车早三分钟。这不是偷，是在等什么。" },
+              { "text": "她翻回三天前的画面，指尖点在一个被忽略的细节上：那人每次都把翻乱的快递，又仔细码回原样。" },
+              { "speaker": "murongxue", "text": "找到了。他在找一个寄错的包裹——里面是给病重母亲的药。他不敢声张，只能每晚自己翻。" }
+            ],
+            "choice": {
+              "prompt": "几个细节，她拼出了整件事。你怎么接？",
+              "options": [
+                {
+                  "text": "你这双眼睛，什么都逃不过。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "murongxue", "text": "我只是没有移开而已。真相，通常藏在没人愿意多看的地方。" },
+                    { "text": "她合上笔记，语气很淡，可你听出了一点认真。" }
+                  ]
+                },
+                {
+                  "text": "别人看监控看热闹，你看出一条命。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "murongxue", "text": "……（顿了一下）记录的意义，大概就在这里。" },
+                    { "text": "她低头，在本子角落写了一行只有自己看得懂的字。" }
+                  ]
+                },
+                {
+                  "text": "下次蹲守，算我一个。",
+                  "momo": 1,
+                  "reaction": [
+                    { "speaker": "murongxue", "text": "可以。你安静，不打扰观察。这是优点。" },
+                    { "text": "她在新的一页写下你的名字，后面跟着一个小小的、像是记号的圈。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 3, "unlockFlag": "romance_murongxue_b1", "wechat": "那位先生的药，物归原主了。我把这件事记下来了。标题：盲区里的善意。" }
+        },
+        {
+          "id": "murongxue_b2",
+          "phase": "熟络",
+          "title": "旁观者",
+          "guide": "多陪她跑几趟采集、攒点好感（约 25），某个深夜你会发现她从不把自己写进任何故事。",
+          "trigger": [
+            { "type": "affinity", "characterId": "murongxue", "minValue": 25 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "深夜的便利屋。沈疏桐又在角落记着什么。你凑过去，她却很自然地把本子合上了一寸。" },
+              { "speaker": "murongxue", "text": "职业习惯。新闻系的人，总站在事情外面看。离得太近，会失真。" },
+              { "text": "她说得平静，可你忽然发现，她记了那么多人的故事，唯独没有一行，是关于她自己的。" },
+              { "speaker": "murongxue", "text": "当旁观者……很安全。不用被写进去，就不会被人翻看。" }
+            ],
+            "choice": {
+              "prompt": "她躲在笔记的后面。你怎么接？",
+              "options": [
+                {
+                  "text": "可你也在故事里啊，沈疏桐。",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "murongxue", "text": "……（笔尖停住）这个角度，我没考虑过。" },
+                    { "text": "她盯着那页空白的、属于自己的纸，很久没有落笔。" }
+                  ]
+                },
+                {
+                  "text": "离得太近会失真。可有些事，就得近看。",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "murongxue", "text": "近看……会带入感情。会不客观。" },
+                    { "text": "她说「不客观」三个字的时候，没有像往常那样立刻把它划掉。" }
+                  ]
+                },
+                {
+                  "text": "你记了那么多人，谁来记你？",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "murongxue", "text": "（怔住）……也许，需要另一个观察者。" },
+                    { "text": "她抬眼看了你一下，那一眼，不像在观察，倒像在确认什么。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 4, "unlockFlag": "romance_murongxue_b2", "wechat": "我今天破例，在本子上写了一行关于自己的。内容保密。（你害的。）" }
+        },
+        {
+          "id": "murongxue_b3",
+          "phase": "暧昧",
+          "title": "反复出现的那条线索",
+          "guide": "你们更近了（好感约 45）。某天你会瞥见她的笔记里，反复出现同一个名字。",
+          "trigger": [
+            { "type": "affinity", "characterId": "murongxue", "minValue": 45 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "你来接班，她正低头整理采访笔记，被叫走时，本子忘在了收银台上，翻开着。" },
+              { "text": "你无意瞥见——好几页的边角，都反复出现同一个名字：你的。后面跟着时间、地点，像在追踪一条线索。" },
+              { "text": "其中一行的备注栏，她写了又划、划了又写，最后留下四个字：「无法客观」。" },
+              { "text": "她回来时看见你在看，整个人僵住，伸手要抢，又顿在半空。" },
+              { "speaker": "murongxue", "text": "那是……采集样本。长期追踪。不是你想的那样。" }
+            ],
+            "choice": {
+              "prompt": "她脸红着，却没把本子夺回去。你怎么办？",
+              "options": [
+                {
+                  "text": "无法客观——是因为这条线索，是我？",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "murongxue", "text": "……（极轻）记者最忌讳，对采访对象动感情。我犯规了。" },
+                    { "text": "她低下头，第一次没有用观察的眼神看你，而是躲闪。" }
+                  ]
+                },
+                {
+                  "text": "追踪了我这么久，结论是什么？",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "murongxue", "text": "结论尚未得出。因为每次接近真相，我的心跳，都会干扰数据。" },
+                    { "text": "她说得一本正经，耳根却红透了。" }
+                  ]
+                },
+                {
+                  "text": "这条线索，准你长期追踪。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "murongxue", "text": "……那我需要，更近的距离。" },
+                    { "text": "她把本子轻轻抱回怀里，没有再划掉那四个字。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 5, "unlockFlag": "romance_murongxue_b3", "wechat": "我把那四个字保留了。第一次，没有划掉一个不客观的结论。（先别判断我。）" }
+        },
+        {
+          "id": "murongxue_b4",
+          "phase": "告白门",
+          "title": "把自己写进报道",
+          "guide": "她约你来便利屋（好感约 70）。这一次，她想把自己写进报道的主角。",
+          "trigger": [
+            { "type": "affinity", "characterId": "murongxue", "minValue": 70 }
+          ],
+          "isGate": true,
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "她约你来便利屋。打烊后，她把一沓打印好的稿子放在桌上，封面是一篇报道的标题，作者署着她的名字。" },
+              { "speaker": "murongxue", "text": "我写了很多报道。每一篇，我都站在事外，只做记录者。" },
+              { "text": "她翻开最新的一篇。你愣住了——这一篇的主角，不是别人，是她自己。" },
+              { "speaker": "murongxue", "text": "这是我第一次，把自己写进去。因为有件事，我没办法再客观地旁观了。" },
+              { "text": "她抬起眼，没有躲闪，没有笔记本挡在中间。" },
+              { "speaker": "murongxue", "text": "（她深吸一口气，念出稿子的最后一行）「记录者发现，自己早已身在故事之中——」" }
+            ],
+            "choice": {
+              "prompt": "她念到这里停住，等你给这篇报道一个结尾。你的回答——",
+              "options": [
+                {
+                  "text": "沈疏桐，我喜欢你。这个结尾，我来写。",
+                  "momo": 3,
+                  "gateConfirm": true,
+                  "reaction": [
+                    { "text": "她眼睛一下子亮了，又迅速蒙上一层水光。" },
+                    { "speaker": "murongxue", "text": "「——而她，终于不再只是旁观。」……这一句，准你署名。" },
+                    { "text": "她把笔递给你，指尖相触的时候，第一次没有退开半步。" }
+                  ]
+                },
+                {
+                  "text": "再等等——这篇报道的结尾，我想跟你一起慢慢写完。",
+                  "momo": 0,
+                  "reaction": [
+                    { "speaker": "murongxue", "text": "……可以。好的报道，不该急着结稿。" },
+                    { "text": "她合上稿子，在末尾轻轻写了三个字：「未完待续」。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "unlockFlag": "romance_murongxue_b4" }
+        },
+        {
+          "id": "murongxue_b5",
+          "phase": "终幕",
+          "title": "致谢名单",
+          "guide": "确认心意之后，慢慢走到这里（好感约 110）。",
+          "trigger": [
+            { "type": "affinity", "characterId": "murongxue", "minValue": 110 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "确认心意之后，沈疏桐递给你一篇装订好的稿子。这一次，标题只有两个字，是你们的姓。" },
+              { "text": "你翻到最后一页——致谢名单。从前她的报道里，致谢总是长长一串。这一篇的致谢，只有一个名字。" },
+              { "speaker": "murongxue", "text": "我说过，如果这是一篇报道，我会把你的名字写在致谢里。" },
+              { "speaker": "murongxue", "text": "（她极浅地笑了）现在我发现，你不该在致谢里。你该在……作者那一栏，跟我并排。" }
+            ],
+            "choice": {
+              "prompt": "她把笔递给你，指向「作者」那一栏的空白。",
+              "options": [
+                {
+                  "text": "那这篇，我们联名。永远连载。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "murongxue", "text": "联名稿。无结稿日期。" },
+                    { "text": "她郑重地把你的名字写在自己的名字旁边，然后把头，轻轻靠了过来。便利屋的灯，安静地照着那两个并排的名字。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 10, "unlockFlag": "romance_murongxue_b5" }
+        }
+      ]
+    },
+    {
+      "characterId": "yunzhiyi",
+      "theme": "她总是横冲直撞地第一个冲上去帮忙，用力气和热血填补自己「不会规划」的不安；你成为那个不嫌她莽、愿意陪她慢下来、也让她知道「她本身」就足够好的人。",
+      "beats": [
+        {
+          "id": "yunzhiyi_b1",
+          "phase": "共事",
+          "title": "夜班便利店风波",
+          "guide": "抽到她、攒一点好感（约 8）后，接她那桩《夜班便利店风波》——看看这位配送站新人怎么用一股莽劲稳住场子。",
+          "trigger": [
+            { "type": "has_character", "characterId": "yunzhiyi" },
+            { "type": "affinity", "characterId": "yunzhiyi", "minValue": 8 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "凌晨两点的便利屋，闯进来个喝高了的醉客，拍着货架嚷嚷要赊账，把别的夜归客都吓得往门口缩。" },
+              { "text": "陈小满二话不说，一个箭步挡在收银台前，把瘦小的身板挺得笔直。" },
+              { "speaker": "yunzhiyi", "text": "大哥！这儿我罩着！有话好好说，别吓着其他客人！" },
+              { "text": "她没什么话术，全凭一股不要命的劲儿，硬是把醉客的气势压了下去，又麻利地搬来热水、扶人坐下。一通忙活，风波平了。" },
+              { "speaker": "yunzhiyi", "text": "（抹了把汗，回头冲你咧嘴）呼——搞定！我就说，先冲上去总没错！" }
+            ],
+            "choice": {
+              "prompt": "她笑得像打了胜仗。你怎么接？",
+              "options": [
+                {
+                  "text": "你这胆子，比我大多了。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "yunzhiyi", "text": "嘿嘿，怕什么！能搬动的事，就不算事！" },
+                    { "text": "她得意地拍了拍胸脯，眼睛亮晶晶的。" }
+                  ]
+                },
+                {
+                  "text": "万一刚才真动起手，你也敢挡？",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "yunzhiyi", "text": "……（小声）敢啊。总不能让客人受伤。我皮实，扛得住。" },
+                    { "text": "她说得轻描淡写，你却心里一紧。" }
+                  ]
+                },
+                {
+                  "text": "下次别一个人冲。等我一起。",
+                  "momo": 1,
+                  "reaction": [
+                    { "speaker": "yunzhiyi", "text": "好嘞！那咱俩，一个冲一个稳！" },
+                    { "text": "她兴奋地朝你伸出手——啪，一个响亮的击掌。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 3, "unlockFlag": "romance_yunzhiyi_b1", "wechat": "今天那大哥酒醒了还来道歉啦！我厉害吧！（明天外勤记得叫我，冲！）" }
+        },
+        {
+          "id": "yunzhiyi_b2",
+          "phase": "熟络",
+          "title": "不只是莽",
+          "guide": "多陪她跑几趟外勤、攒点好感（约 25），某个深夜你会看见她逞强背后的不安。",
+          "trigger": [
+            { "type": "affinity", "characterId": "yunzhiyi", "minValue": 25 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "深夜，陈小满垂头丧气地回到便利屋，手里攥着一张被划得乱七八糟的配送单。" },
+              { "speaker": "yunzhiyi", "text": "我……我又把路线记错了，三个件送反了，跑了双倍的路才补回来。" },
+              { "text": "她平时那股冲劲全没了，蹲在货架边，声音闷闷的。" },
+              { "speaker": "yunzhiyi", "text": "大家都说我四肢发达。会跑、能搬，就是脑子不够使……是不是，我也就只能干这个了。" }
+            ],
+            "choice": {
+              "prompt": "她难得地泄了气。你怎么接？",
+              "options": [
+                {
+                  "text": "你不是脑子不够，是把别人偷懒的路，都替他们跑了。",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "yunzhiyi", "text": "……（猛地抬头）真、真的吗？我没想过这样算……" },
+                    { "text": "她吸了吸鼻子，眼眶有点红，可眼睛慢慢又亮了起来。" }
+                  ]
+                },
+                {
+                  "text": "规划可以学。可你那股不放弃的劲，是学不来的。",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "yunzhiyi", "text": "学不来的……（她小声重复）那、那我也算有个长处咯？" },
+                    { "text": "她攥着配送单的手，悄悄松开了。" }
+                  ]
+                },
+                {
+                  "text": "在我这儿，你从来不只是个跑腿的。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "yunzhiyi", "text": "你这话……我要记一辈子的啊。" },
+                    { "text": "她飞快地低下头，耳朵红得像跑完一整条街。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 4, "unlockFlag": "romance_yunzhiyi_b2", "wechat": "今天谢谢你。我把『不只是跑腿的』写在我的小本本第一页了！（不许笑！）" }
+        },
+        {
+          "id": "yunzhiyi_b3",
+          "phase": "暧昧",
+          "title": "留给你的能量棒",
+          "guide": "你们更近了（好感约 45）。某天你的口袋里，会多出一样她偷偷塞的东西。",
+          "trigger": [
+            { "type": "affinity", "characterId": "yunzhiyi", "minValue": 45 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "你来接班，工服口袋里被人塞了样东西——一根能量棒，外面还包着张折得方方正正的纸。" },
+              { "text": "纸上是一张手绘的路线图，歪歪扭扭，从配送站一路画到便利屋，沿途标着一堆小记号：「这里有近路」「这家的灯最晚关」「这段路黑，慢点走」。" },
+              { "text": "终点画了个小小的、笨拙的爱心，又被涂掉了一半，像是画的人临时害了羞。" },
+              { "text": "陈小满抱着一摞快递从门口进来，看见你手里的纸，整个人「啊」地僵在原地。" },
+              { "speaker": "yunzhiyi", "text": "那、那是我顺手画的！怕你走夜路不安全！能量棒也是、是多的！" }
+            ],
+            "choice": {
+              "prompt": "她慌得快把怀里的快递抱不住了。你怎么办？",
+              "options": [
+                {
+                  "text": "这条路你天天跑，标记是给我画的吧。",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "yunzhiyi", "text": "我……我就是不想你走错、走危险的路嘛。" },
+                    { "text": "她声音越来越小，最后把脸埋进了快递箱后面。" }
+                  ]
+                },
+                {
+                  "text": "终点那个爱心，为什么涂掉一半？",
+                  "momo": 3,
+                  "reaction": [
+                    { "speaker": "yunzhiyi", "text": "别看那个！手滑画的！手滑！" },
+                    { "text": "她冲过来要抢，又不敢真抢，急得直跺脚，耳朵通红。" }
+                  ]
+                },
+                {
+                  "text": "能量棒我收下。下次，我陪你一起跑这条路。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "yunzhiyi", "text": "真的？！那、那我跑慢一点等你！" },
+                    { "text": "她一下子又雀跃起来，可眼神里多了点以前没有的、藏着的东西。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 5, "unlockFlag": "romance_yunzhiyi_b3", "wechat": "那张图你别丢哦！夜路真的危险！（爱心是手滑！但……你要是想留着，也行。）" }
+        },
+        {
+          "id": "yunzhiyi_b4",
+          "phase": "告白门",
+          "title": "冲过整座城",
+          "guide": "某个深夜（好感约 70），她会从城的另一头，一口气跑到你面前。",
+          "trigger": [
+            { "type": "affinity", "characterId": "yunzhiyi", "minValue": 70 }
+          ],
+          "isGate": true,
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "深夜，便利屋的门被「砰」地撞开。陈小满冲了进来，满头大汗，喘得话都说不连贯，像是跑了很远很远的路。" },
+              { "speaker": "yunzhiyi", "text": "呼……呼……可算、可算赶到了。我从城东配送站，一路跑过来的。" },
+              { "text": "你问她出什么事了。她摇摇头，手撑着膝盖，喘匀了气，才一点点直起身。" },
+              { "speaker": "yunzhiyi", "text": "没出事。我就是……突然特别特别想见你。一刻都等不了，就跑过来了。" },
+              { "text": "她不再像平时那样咋咋呼呼，而是认认真真地，看着你的眼睛。" },
+              { "speaker": "yunzhiyi", "text": "我不会说漂亮话，路线我也老记错。但有件事，我从城东跑到城西都没跑岔——" }
+            ],
+            "choice": {
+              "prompt": "她大口喘着气，眼睛却亮得惊人。你的回答——",
+              "options": [
+                {
+                  "text": "陈小满，我喜欢你。这条路，你没跑错。",
+                  "momo": 3,
+                  "gateConfirm": true,
+                  "reaction": [
+                    { "text": "她愣了一秒，然后咧开一个比谁都灿烂的笑，眼泪却啪嗒掉了下来。" },
+                    { "speaker": "yunzhiyi", "text": "我也是！我喜欢你！这是我这辈子，跑得最值的一趟！" },
+                    { "text": "她一把抱住你，整个人还带着奔跑过后的滚烫心跳。" }
+                  ]
+                },
+                {
+                  "text": "再等等——你先喘口气，这份心意，值得你好好说。",
+                  "momo": 0,
+                  "reaction": [
+                    { "speaker": "yunzhiyi", "text": "……好！那我歇好了，下次一口气说完！" },
+                    { "text": "她用力点头，又偷偷把那句没说出口的话，攥紧在手心里。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "unlockFlag": "romance_yunzhiyi_b4" }
+        },
+        {
+          "id": "yunzhiyi_b5",
+          "phase": "终幕",
+          "title": "两个人的路线",
+          "guide": "确认心意之后，慢慢走到这里（好感约 110）。",
+          "trigger": [
+            { "type": "affinity", "characterId": "yunzhiyi", "minValue": 110 }
+          ],
+          "scene": {
+            "location": "store",
+            "lines": [
+              { "text": "确认心意之后的某个夜班，陈小满献宝似的掏出一张崭新的路线图，画得比上次工整多了（虽然还是有点歪）。" },
+              { "text": "图上有两条线，一条从配送站出发，一条从便利屋出发，弯弯绕绕，最后在中间一个小点上，紧紧凑到了一起。" },
+              { "speaker": "yunzhiyi", "text": "你看！这是我画的『我们的路线』！不管从哪儿出发，终点都是对方！" },
+              { "text": "中间那个汇合的小点上，这次画了一个完完整整、没有涂掉的爱心。" }
+            ],
+            "choice": {
+              "prompt": "她举着图，眼巴巴地等你点头。",
+              "options": [
+                {
+                  "text": "那以后每一趟，我们都往中间这个点跑。",
+                  "momo": 2,
+                  "reaction": [
+                    { "speaker": "yunzhiyi", "text": "说定了！谁先到谁等谁，绝不许迷路！" },
+                    { "text": "她笑得灿烂极了，一把拉起你的手，像要立刻沿着那条线冲出去。夜色里，两个人的影子，并排着。" }
+                  ]
+                }
+              ]
+            }
+          },
+          "reward": { "affinity": 10, "unlockFlag": "romance_yunzhiyi_b5" }
+        }
+      ]
     }
   ]
 }
