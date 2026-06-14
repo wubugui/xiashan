@@ -46,8 +46,14 @@ export interface WaifeConfig {
   interactions: { type: 'touch' | 'gift' | 'talk'; response: string; level: number }[];
   effects: { type: 'story' | 'passive'; description: string; value: number; level: number }[];
   romance: { theme: string; beats: RomanceBeat[] };
-  /** 状态化签名（按我的状态）：默认人设签名在 phone.signature */
-  signatures: { distant?: string; close?: string; lover?: string; chosen?: string; jealous?: string };
+  /**
+   * 签名：大部分是她自己的生活(life，按日轮换、与游戏无关)，感情只在平常里偶尔冒头。
+   * - life: 生活签名池(默认就从这里随机，模拟她的日子)
+   * - feeling: 暧昧期偶尔泄露的心事(按概率冒出，珍贵)
+   * - lover: 确认心意后偶尔出现的恋人签名
+   * - chosen/jealous: 头像博弈事件的即时覆盖
+   */
+  signatures: { life: string[]; feeling?: string[]; lover?: string[]; chosen?: string[]; jealous?: string[] };
   /** 事件角色反应（被设头像/别人被设/被冷落/主动找你/被错过…），中央引擎按角色取用 */
   reactions: {
     sweet?: string[]; reject?: string[]; flattered?: string[]; jealous?: string[];
