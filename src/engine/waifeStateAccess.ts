@@ -4,7 +4,7 @@
  */
 import legacy from '@/content/waifeStates.json';
 import { waifeReactions, waifeSignatures } from '@/data/waifes';
-import type { WaifeConfig } from '@/data/waife';
+import type { WaifeConfig, TimeBucket } from '@/data/waife';
 
 const legacyStates = (legacy as {
   states: Record<string, {
@@ -26,7 +26,8 @@ export function reactionsOf(id: string): WaifeConfig['reactions'] {
 
 /** 归一后的签名池：配置角色给 life/feeling/lover/chosen/jealous；旧角色给 distant/close/lover/chosen/jealous(单句包成数组) */
 export interface SignaturePools {
-  life?: string[]; feeling?: string[]; lover?: string[]; chosen?: string[]; jealous?: string[];
+  life?: string[] | Partial<Record<TimeBucket, string[]>>;
+  feeling?: string[]; lover?: string[]; chosen?: string[]; jealous?: string[];
   distant?: string[]; close?: string[];
 }
 const wrap = (v?: string): string[] | undefined => (v ? [v] : undefined);

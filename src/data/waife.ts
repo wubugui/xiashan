@@ -14,6 +14,8 @@ import type { RomanceBeat } from '@/data/romanceArcs';
 export type ChatIntent = 'greet' | 'care' | 'flirt' | 'invite';
 export type AffinityTier = '生疏' | '熟络' | '亲密';
 export type ChatChannel = 'wechat' | 'sms';
+/** 一天的时段（按真实时钟），让签名/状态跟着她的作息走 */
+export type TimeBucket = '清晨' | '上午' | '午后' | '夜晚' | '深夜';
 
 /** 一格回复：数组随机取一句；空数组 [] = 她不回（已读不回） */
 export type ReplyCell = string[];
@@ -41,6 +43,8 @@ export interface WaifeConfig {
     commonPhrases: string[];
     /** 默认人设签名 */
     signature: string;
+    /** 她的睡眠时段 [起,止)（24h）：这段时间给她发消息，她在睡，回复迷糊/已读 */
+    sleepHours?: [number, number];
   };
   dialogues: { level: number; text: string }[];
   interactions: { type: 'touch' | 'gift' | 'talk'; response: string; level: number }[];
@@ -48,12 +52,17 @@ export interface WaifeConfig {
   romance: { theme: string; beats: RomanceBeat[] };
   /**
    * 签名：大部分是她自己的生活(life，按日轮换、与游戏无关)，感情只在平常里偶尔冒头。
-   * - life: 生活签名池(默认就从这里随机，模拟她的日子)
+   * - life: 生活签名池——可是扁平数组，也可按时段分桶(随她的作息变，半夜/白天看到不同的她)
    * - feeling: 暧昧期偶尔泄露的心事(按概率冒出，珍贵)
    * - lover: 确认心意后偶尔出现的恋人签名
    * - chosen/jealous: 头像博弈事件的即时覆盖
    */
-  signatures: { life: string[]; feeling?: string[]; lover?: string[]; chosen?: string[]; jealous?: string[] };
+  signatures: {
+    life: string[] | Partial<Record<TimeBucket, string[]>>;
+    feeling?: string[]; lover?: string[]; chosen?: string[]; jealous?: string[];
+  };
+  /** 她在睡眠时段收到消息时的迷糊回复（不分意图；空/无则已读不回） */
+  asleep?: { wechat?: string[]; sms?: string[] };
   /** 事件角色反应（被设头像/别人被设/被冷落/主动找你/被错过…），中央引擎按角色取用 */
   reactions: {
     sweet?: string[]; reject?: string[]; flattered?: string[]; jealous?: string[];

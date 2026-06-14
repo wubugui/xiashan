@@ -6,7 +6,7 @@
  * 纯函数，不读 store。
  */
 import content from '@/content/chatReplies.json';
-import { waifeChat } from '@/data/waifes';
+import { waifeChat, waifeConfig } from '@/data/waifes';
 import type { ChatIntent, ChatChannel } from '@/data/waife';
 
 export type ReplyTier = '生疏' | '熟络' | '亲密';
@@ -44,13 +44,28 @@ export function pickReply(
   return pickFrom(pool, rng);
 }
 
+/** 此刻她是否在睡（配置了 sleepHours，且当前小时落在 [起,止) 内） */
+function isAsleep(charId: string, hour: number | undefined): boolean {
+  if (hour == null) return false;
+  const sh = waifeConfig(charId)?.phone.sleepHours;
+  if (!sh) return false;
+  const [a, b] = sh;
+  return a <= b ? hour >= a && hour < b : hour >= a || hour < b; // 支持跨午夜
+}
+
 /**
- * 上下文化回复：按「意图 × 好感层」取她的回应。
- * 返回 null = 她已读不回（配置里该格子为空）。未迁配置的角色回退按层随机池。
+ * 上下文化回复：按「意图 × 好感层」取她的回应；若此刻她在睡，先走迷糊回复。
+ * 返回 null = 她已读不回（睡着没醒 / 配置里该格子为空）。未迁配置的角色回退按层随机池。
  */
 export function replyTo(
-  charId: string, channel: ChatChannel, intent: ChatIntent, affinity: number, isLover: boolean, rng: () => number = Math.random,
+  charId: string, channel: ChatChannel, intent: ChatIntent, affinity: number, isLover: boolean,
+  hour?: number, rng: () => number = Math.random,
 ): string | null {
+  // 她在睡：迷糊敷衍或干脆没醒（不分意图）
+  if (isAsleep(charId, hour)) {
+    const pool = waifeConfig(charId)?.asleep?.[channel];
+    return pool && pool.length ? pickFrom(pool, rng) : null;
+  }
   const matrix = waifeChat(charId);
   if (matrix) {
     const tier = replyTier(affinity, isLover);
