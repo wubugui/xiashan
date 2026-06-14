@@ -41,7 +41,7 @@ export default function ContactScreen({ characterId, initialTab = 'wechat', onBa
     ? null
     : playerAvatarSource === characterId ? 'chosen'
       : (affinity >= 30 ? 'jealous' : null);
-  const signature = character ? signatureFor(character, { isLover: xinyiTarget === characterId, avatarMood }) : '';
+  const signature = character ? signatureFor(character, { isLover: xinyiTarget === characterId, avatarMood, affinity }) : '';
   /** 短信会不会有回音（tier≥2）/ 电话会不会接（tier≥3） */
   const smsReplies = tier >= 2;
   const callAnswers = tier >= 3;
