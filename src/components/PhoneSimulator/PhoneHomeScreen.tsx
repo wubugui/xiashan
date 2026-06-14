@@ -4,6 +4,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
 import { commsTier, type CommsTier } from '@/engine/phoneAccess';
 import { checkNeglect } from '@/engine/neglect';
+import { rollAmbient } from '@/engine/ambient';
 import { assetUrl } from '@/lib/assets';
 import { cn } from '@/lib/utils';
 
@@ -38,8 +39,10 @@ export default function PhoneHomeScreen({ onOpenContact, onOpenBrowser }: PhoneH
       },
       today,
     );
+    const neglected = new Set<string>();
     for (const r of reactions) {
       if (!store.tryDailyAction(`neglect:${r.characterId}`)) continue;
+      neglected.add(r.characterId);
       if (r.affinityDelta) store.addAffinity(r.characterId, r.affinityDelta);
       if (r.message) {
         store.addPhoneMessage({
@@ -47,6 +50,18 @@ export default function PhoneHomeScreen({ onOpenContact, onOpenBrowser }: PhoneH
           characterId: r.characterId, type: 'wechat', content: r.message, timestamp: Date.now(), read: false,
         });
       }
+    }
+
+    // 环境感：关系够近的她偶尔主动找你（每天至多一条；不和冷落重叠）
+    const ambient = rollAmbient(
+      { ownedCharacterIds: store.ownedCharacters.map((c) => c.characterId), affinityMap: store.affinityMap, lastContact: store.lastContact },
+      today,
+    );
+    if (ambient && !neglected.has(ambient.characterId) && store.tryDailyAction('ambient:day')) {
+      store.addPhoneMessage({
+        id: `ambient_${ambient.characterId}_${Date.now()}_${Math.floor(Math.random() * 9999)}`,
+        characterId: ambient.characterId, type: 'wechat', content: ambient.message, timestamp: Date.now(), read: false,
+      });
     }
   }, []);
 
