@@ -1,20 +1,7 @@
 {
   "_comment": "老婆的状态化内容：随关系/头像博弈变化的微信签名(sig*) + 头像博弈反应(react*) + 被冷落主动找你(reactNeglect)。signatureFor 读 sig*；avatarFallout 读 reactSweet/Reject/Flattered/Jealous；neglect 读 reactNeglect。每条贴各自人设。",
+  "_note_suli": "苏音音已迁入 src/content/waifes/suli.json（单一数据源），此处不再保留。",
   "states": {
-    "suli": {
-      "sigLover": "我的频段，从此只为一个人开。",
-      "sigChosen": "……被你挂在手机里了。（没让你关掉。）",
-      "sigJealous": "你的头像换了。我听得出，不是我。",
-      "sigDistant": "夜里的声音，陌生人也能听。",
-      "sigClose": "最近的频段，总不自觉调向某个人。",
-      "reactSweet": ["……我看到了。你把我，放在最显眼的地方。", "（停顿）那就别取下来了。这是我同意的意思。"],
-      "reactReject": ["把我的脸挂上去之前，至少先问一句。", "我们还没熟到这个程度。……取下来吧。"],
-      "reactFlattered": ["……虽然没经过我同意。但，我没让你取下来。"],
-      "reactJealous": ["你的头像，换成别人了。我听得出，那不是我的声音。", "嗯，挺好。（这条之后，她安静了很久。）"],
-      "reactNeglect": ["……好几天没你的消息了。频段空着，我也空着。", "在吗。夜里想找人说话——想找的是你。"],
-      "reactAmbient": ["这首歌突然想放给你听。（没有理由。）", "电台的间隙，想起你了。"],
-      "reactPassedOver": ["听说了。……那就好。我的频段，永远为你留着——以朋友的身份。"]
-    },
     "aruo": {
       "sigLover": "下播之后，只想跟你一个人连麦。",
       "sigChosen": "我上你头像啦！这是官宣吗官宣吗！",

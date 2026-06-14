@@ -1,7 +1,7 @@
 import { ChevronLeft } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
-import { pickReply } from '@/engine/chatReply';
+import { replyTo, type ChatIntent } from '@/engine/chatReply';
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { assetUrl } from '@/lib/assets';
@@ -27,9 +27,12 @@ const avatarColors: Record<string, string> = {
 };
 
 // 短信定位「更短、更随性」——玩家发起的小问候
-const smsReplies: Record<string, string[]> = {
-  default: ['在干嘛？', '路上小心', '早点睡', '周末有空吗？'],
-};
+const smsReplies: { text: string; intent: ChatIntent }[] = [
+  { text: '在干嘛？', intent: 'greet' },
+  { text: '路上小心', intent: 'care' },
+  { text: '早点睡', intent: 'care' },
+  { text: '周末有空吗？', intent: 'invite' },
+];
 
 export default function SMSDetail({ characterId, onBack, hideHeader = false, willReply = true }: SMSDetailProps) {
   const phoneMessages = usePlayerStore((s) => s.phoneMessages);
@@ -66,7 +69,7 @@ export default function SMSDetail({ characterId, onBack, hideHeader = false, wil
     });
   }, [messages, markMessageRead]);
 
-  const handleReply = (text: string) => {
+  const handleReply = (text: string, intent: ChatIntent) => {
     const msgId = `player_sms_${Date.now()}`;
     addPhoneMessage({
       id: msgId,
@@ -87,9 +90,10 @@ export default function SMSDetail({ characterId, onBack, hideHeader = false, wil
       addAffinity(characterId, 2);
     }
 
-    // 她回应（角色口吻）
+    // 她回应：按「意图×好感层」取，可能已读不回
+    const reply = replyTo(characterId, 'sms', intent, affinityMap[characterId] ?? 0, xinyiTarget === characterId);
+    if (reply === null) return; // 已读不回
     setTimeout(() => {
-      const reply = pickReply(characterId, 'sms', affinityMap[characterId] ?? 0, xinyiTarget === characterId);
       const replyId = `char_sms_${Date.now()}`;
       addPhoneMessage({
         id: replyId,
@@ -103,7 +107,7 @@ export default function SMSDetail({ characterId, onBack, hideHeader = false, wil
     }, 1200 + Math.random() * 1200);
   };
 
-  const replies = smsReplies[characterId] || smsReplies.default;
+  const replies = smsReplies;
 
   return (
     <div className="flex h-full flex-col" style={{ background: '#000' }}>
@@ -161,10 +165,10 @@ export default function SMSDetail({ characterId, onBack, hideHeader = false, wil
           {replies.map((reply, i) => (
             <button
               key={i}
-              onClick={() => handleReply(reply)}
+              onClick={() => handleReply(reply.text, reply.intent)}
               className="flex-shrink-0 rounded-full bg-blue-500/20 px-3 py-1.5 text-xs text-blue-400 transition-colors active:bg-blue-500/30"
             >
-              {reply}
+              {reply.text}
             </button>
           ))}
         </div>

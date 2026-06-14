@@ -3,10 +3,8 @@
  * 让手机即使在你很上心时也有生活气。每天至多一条（调用方用每日 key 限频）。
  * 纯函数，不读写 store；内容在 waifeStates.json 的 reactAmbient。
  */
-import content from '@/content/waifeStates.json';
 import { NEGLECT_DAYS } from '@/engine/neglect';
-
-const states = (content as { states: Record<string, { reactAmbient?: string[] }> }).states;
+import { reactionsOf } from '@/engine/waifeStateAccess';
 
 export interface AmbientInput {
   ownedCharacterIds: string[];
@@ -38,7 +36,7 @@ export function rollAmbient(input: AmbientInput, today: string, rng: () => numbe
   const eligible = input.ownedCharacterIds.filter((id) => {
     if ((input.affinityMap[id] ?? 0) < AMBIENT_MIN_AFFINITY) return false;
     if (daysSince(input.lastContact[id], today) >= NEGLECT_DAYS) return false;
-    return (states[id]?.reactAmbient?.length ?? 0) > 0;
+    return (reactionsOf(id).ambient?.length ?? 0) > 0;
   });
   if (eligible.length === 0) return null;
   if (rng() >= AMBIENT_CHANCE) return null;
@@ -51,7 +49,7 @@ export function rollAmbient(input: AmbientInput, today: string, rng: () => numbe
     r -= weights[i];
     if (r < 0) { chosen = eligible[i]; break; }
   }
-  const pool = states[chosen]?.reactAmbient ?? [];
+  const pool = reactionsOf(chosen).ambient ?? [];
   const message = pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))];
   return { characterId: chosen, message };
 }

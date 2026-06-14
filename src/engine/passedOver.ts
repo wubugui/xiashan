@@ -3,9 +3,7 @@
  * 她们会发来一条得体的"被错过/退场"消息（按人设，有的洒脱有的强忍）。
  * 纯函数，不读写 store；内容在 waifeStates.json 的 reactPassedOver。
  */
-import content from '@/content/waifeStates.json';
-
-const states = (content as { states: Record<string, { reactPassedOver?: string[] }> }).states;
+import { reactionsOf } from '@/engine/waifeStateAccess';
 
 export interface PassedOverInput {
   chosenId: string;
@@ -26,7 +24,7 @@ export function passedOverReactions(input: PassedOverInput, rng: () => number = 
   for (const id of input.ownedCharacterIds) {
     if (id === input.chosenId) continue;
     if ((input.affinityMap[id] ?? 0) < PASSED_OVER_MIN_AFFINITY) continue;
-    const pool = states[id]?.reactPassedOver ?? [];
+    const pool = reactionsOf(id).passedOver ?? [];
     if (!pool.length) continue;
     out.push({ characterId: id, message: pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))] });
   }

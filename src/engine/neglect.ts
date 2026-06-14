@@ -3,9 +3,7 @@
  * 纯函数，不读写 store；内容在 waifeStates.json 的 reactNeglect。
  * 调用方（打开手机时）按返回的 reactions 落地：addAffinity + addPhoneMessage，并用每日 key 防刷。
  */
-import content from '@/content/waifeStates.json';
-
-const states = (content as { states: Record<string, { reactNeglect?: string[] }> }).states;
+import { reactionsOf } from '@/engine/waifeStateAccess';
 
 export interface NeglectInput {
   ownedCharacterIds: string[];
@@ -42,7 +40,7 @@ export function checkNeglect(input: NeglectInput, today: string, rng: () => numb
     if (aff < NEGLECT_MIN_AFFINITY) continue;
     const days = daysSince(input.lastContact[id], today);
     if (days < NEGLECT_DAYS) continue;
-    const pool = states[id]?.reactNeglect ?? [];
+    const pool = reactionsOf(id).neglect ?? [];
     const message = pool.length ? pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))] : '';
     out.push({ characterId: id, affinityDelta: NEGLECT_DECAY, message, days });
   }

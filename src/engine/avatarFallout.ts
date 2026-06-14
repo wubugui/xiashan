@@ -5,11 +5,7 @@
  * - 其他好感≥30 的老婆：吃醋，掉好感 + 疏远/询问。
  * 反应以「她的下一条微信」形式发出（调用方 addPhoneMessage 落地）。
  */
-import content from '@/content/waifeStates.json';
-
-const states = (content as {
-  states: Record<string, { reactSweet?: string[]; reactReject?: string[]; reactFlattered?: string[]; reactJealous?: string[] }>;
-}).states;
+import { reactionsOf } from '@/engine/waifeStateAccess';
 
 export interface AvatarFalloutInput {
   chosenId: string;
@@ -44,22 +40,21 @@ export function resolveAvatarFallout(input: AvatarFalloutInput, rng: () => numbe
   const { chosenId, affinityMap, ownedCharacterIds, xinyiTarget } = input;
   const out: FalloutReaction[] = [];
   const inPlace = (affinityMap[chosenId] ?? 0) >= SWEET_AFFINITY || xinyiTarget === chosenId;
-  const s = states[chosenId] ?? {};
+  const s = reactionsOf(chosenId);
 
   if (inPlace) {
-    out.push({ characterId: chosenId, affinityDelta: DELTA.sweet, message: pick(s.reactSweet, rng()), kind: 'sweet' });
+    out.push({ characterId: chosenId, affinityDelta: DELTA.sweet, message: pick(s.sweet, rng()), kind: 'sweet' });
   } else if (rng() < 0.15) {
-    out.push({ characterId: chosenId, affinityDelta: DELTA.flattered, message: pick(s.reactFlattered, rng()), kind: 'flattered' });
+    out.push({ characterId: chosenId, affinityDelta: DELTA.flattered, message: pick(s.flattered, rng()), kind: 'flattered' });
   } else {
-    out.push({ characterId: chosenId, affinityDelta: DELTA.reject, message: pick(s.reactReject, rng()), kind: 'reject' });
+    out.push({ characterId: chosenId, affinityDelta: DELTA.reject, message: pick(s.reject, rng()), kind: 'reject' });
   }
 
   // 其他好感够高的老婆吃醋（按 id 顺序，稳定）
   for (const id of ownedCharacterIds) {
     if (id === chosenId) continue;
     if ((affinityMap[id] ?? 0) < JEALOUS_AFFINITY) continue;
-    const js = states[id] ?? {};
-    out.push({ characterId: id, affinityDelta: DELTA.jealous, message: pick(js.reactJealous, rng()), kind: 'jealous' });
+    out.push({ characterId: id, affinityDelta: DELTA.jealous, message: pick(reactionsOf(id).jealous, rng()), kind: 'jealous' });
   }
   return out;
 }

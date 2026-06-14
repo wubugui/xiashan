@@ -3,11 +3,7 @@
  * 让签名"活"起来——随确认心意 / 玩家头像博弈而变。纯函数，不读 store，状态由调用方传入。
  */
 import type { Character } from '@/data/types';
-import content from '@/content/waifeStates.json';
-
-const states = (content as {
-  states: Record<string, { sigLover?: string; sigChosen?: string; sigJealous?: string; sigDistant?: string; sigClose?: string }>;
-}).states;
+import { signaturesOf } from '@/engine/waifeStateAccess';
 
 export interface SignatureCtx {
   /** 已确认心意（她是恋人） */
@@ -20,12 +16,12 @@ export interface SignatureCtx {
 
 /** 优先级：头像博弈（最新最扎眼）> 恋人 > 好感分层（暧昧/生疏）> 默认人设(熟络) */
 export function signatureFor(character: Character, ctx: SignatureCtx = {}): string {
-  const s = states[character.id] ?? {};
-  if (ctx.avatarMood === 'chosen' && s.sigChosen) return s.sigChosen;
-  if (ctx.avatarMood === 'jealous' && s.sigJealous) return s.sigJealous;
-  if (ctx.isLover && s.sigLover) return s.sigLover;
+  const s = signaturesOf(character.id);
+  if (ctx.avatarMood === 'chosen' && s.chosen) return s.chosen;
+  if (ctx.avatarMood === 'jealous' && s.jealous) return s.jealous;
+  if (ctx.isLover && s.lover) return s.lover;
   const aff = ctx.affinity ?? 0;
-  if (aff >= 60 && s.sigClose) return s.sigClose;
-  if (aff < 20 && s.sigDistant) return s.sigDistant;
+  if (aff >= 60 && s.close) return s.close;
+  if (aff < 20 && s.distant) return s.distant;
   return character.phonePersonality.signature ?? '';
 }

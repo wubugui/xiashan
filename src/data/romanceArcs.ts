@@ -1,5 +1,6 @@
 import content from '@/content/romanceArcs.json';
 import type { Condition } from '@/engine/types';
+import { waifeConfigArcs, configuredIds } from '@/data/waifes';
 
 export type RomancePhase = '共事' | '熟络' | '暧昧' | '告白门' | '深耕' | '终幕';
 
@@ -57,7 +58,9 @@ export interface RomanceArc {
   beats: RomanceBeat[];
 }
 
-const arcs = (content as { arcs: RomanceArc[] }).arcs;
+// 「一角色一配置」的角色用配置里的恋爱线覆盖旧 romanceArcs.json 同 id 项
+const legacyArcs = (content as { arcs: RomanceArc[] }).arcs.filter((a) => !configuredIds.has(a.characterId));
+const arcs: RomanceArc[] = [...waifeConfigArcs, ...legacyArcs];
 
 export function getRomanceArc(characterId: string): RomanceArc | undefined {
   return arcs.find((a) => a.characterId === characterId);

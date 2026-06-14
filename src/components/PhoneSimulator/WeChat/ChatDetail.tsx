@@ -1,7 +1,7 @@
 import { ChevronLeft, MoreVertical } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
-import { pickReply } from '@/engine/chatReply';
+import { replyTo, type ChatIntent } from '@/engine/chatReply';
 import MessageBubble from './MessageBubble';
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,7 +26,12 @@ const avatarColors: Record<string, string> = {
 };
 
 // 玩家可点的快捷回复（玩家口吻，通用且暖）
-const playerReplies = ['在的，怎么了？', '辛苦啦，注意休息', '想你了', '改天约你出来'];
+const playerReplies: { text: string; intent: ChatIntent }[] = [
+  { text: '在的，怎么了？', intent: 'greet' },
+  { text: '辛苦啦，注意休息', intent: 'care' },
+  { text: '想你了', intent: 'flirt' },
+  { text: '改天约你出来', intent: 'invite' },
+];
 
 export default function ChatDetail({ characterId, onBack, hideHeader = false }: ChatDetailProps) {
   const phoneMessages = usePlayerStore((s) => s.phoneMessages);
@@ -65,7 +70,7 @@ export default function ChatDetail({ characterId, onBack, hideHeader = false }: 
     });
   }, [messages, markMessageRead]);
 
-  const handleQuickReply = (text: string) => {
+  const handleQuickReply = (text: string, intent: ChatIntent) => {
     if (isTyping) return;
     const playerId = `player_${Date.now()}`;
     addPhoneMessage({
@@ -84,12 +89,13 @@ export default function ChatDetail({ characterId, onBack, hideHeader = false }: 
       addAffinity(characterId, 2);
     }
 
-    // 她回应（角色口吻，有来有回）
+    // 她回应：按「意图×好感层」取，可能已读不回
+    const reply = replyTo(characterId, 'wechat', intent, affinityMap[characterId] ?? 0, xinyiTarget === characterId);
+    if (reply === null) return; // 已读不回——她没回应（关系/语境不到）
     setIsTyping(true);
     const delay = 900 + Math.random() * 1500;
     setTimeout(() => {
       setIsTyping(false);
-      const reply = pickReply(characterId, 'wechat', affinityMap[characterId] ?? 0, xinyiTarget === characterId);
       const replyId = `char_${Date.now()}`;
       addPhoneMessage({
         id: replyId,
@@ -176,12 +182,12 @@ export default function ChatDetail({ characterId, onBack, hideHeader = false }: 
         <div className="flex gap-2 overflow-x-auto px-3 py-2">
           {playerReplies.map((reply) => (
             <button
-              key={reply}
-              onClick={() => handleQuickReply(reply)}
+              key={reply.text}
+              onClick={() => handleQuickReply(reply.text, reply.intent)}
               disabled={isTyping}
               className="flex-shrink-0 rounded-full border border-black/10 bg-white px-3 py-1 text-xs text-black/70 transition-colors active:bg-black/5 disabled:opacity-40"
             >
-              {reply}
+              {reply.text}
             </button>
           ))}
         </div>
