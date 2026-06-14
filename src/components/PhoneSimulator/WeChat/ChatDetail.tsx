@@ -1,6 +1,7 @@
 import { ChevronLeft, MoreVertical } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
+import { pickReply } from '@/engine/chatReply';
 import MessageBubble from './MessageBubble';
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,19 +28,6 @@ const avatarColors: Record<string, string> = {
 // 玩家可点的快捷回复（玩家口吻，通用且暖）
 const playerReplies = ['在的，怎么了？', '辛苦啦，注意休息', '想你了', '改天约你出来'];
 
-// 她的回应（角色口吻——聊天有来有回，不再答非所问）
-const herReplies: Record<string, string[]> = {
-  suli: ['嗯……听到你的消息，安心了点。', '今晚的节目，悄悄给你留了首歌。', '别太晚睡，我陪着你。'],
-  aruo: ['哇你终于回我了！感动！', '下次直播我喊你的名字哦~', '有你在，冷场都不怕啦！'],
-  sangluo: ['店里给你留着位子，随时来。', '别硬撑，累了就歇会儿。', '听你这么说，我就放心了。'],
-  aman: ['团子刚还在念叨你呢（骗你的）。', '你也要好好吃饭呀。', '想我了就来摸猫，随时欢迎。'],
-  shenzhaoning: ['收到。……谢谢你还想着我。', '有你这句，今天的乱摊子也值了。', '嗯，我也是。'],
-  murongxue: ['我把你说的记下来了。', '……被你这么一说，有点不好意思。', '嗯，我一直都在听。'],
-  yunzhiyi: ['哎嘿，被你发现我在等消息了！', '约我呀约我呀！我超有空！', '今天也要元气满满哦，一起！'],
-  linxia: ['看到你消息，今天的累都没了。', '那个……我也很谢谢你。', '下次换我请你，说定了！'],
-  default: ['嗯，谢谢你。', '收到，照顾好自己。', '改天见面聊。'],
-};
-
 export default function ChatDetail({ characterId, onBack, hideHeader = false }: ChatDetailProps) {
   const phoneMessages = usePlayerStore((s) => s.phoneMessages);
   const addPhoneMessage = usePlayerStore((s) => s.addPhoneMessage);
@@ -52,6 +40,8 @@ export default function ChatDetail({ characterId, onBack, hideHeader = false }: 
 
   const displayAvatar = usePlayerStore((s) => s.displayAvatar);
   const playerAvatarUrl = usePlayerStore((s) => s.playerAvatarUrl);
+  const affinityMap = usePlayerStore((s) => s.affinityMap);
+  const xinyiTarget = usePlayerStore((s) => s.xinyiTarget);
   const character = getCharacterById(characterId);
   const avatarSrc = displayAvatar[characterId] || character?.avatarUrl;
   const color = avatarColors[characterId] || '#999';
@@ -97,8 +87,7 @@ export default function ChatDetail({ characterId, onBack, hideHeader = false }: 
     const delay = 900 + Math.random() * 1500;
     setTimeout(() => {
       setIsTyping(false);
-      const pool = herReplies[characterId] || herReplies.default;
-      const reply = pool[Math.floor(Math.random() * pool.length)];
+      const reply = pickReply(characterId, 'wechat', affinityMap[characterId] ?? 0, xinyiTarget === characterId);
       const replyId = `char_${Date.now()}`;
       addPhoneMessage({
         id: replyId,

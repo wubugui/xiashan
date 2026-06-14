@@ -1,6 +1,7 @@
 import { ChevronLeft } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
+import { pickReply } from '@/engine/chatReply';
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { assetUrl } from '@/lib/assets';
@@ -30,19 +31,6 @@ const smsReplies: Record<string, string[]> = {
   default: ['在干嘛？', '路上小心', '早点睡', '周末有空吗？'],
 };
 
-// 她的短信回应（短、私人、口吻贴人设）
-const herSms: Record<string, string[]> = {
-  suli: ['刚下播。听到提示音就笑了。', '嗯，你也是。', '夜里别想太多，有我。'],
-  aruo: ['哎你猜我在干嘛~等你消息呀！', '收到收到！明天见！', '么么，注意安全！'],
-  sangluo: ['在煮今天最后一壶。', '路上慢点，不急。', '周末？给你留位子。'],
-  aman: ['在给团子梳毛，它打了个喷嚏。', '好，你也是。', '有空就来，我都在。'],
-  shenzhaoning: ['刚收工。难得你先发我。', '嗯，知道了。', '周末……可以。'],
-  murongxue: ['在整理素材，看到一条想发你。', '好，路上看手机别走神。', '嗯，约。'],
-  yunzhiyi: ['刚送完最后一单！超快的！', '收到！明天见明天见！', '有空有空！去哪都行！'],
-  linxia: ['刚到家，正想发你呢。', '你也早点休息呀。', '周末！我看看清单排一下~'],
-  default: ['嗯，收到。', '好，你也是。', '改天约。'],
-};
-
 export default function SMSDetail({ characterId, onBack, hideHeader = false, willReply = true }: SMSDetailProps) {
   const phoneMessages = usePlayerStore((s) => s.phoneMessages);
   const addPhoneMessage = usePlayerStore((s) => s.addPhoneMessage);
@@ -53,6 +41,8 @@ export default function SMSDetail({ characterId, onBack, hideHeader = false, wil
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
 
   const displayAvatar = usePlayerStore((s) => s.displayAvatar);
+  const affinityMap = usePlayerStore((s) => s.affinityMap);
+  const xinyiTarget = usePlayerStore((s) => s.xinyiTarget);
   const character = getCharacterById(characterId);
   const avatarSrc = displayAvatar[characterId] || character?.avatarUrl;
   const color = avatarColors[characterId] || '#999';
@@ -97,8 +87,7 @@ export default function SMSDetail({ characterId, onBack, hideHeader = false, wil
 
     // 她回应（角色口吻）
     setTimeout(() => {
-      const pool = herSms[characterId] || herSms.default;
-      const reply = pool[Math.floor(Math.random() * pool.length)];
+      const reply = pickReply(characterId, 'sms', affinityMap[characterId] ?? 0, xinyiTarget === characterId);
       const replyId = `char_sms_${Date.now()}`;
       addPhoneMessage({
         id: replyId,
