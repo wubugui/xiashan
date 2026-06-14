@@ -29,6 +29,8 @@ export interface Character {
     wechatStyle: 'formal' | 'casual' | 'cold' | 'playful' | 'mysterious';
     responseSpeed: 'instant' | 'fast' | 'slow' | 'unpredictable';
     commonPhrases: string[];
+    /** 微信签名（默认状态）：反映人设，状态变化时由 signatureFor 覆盖 */
+    signature?: string;
   };
 }
 

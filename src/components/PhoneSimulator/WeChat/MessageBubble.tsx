@@ -8,6 +8,8 @@ interface MessageBubbleProps {
   sender: 'character' | 'player';
   /** 角色头像（character 侧用真头像，缺省退回首字色块） */
   avatarUrl?: string;
+  /** 玩家自己的头像（设为我的头像后）：player 侧用真头像，缺省退回「我」色块 */
+  playerAvatarUrl?: string | null;
   /** 头像首字回退（角色名首字，不是消息内容首字） */
   fallbackInitial?: string;
   voiceText?: string;
@@ -19,6 +21,7 @@ export default function MessageBubble({
   type,
   sender,
   avatarUrl,
+  playerAvatarUrl,
   fallbackInitial = '',
   voiceText,
   isNew = false,
@@ -144,11 +147,20 @@ export default function MessageBubble({
       </div>
 
       {isPlayer && (
-        <div
-          className="ml-2 mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-500 text-xs font-bold text-white"
-        >
-          我
-        </div>
+        playerAvatarUrl ? (
+          <img
+            src={assetUrl(playerAvatarUrl)}
+            alt=""
+            className="ml-2 mt-1 h-9 w-9 flex-shrink-0 rounded-lg object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div
+            className="ml-2 mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-500 text-xs font-bold text-white"
+          >
+            我
+          </div>
+        )
       )}
     </motion.div>
   );

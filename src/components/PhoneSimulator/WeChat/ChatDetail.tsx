@@ -51,6 +51,7 @@ export default function ChatDetail({ characterId, onBack, hideHeader = false }: 
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
 
   const displayAvatar = usePlayerStore((s) => s.displayAvatar);
+  const playerAvatarUrl = usePlayerStore((s) => s.playerAvatarUrl);
   const character = getCharacterById(characterId);
   const avatarSrc = displayAvatar[characterId] || character?.avatarUrl;
   const color = avatarColors[characterId] || '#999';
@@ -139,6 +140,7 @@ export default function ChatDetail({ characterId, onBack, hideHeader = false }: 
               type="text"
               sender={isPlayer ? 'player' : 'character'}
               avatarUrl={isPlayer ? undefined : avatarSrc}
+              playerAvatarUrl={isPlayer ? playerAvatarUrl : undefined}
               fallbackInitial={character?.name.charAt(0) ?? ''}
               isNew={newMessageIds.has(msg.id)}
             />

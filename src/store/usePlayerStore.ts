@@ -86,6 +86,10 @@ interface PlayerState {
   displayPortrait: Record<string, string>;
   /** 设为头像：玩家为每个角色选定的手机头像（收藏里解锁的表情）：charId → 资源路径 */
   displayAvatar: Record<string, string>;
+  /** 玩家自己的头像（可设成某个老婆的照片，高博弈）：资源路径，null = 默认「我」 */
+  playerAvatarUrl: string | null;
+  /** 玩家头像取自哪个老婆（驱动她的甜蜜/反感、别人吃醋）：charId，null = 默认 */
+  playerAvatarSource: string | null;
   /** 缘分 UP 截止日（completedCommission → 限时权重 ×4）：characterId → 'YYYY-MM-DD' 含当日 */
   rateUpUntil: Record<string, string>;
   /** 冷淡截止日（放弃委托 → 限时权重 ×0.25 + 委托不上板）：characterId → 'YYYY-MM-DD' 含当日 */
@@ -137,6 +141,8 @@ interface PlayerState {
   setDisplayPortrait: (characterId: string, asset: string) => void;
   /** 设为头像：把某张已解锁表情设为她的手机头像 */
   setDisplayAvatar: (characterId: string, asset: string) => void;
+  /** 设为我的头像：把某张图设为玩家自己的头像（sourceCharId = 取自哪个老婆，可 null） */
+  setPlayerAvatar: (asset: string, sourceCharId: string | null) => void;
   tryDailyAction: (key: string) => boolean;
   addExp: (characterId: string, amount: number) => void;
   addGachaResult: (characterId: string, rarity: string) => void;
@@ -173,6 +179,8 @@ const initialState = {
   momo: {} as Record<string, number>,
   displayPortrait: {} as Record<string, string>,
   displayAvatar: {} as Record<string, string>,
+  playerAvatarUrl: null as string | null,
+  playerAvatarSource: null as string | null,
   rateUpUntil: {} as Record<string, string>,
   coldUntil: {} as Record<string, string>,
   totalGachaCount: 0,
@@ -283,6 +291,7 @@ export const usePlayerStore = create<PlayerState>()(
       setDisplayAvatar: (characterId, asset) => set(s => ({
         displayAvatar: { ...s.displayAvatar, [characterId]: asset },
       })),
+      setPlayerAvatar: (asset, sourceCharId) => set({ playerAvatarUrl: asset, playerAvatarSource: sourceCharId }),
       tryDailyAction: (key) => {
         const today = new Date().toISOString().slice(0, 10);
         if (get().dailyActions[key] === today) return false;
@@ -328,7 +337,7 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'xiashan-player-store',
-      version: 9,
+      version: 10,
       storage: createJSONStorage(() => safeStorage),
       // 旧版本存档可能缺字段、字段为 null 或类型不符（项目从 AVG 改版而来），
       // 合并时丢弃所有与默认值类型不符的项，避免启动即崩、全页空白。
@@ -353,6 +362,12 @@ export const usePlayerStore = create<PlayerState>()(
           personTickets?: number;
           commissionTickets?: number;
         };
+        if (version < 10) {
+          // 玩家头像博弈新增字段：老存档补默认
+          const s10 = state as typeof state & { playerAvatarUrl?: string | null; playerAvatarSource?: string | null };
+          s10.playerAvatarUrl = s10.playerAvatarUrl ?? null;
+          s10.playerAvatarSource = s10.playerAvatarSource ?? null;
+        }
         if (version < 9) {
           // 设为头像新增字段：老存档补空对象（merge 也会兜底）
           const s9 = state as typeof state & { displayAvatar?: Record<string, string> };

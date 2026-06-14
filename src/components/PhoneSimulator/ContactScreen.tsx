@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
 import { commsTier } from '@/engine/phoneAccess';
+import { signatureFor } from '@/engine/signature';
 import { assetUrl } from '@/lib/assets';
 import { cn } from '@/lib/utils';
 import ChatDetail from './WeChat/ChatDetail';
@@ -27,12 +28,20 @@ export default function ContactScreen({ characterId, initialTab = 'wechat', onBa
   const affinityMap = usePlayerStore((s) => s.affinityMap);
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
   const displayAvatar = usePlayerStore((s) => s.displayAvatar);
+  const xinyiTarget = usePlayerStore((s) => s.xinyiTarget);
+  const playerAvatarSource = usePlayerStore((s) => s.playerAvatarSource);
   const character = getCharacterById(characterId);
   // 手机头像：玩家在收藏里「设为头像」过就用她选的表情，否则用默认
   const avatarSrc = displayAvatar[characterId] || character?.avatarUrl;
   const owned = ownedCharacters.some((c) => c.characterId === characterId);
   const affinity = affinityMap[characterId] ?? 0;
   const tier = commsTier(characterId, owned, affinity);
+  // 她当前的微信签名（随恋人/头像博弈状态变化）
+  const avatarMood: 'chosen' | 'jealous' | null = !playerAvatarSource
+    ? null
+    : playerAvatarSource === characterId ? 'chosen'
+      : (affinity >= 30 ? 'jealous' : null);
+  const signature = character ? signatureFor(character, { isLover: xinyiTarget === characterId, avatarMood }) : '';
   /** 短信会不会有回音（tier≥2）/ 电话会不会接（tier≥3） */
   const smsReplies = tier >= 2;
   const callAnswers = tier >= 3;
@@ -91,8 +100,11 @@ export default function ContactScreen({ characterId, initialTab = 'wechat', onBa
         )}
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold text-white">{character.name}</p>
-          <p className="truncate text-[10px] text-white/45">好感 {affinity} · {tier >= 3 ? '深夜长谈' : tier >= 2 ? '常联系' : '刚加好友'}</p>
+          <p className="truncate text-[10px] italic text-white/55">{signature || `好感 ${affinity}`}</p>
         </div>
+        <span className="shrink-0 rounded-full bg-white/8 px-2 py-0.5 text-[9px] text-white/45">
+          好感 {affinity} · {tier >= 3 ? '深夜长谈' : tier >= 2 ? '常联系' : '刚加好友'}
+        </span>
       </div>
 
       {/* Tab 栏：三个渠道始终可点，不锁不灰 */}

@@ -76,7 +76,8 @@
           "别关机。",
           "零点见。",
           "声音放轻。"
-        ]
+        ],
+        "signature": "凌晨的频段，还醒着。"
       },
       "gachaPortraitUrl": "/characters/face/suli/smile.png",
       "gachaQuote": "睡不着的话——零点，调到我的频段……",
@@ -169,7 +170,8 @@
           "别慌别慌",
           "镜头给我",
           "你猜？"
-        ]
+        ],
+        "signature": "下播了，但还在线哦。"
       },
       "gachaPortraitUrl": "/characters/face/aruo/smile.png",
       "gachaVoiceUrls": [
@@ -188,7 +190,7 @@
     {
       "id": "sangluo",
       "name": "顾夜莺",
-      "rarity": "SSR",
+      "rarity": "SR",
       "title": "深夜咖啡吧主理人",
       "description": "深夜咖啡吧的主理人，长期接待加班族、失眠客和夜归人。她慵懒成熟，说话慢，情绪很稳，不爱主动干涉别人，却很擅长让失控的人慢慢冷静下来。",
       "element": "月",
@@ -261,7 +263,8 @@
           "别急",
           "我在店里",
           "今晚风很静"
-        ]
+        ],
+        "signature": "夜里总有一杯，给你留灯。"
       },
       "gachaPortraitUrl": "/characters/face/sangluo/smile.png",
       "gachaVoiceUrls": [
@@ -280,7 +283,7 @@
     {
       "id": "aman",
       "name": "许念",
-      "rarity": "SSR",
+      "rarity": "SR",
       "title": "宠物护理师",
       "description": "宠物护理师，同时参与社区陪诊和邻里互助。她温柔亲近，耐心很好，不急着判断别人，也不会用大道理压人；她的强项是让人和小动物都愿意靠近。",
       "element": "花",
@@ -353,7 +356,8 @@
           "我带猫条",
           "没事的",
           "交给我吧~"
-        ]
+        ],
+        "signature": "今天也，温柔地接住每一个害怕。"
       },
       "gachaPortraitUrl": "/characters/face/aman/smile.png",
       "gachaQuote": "小动物害怕的时候，追得越急、越躲。人有时候……也一样。",
@@ -373,7 +377,7 @@
     {
       "id": "shenzhaoning",
       "name": "祁宁",
-      "rarity": "SR",
+      "rarity": "R",
       "title": "楼宇运营专员",
       "description": "商业楼宇运营专员，熟悉门禁、访客系统、前台规则和各种流程漏洞。她利落冷静，说话简短，习惯把混乱的问题拆成流程、权限和责任三部分；她不太会安慰人，但很会让事情立刻往前走。",
       "element": "金",
@@ -442,7 +446,8 @@
           "按流程来。",
           "权限确认。",
           "十分钟后回复。"
-        ]
+        ],
+        "signature": "流程清晰，世界才不慌。"
       },
       "gachaPortraitUrl": "/characters/face/shenzhaoning/smile.png",
       "gachaVoiceUrls": [],
@@ -459,7 +464,7 @@
     {
       "id": "murongxue",
       "name": "沈疏桐",
-      "rarity": "SR",
+      "rarity": "R",
       "title": "新闻系学生",
       "description": "城市新闻系学生，兼职资料整理、线索核验和社区新闻采集。她安静克制，观察力强，记忆细节很准；她不喜欢抢话，但一开口通常能指出别人忽略的关键点。",
       "element": "墨",
@@ -528,7 +533,8 @@
           "有线索。",
           "先别判断。",
           "我记下了。"
-        ]
+        ],
+        "signature": "仍在记录，尚未结论。"
       },
       "gachaPortraitUrl": "/characters/face/murongxue/smile.png",
       "gachaVoiceUrls": [],
@@ -545,7 +551,7 @@
     {
       "id": "yunzhiyi",
       "name": "陈小满",
-      "rarity": "SR",
+      "rarity": "R",
       "title": "配送站新人",
       "description": "社区配送站新人，也是便利屋常用的外勤跑腿搭档。她元气直接，行动力强，很多事会先冲上去试一把；她不算最会规划，但体力、韧性和现场反应很可靠。",
       "element": "力",
@@ -614,7 +620,8 @@
           "这个我能搬",
           "路线发我",
           "冲！"
-        ]
+        ],
+        "signature": "能搬动的都不算事——冲！"
       },
       "gachaPortraitUrl": "/characters/face/yunzhiyi/smile.png",
       "gachaVoiceUrls": [],
@@ -700,7 +707,8 @@
           "别急，我来补",
           "今天也辛苦啦",
           "明天见~"
-        ]
+        ],
+        "signature": "清单列好，今天也要稳稳的。"
       },
       "gachaPortraitUrl": "/characters/face/linxia/smile.png",
       "gachaVoiceUrls": [],

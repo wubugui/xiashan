@@ -9,7 +9,8 @@ import { dupesNeededForStage } from '@/engine/bondEngine';
 import { expForLevel } from '@/engine/shopEngine';
 import { getRomanceArc, type RomanceBeat, type RomanceChoiceOption } from '@/data/romanceArcs';
 import { beatStatus } from '@/engine/romanceEngine';
-import { getCollectibles } from '@/data/collectibles';
+import { getCollectibles, type Collectible } from '@/data/collectibles';
+import { resolveAvatarFallout } from '@/engine/avatarFallout';
 import { evaluateAll } from '@/engine/conditionEngine';
 import RomanceScene from '@/components/RomanceScene';
 import StoryViewer from '@/components/StoryViewer';
@@ -70,6 +71,7 @@ export default function CharacterDetail() {
   const setDisplayPortrait = usePlayerStore((s) => s.setDisplayPortrait);
   const displayAvatar = usePlayerStore((s) => s.displayAvatar);
   const setDisplayAvatar = usePlayerStore((s) => s.setDisplayAvatar);
+  const setPlayerAvatar = usePlayerStore((s) => s.setPlayerAvatar);
   const setFlag = usePlayerStore((s) => s.setFlag);
   const addPhoneMessage = usePlayerStore((s) => s.addPhoneMessage);
 
@@ -79,6 +81,13 @@ export default function CharacterDetail() {
   const [playingBeat, setPlayingBeat] = useState<{ beat: RomanceBeat; replay: boolean } | null>(null);
   // 收藏里正在回看的 CG 短篇
   const [openCg, setOpenCg] = useState<{ title: string; image?: string; paragraphs: string[] } | null>(null);
+  // 收藏里点开的操作面板（设为她头像/主视觉/我的头像）
+  const [sheetItem, setSheetItem] = useState<Collectible | null>(null);
+  // 「设为我的头像」高博弈二次确认
+  const [confirmMine, setConfirmMine] = useState<Collectible | null>(null);
+  // 收藏操作的轻提示
+  const [collectToast, setCollectToast] = useState<string | null>(null);
+  const flash = (msg: string) => { setCollectToast(msg); window.setTimeout(() => setCollectToast((c) => (c === msg ? null : c)), 3200); };
 
   const character = id ? getCharacterById(id) : undefined;
   const ownedChar = ownedCharacters.find((c) => c.characterId === id);
@@ -169,6 +178,33 @@ export default function CharacterDetail() {
     }
     if (beat.isGate) usePlayerStore.getState().setXinyiTarget(id);
     advanceRomance(id);
+  };
+
+  /** 设为我的头像（高博弈）：换头像 + 结算她的甜蜜/反感 + 别人吃醋，反应以微信发来 */
+  const applyMineAvatar = (item: Collectible) => {
+    if (!id) return;
+    setPlayerAvatar(item.asset, id);
+    const reactions = resolveAvatarFallout({
+      chosenId: id,
+      affinityMap,
+      ownedCharacterIds: ownedCharacters.map((c) => c.characterId),
+      xinyiTarget,
+    });
+    for (const r of reactions) {
+      if (r.affinityDelta) addAffinity(r.characterId, r.affinityDelta);
+      if (r.message) {
+        addPhoneMessage({
+          id: `avatar_react_${r.characterId}_${Date.now()}_${Math.floor(Math.random() * 9999)}`,
+          characterId: r.characterId, type: 'wechat', content: r.message, timestamp: Date.now(), read: false,
+        });
+      }
+    }
+    const self = reactions.find((r) => r.characterId === id);
+    const jealous = reactions.filter((r) => r.kind === 'jealous').length;
+    const head = self?.kind === 'sweet' ? `已设为我的头像 · ${character?.name} 甜蜜暴击 💗`
+      : self?.kind === 'flattered' ? `已设为我的头像 · ${character?.name} 有点受宠若惊`
+        : `已设为我的头像 · ${character?.name} 似乎不太自在…`;
+    flash(jealous > 0 ? `${head}（${jealous} 位老婆吃醋了，去微信看看）` : `${head}（去微信看她的反应）`);
   };
 
   if (!character) {
@@ -356,7 +392,7 @@ export default function CharacterDetail() {
           return (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
               <p className="text-xs text-slate-400">收藏 {unlockedCount}/{items.length} · 刷得越多，集得越全</p>
-              <p className="text-[11px] text-slate-500">立绘点「设为展示」当主视觉，表情点「设为头像」上手机，带 📖 的短篇点开回看剧情。</p>
+              <p className="text-[11px] text-slate-500">点已解锁的图：可设为她的头像/专属主视觉，或设成你自己的头像（高博弈）；带 📖 的短篇点开回看。</p>
               <div className="grid grid-cols-3 gap-2">
                 {items.map((it) => {
                   const unlocked = evaluateAll(it.unlock, condState);
@@ -369,11 +405,10 @@ export default function CharacterDetail() {
                   const actionLabel = isCg ? '回看' : isExpr ? '设为头像' : '设为展示';
                   const activeLabel = isExpr ? '头像中' : '展示中';
                   const onClick = () => {
-                    if (!unlocked || !id) return;
+                    if (!unlocked) return;
                     playSound('btn-confirm');
                     if (isCg && it.cg) setOpenCg(it.cg);
-                    else if (isExpr) setDisplayAvatar(id, it.asset);
-                    else setDisplayPortrait(id, it.asset);
+                    else setSheetItem(it);
                   };
                   return (
                     <button
@@ -651,6 +686,76 @@ export default function CharacterDetail() {
       {/* 收藏里回看的 CG 短篇 */}
       {openCg && (
         <StoryViewer title={openCg.title} image={openCg.image} paragraphs={openCg.paragraphs} onClose={() => setOpenCg(null)} />
+      )}
+
+      {/* 收藏操作面板 */}
+      {sheetItem && id && (
+        <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/60" onClick={() => setSheetItem(null)}>
+          <motion.div
+            initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-t-2xl border-t border-white/10 bg-slate-900 p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]"
+          >
+            <div className="mb-3 flex items-center gap-3">
+              <img src={assetUrl(sheetItem.asset)} alt="" className="h-12 w-12 rounded-lg object-cover object-top" />
+              <div>
+                <p className="text-sm font-bold text-white">{sheetItem.name}</p>
+                <p className="text-[11px] text-slate-400">{character.name} · {sheetItem.kind === 'expr' ? '表情' : '立绘'}</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {sheetItem.kind === 'expr' ? (
+                <button
+                  onClick={() => { playSound('btn-confirm'); setDisplayAvatar(id, sheetItem.asset); flash(`已设为 ${character.name} 的手机头像`); setSheetItem(null); }}
+                  className="w-full rounded-xl bg-slate-800 py-3 text-sm font-bold text-amber-200 active:scale-[0.99]"
+                >设为 {character.name} 的手机头像</button>
+              ) : (
+                <button
+                  onClick={() => { playSound('btn-confirm'); setDisplayPortrait(id, sheetItem.asset); flash(`已设为 ${character.name} 的专属主视觉`); setSheetItem(null); }}
+                  className="w-full rounded-xl bg-slate-800 py-3 text-sm font-bold text-amber-200 active:scale-[0.99]"
+                >设为 {character.name} 的专属主视觉</button>
+              )}
+              <button
+                onClick={() => { playSound('btn-confirm'); const it = sheetItem; setSheetItem(null); setConfirmMine(it); }}
+                className="w-full rounded-xl border border-rose-400/40 bg-rose-500/10 py-3 text-sm font-bold text-rose-200 active:scale-[0.99]"
+              >设为我自己的头像 ⚠</button>
+              <button onClick={() => setSheetItem(null)} className="w-full py-2.5 text-sm text-slate-400">取消</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* 设为我的头像 · 高博弈二次确认 */}
+      {confirmMine && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 p-6" onClick={() => setConfirmMine(null)}>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-2xl border border-rose-400/30 bg-slate-900 p-5"
+          >
+            <p className="mb-2 text-base font-black text-rose-200">把头像换成{character.name}？</p>
+            <p className="mb-4 text-xs leading-relaxed text-slate-300">
+              这是一步要心理准备的棋——关系到位了，她会甜蜜暴击；还没到位，她可能会不自在、关系变淡。
+              而且<span className="text-rose-300">其他和你走得近的老婆看到，未必高兴</span>。她们的反应，会在微信里等你。
+            </p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmMine(null)} className="flex-1 rounded-xl bg-slate-800 py-2.5 text-sm font-bold text-slate-300">再想想</button>
+              <button
+                onClick={() => { const it = confirmMine; setConfirmMine(null); playSound('challenge-appear'); if (it) applyMineAvatar(it); }}
+                className="flex-1 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 py-2.5 text-sm font-black text-white"
+              >就换她 💗</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* 收藏操作轻提示 */}
+      {collectToast && (
+        <div className="pointer-events-none fixed inset-x-0 z-[300] flex justify-center px-4" style={{ bottom: 'calc(var(--bar-h, 0px) + var(--nav-h, 0px) + 24px)' }}>
+          <div className="max-w-[92%] rounded-xl bg-slate-800/95 px-4 py-2.5 text-center text-xs font-medium text-amber-100 shadow-lg ring-1 ring-white/10">
+            {collectToast}
+          </div>
+        </div>
       )}
     </div>
   );
