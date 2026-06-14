@@ -11,6 +11,7 @@ import { getRomanceArc, type RomanceBeat, type RomanceChoiceOption } from '@/dat
 import { beatStatus } from '@/engine/romanceEngine';
 import { getCollectibles, type Collectible } from '@/data/collectibles';
 import { resolveAvatarFallout } from '@/engine/avatarFallout';
+import { passedOverReactions } from '@/engine/passedOver';
 import { evaluateAll } from '@/engine/conditionEngine';
 import RomanceScene from '@/components/RomanceScene';
 import StoryViewer from '@/components/StoryViewer';
@@ -176,7 +177,21 @@ export default function CharacterDetail() {
     if (r?.wechat) {
       addPhoneMessage({ id: `romance_${beat.id}_${Date.now()}`, characterId: id, type: 'wechat', content: r.wechat, timestamp: Date.now(), read: false });
     }
-    if (beat.isGate) usePlayerStore.getState().setXinyiTarget(id);
+    if (beat.isGate) {
+      usePlayerStore.getState().setXinyiTarget(id);
+      // 确认心意后，其他有好感的老婆会发来一条得体的"退场"消息——不再默默被锁
+      const reactions = passedOverReactions({
+        chosenId: id,
+        ownedCharacterIds: ownedCharacters.map((c) => c.characterId),
+        affinityMap,
+      });
+      for (const r of reactions) {
+        addPhoneMessage({
+          id: `passedover_${r.characterId}_${Date.now()}_${Math.floor(Math.random() * 9999)}`,
+          characterId: r.characterId, type: 'wechat', content: r.message, timestamp: Date.now(), read: false,
+        });
+      }
+    }
     advanceRomance(id);
   };
 
