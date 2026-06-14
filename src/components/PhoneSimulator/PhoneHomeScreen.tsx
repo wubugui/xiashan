@@ -1,7 +1,9 @@
+import { useEffect, useRef } from 'react';
 import { MessageCircle, MessageSquare, Phone as PhoneIcon, Globe, ChevronRight } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
 import { commsTier, type CommsTier } from '@/engine/phoneAccess';
+import { checkNeglect } from '@/engine/neglect';
 import { assetUrl } from '@/lib/assets';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +22,33 @@ export default function PhoneHomeScreen({ onOpenContact, onOpenBrowser }: PhoneH
   const affinityMap = usePlayerStore((s) => s.affinityMap);
   const phoneMessages = usePlayerStore((s) => s.phoneMessages);
   const displayAvatar = usePlayerStore((s) => s.displayAvatar);
+
+  // 打开手机时结算"被冷落"：太久没联系的她会主动找你（每人每天最多一次）
+  const neglectRan = useRef(false);
+  useEffect(() => {
+    if (neglectRan.current) return;
+    neglectRan.current = true;
+    const store = usePlayerStore.getState();
+    const today = new Date().toISOString().slice(0, 10);
+    const reactions = checkNeglect(
+      {
+        ownedCharacterIds: store.ownedCharacters.map((c) => c.characterId),
+        affinityMap: store.affinityMap,
+        lastContact: store.lastContact,
+      },
+      today,
+    );
+    for (const r of reactions) {
+      if (!store.tryDailyAction(`neglect:${r.characterId}`)) continue;
+      if (r.affinityDelta) store.addAffinity(r.characterId, r.affinityDelta);
+      if (r.message) {
+        store.addPhoneMessage({
+          id: `neglect_${r.characterId}_${Date.now()}_${Math.floor(Math.random() * 9999)}`,
+          characterId: r.characterId, type: 'wechat', content: r.message, timestamp: Date.now(), read: false,
+        });
+      }
+    }
+  }, []);
 
   const contacts = ownedCharacters
     .map((oc) => {

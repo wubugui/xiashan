@@ -34,6 +34,7 @@ export default function ChatDetail({ characterId, onBack, hideHeader = false }: 
   const markMessageRead = usePlayerStore((s) => s.markMessageRead);
   const addAffinity = usePlayerStore((s) => s.addAffinity);
   const tryDailyAction = usePlayerStore((s) => s.tryDailyAction);
+  const markContact = usePlayerStore((s) => s.markContact);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
@@ -76,6 +77,7 @@ export default function ChatDetail({ characterId, onBack, hideHeader = false }: 
       read: true,
     });
     setNewMessageIds((prev) => new Set(prev).add(playerId));
+    markContact(characterId); // 主动联系，刷新被冷落计时
 
     // 每日首次主动聊天 +2 好感（看手机是「有用的事」，限频防刷）
     if (tryDailyAction(`wechat_chat:${characterId}`)) {

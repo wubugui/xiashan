@@ -37,6 +37,7 @@ export default function SMSDetail({ characterId, onBack, hideHeader = false, wil
   const markMessageRead = usePlayerStore((s) => s.markMessageRead);
   const addAffinity = usePlayerStore((s) => s.addAffinity);
   const tryDailyAction = usePlayerStore((s) => s.tryDailyAction);
+  const markContact = usePlayerStore((s) => s.markContact);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
 
@@ -76,6 +77,7 @@ export default function SMSDetail({ characterId, onBack, hideHeader = false, wil
       read: true,
     });
     setNewMessageIds((prev) => new Set(prev).add(msgId));
+    markContact(characterId); // 发了短信也算主动联系，刷新被冷落计时
 
     // 关系没到位：石沉大海——能发出去，但没回音、不涨好感
     if (!willReply) return;
