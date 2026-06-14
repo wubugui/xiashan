@@ -5,6 +5,7 @@ import { getCharacterById } from '@/data/characters';
 import { commsTier, type CommsTier } from '@/engine/phoneAccess';
 import { checkNeglect } from '@/engine/neglect';
 import { rollAmbient } from '@/engine/ambient';
+import { signatureDetail, type SignatureKind } from '@/engine/signature';
 import { assetUrl } from '@/lib/assets';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +24,16 @@ export default function PhoneHomeScreen({ onOpenContact, onOpenBrowser }: PhoneH
   const affinityMap = usePlayerStore((s) => s.affinityMap);
   const phoneMessages = usePlayerStore((s) => s.phoneMessages);
   const displayAvatar = usePlayerStore((s) => s.displayAvatar);
+  const xinyiTarget = usePlayerStore((s) => s.xinyiTarget);
+  const playerAvatarSource = usePlayerStore((s) => s.playerAvatarSource);
+  const signatureSeen = usePlayerStore((s) => s.signatureSeen);
+  const markSignatureSeen = usePlayerStore((s) => s.markSignatureSeen);
+  const today = new Date().toISOString().slice(0, 10);
+  // 特别签名的点的染色：心事/恋人=粉，被选中=琥珀，吃醋=冷蓝
+  const dotColor: Record<SignatureKind, string> = {
+    feeling: 'bg-rose-400', lover: 'bg-rose-400', chosen: 'bg-amber-400', jealous: 'bg-sky-400',
+    life: '', close: '', distant: '', default: '',
+  };
 
   // 打开手机时结算"被冷落"：太久没联系的她会主动找你（每人每天最多一次）
   const neglectRan = useRef(false);
@@ -74,8 +85,14 @@ export default function PhoneHomeScreen({ onOpenContact, onOpenBrowser }: PhoneH
         .sort((a, b) => a.timestamp - b.timestamp);
       const last = msgs[msgs.length - 1];
       const unread = msgs.filter((m) => !m.read && !m.id.startsWith('player_')).length;
-      const tier = commsTier(oc.characterId, true, affinityMap[oc.characterId] ?? 0);
-      return { char, last, unread, tier, lastTs: last?.timestamp ?? 0 };
+      const aff = affinityMap[oc.characterId] ?? 0;
+      const tier = commsTier(oc.characterId, true, aff);
+      // 她当前的签名（她的状态）+ 是否有"没看过的特别变化"
+      const avatarMood: 'chosen' | 'jealous' | null = !playerAvatarSource
+        ? null : playerAvatarSource === oc.characterId ? 'chosen' : (aff >= 30 ? 'jealous' : null);
+      const sig = signatureDetail(char, { isLover: xinyiTarget === oc.characterId, avatarMood, affinity: aff, daySeed: today });
+      const sigIsNew = sig.special && signatureSeen[oc.characterId] !== sig.text;
+      return { char, last, unread, tier, lastTs: last?.timestamp ?? 0, sig, sigIsNew };
     })
     .filter((x): x is NonNullable<typeof x> => x !== null)
     .sort((a, b) => b.lastTs - a.lastTs);
@@ -117,10 +134,10 @@ export default function PhoneHomeScreen({ onOpenContact, onOpenBrowser }: PhoneH
           </div>
         ) : (
           <div className="space-y-2">
-            {contacts.map(({ char, last, unread, tier }) => (
+            {contacts.map(({ char, last, unread, tier, sig, sigIsNew }) => (
               <button
                 key={char.id}
-                onClick={() => onOpenContact(char.id)}
+                onClick={() => { markSignatureSeen(char.id, sig.text); onOpenContact(char.id); }}
                 className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 text-left transition-all active:scale-[0.99] hover:border-white/20"
               >
                 <div className="relative shrink-0">
@@ -141,9 +158,14 @@ export default function PhoneHomeScreen({ onOpenContact, onOpenBrowser }: PhoneH
                     <span className="truncate text-sm font-bold text-white">{char.name}</span>
                     <span className="shrink-0 text-[10px] text-white/35">{formatTime(last?.timestamp ?? 0)}</span>
                   </div>
-                  <p className={cn('mt-0.5 truncate text-xs', unread > 0 ? 'text-white/80' : 'text-white/40')}>
-                    {last ? last.content : '还没有聊过天'}
-                  </p>
+                  {unread > 0 ? (
+                    <p className="mt-0.5 truncate text-xs text-white/80">{last?.content}</p>
+                  ) : (
+                    <p className="mt-0.5 flex items-center gap-1.5 text-xs italic text-white/45">
+                      {sigIsNew && <span className={cn('inline-block h-1.5 w-1.5 shrink-0 rounded-full', dotColor[sig.kind], 'animate-pulse')} />}
+                      <span className="truncate">{sig.text || (last ? last.content : '还没有聊过天')}</span>
+                    </p>
+                  )}
                   {/* 三档通讯图标：亮=已解锁 */}
                   <div className="mt-1.5 flex items-center gap-2.5">
                     {tierIcon(tier, 1, MessageCircle, 'text-green-400')}

@@ -92,6 +92,8 @@ interface PlayerState {
   playerAvatarSource: string | null;
   /** 最近一次主动联系她的自然日（charId → 'YYYY-MM-DD'）：被冷落判定用 */
   lastContact: Record<string, string>;
+  /** 玩家最近看过的她的签名（charId → 签名原文）：判定"她的状态有没有新变化"用 */
+  signatureSeen: Record<string, string>;
   /** 缘分 UP 截止日（completedCommission → 限时权重 ×4）：characterId → 'YYYY-MM-DD' 含当日 */
   rateUpUntil: Record<string, string>;
   /** 冷淡截止日（放弃委托 → 限时权重 ×0.25 + 委托不上板）：characterId → 'YYYY-MM-DD' 含当日 */
@@ -147,6 +149,8 @@ interface PlayerState {
   setPlayerAvatar: (asset: string, sourceCharId: string | null) => void;
   /** 记一次主动联系（聊天/短信/通话）：刷新被冷落计时 */
   markContact: (characterId: string) => void;
+  /** 记下玩家已看过她当前的签名（点进她的联系人即视为看过） */
+  markSignatureSeen: (characterId: string, signature: string) => void;
   tryDailyAction: (key: string) => boolean;
   addExp: (characterId: string, amount: number) => void;
   addGachaResult: (characterId: string, rarity: string) => void;
@@ -186,6 +190,7 @@ const initialState = {
   playerAvatarUrl: null as string | null,
   playerAvatarSource: null as string | null,
   lastContact: {} as Record<string, string>,
+  signatureSeen: {} as Record<string, string>,
   rateUpUntil: {} as Record<string, string>,
   coldUntil: {} as Record<string, string>,
   totalGachaCount: 0,
@@ -300,6 +305,7 @@ export const usePlayerStore = create<PlayerState>()(
       })),
       setPlayerAvatar: (asset, sourceCharId) => set({ playerAvatarUrl: asset, playerAvatarSource: sourceCharId }),
       markContact: (characterId) => set(s => ({ lastContact: { ...s.lastContact, [characterId]: new Date().toISOString().slice(0, 10) } })),
+      markSignatureSeen: (characterId, signature) => set(s => (s.signatureSeen[characterId] === signature ? s : ({ signatureSeen: { ...s.signatureSeen, [characterId]: signature } }))),
       tryDailyAction: (key) => {
         const today = new Date().toISOString().slice(0, 10);
         if (get().dailyActions[key] === today) return false;
@@ -345,7 +351,7 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'xiashan-player-store',
-      version: 11,
+      version: 12,
       storage: createJSONStorage(() => safeStorage),
       // 旧版本存档可能缺字段、字段为 null 或类型不符（项目从 AVG 改版而来），
       // 合并时丢弃所有与默认值类型不符的项，避免启动即崩、全页空白。
@@ -370,6 +376,11 @@ export const usePlayerStore = create<PlayerState>()(
           personTickets?: number;
           commissionTickets?: number;
         };
+        if (version < 12) {
+          // 签名已读追踪新增字段：老存档补空（首次都视作"有新变化"，正好引导玩家去看）
+          const s12 = state as typeof state & { signatureSeen?: Record<string, string> };
+          s12.signatureSeen = s12.signatureSeen ?? {};
+        }
         if (version < 11) {
           // 被冷落计时新增字段：已拥有的角色都从今天起算，避免老存档一开就被判定冷落
           const s11 = state as typeof state & { lastContact?: Record<string, string>; ownedCharacters?: { characterId: string }[] };
