@@ -29,7 +29,6 @@ export default function PhoneHomeScreen({ onOpenContact, onOpenBrowser }: PhoneH
   const signatureSeen = usePlayerStore((s) => s.signatureSeen);
   const markSignatureSeen = usePlayerStore((s) => s.markSignatureSeen);
   const today = new Date().toISOString().slice(0, 10);
-  const hour = new Date().getHours();
   // 特别签名的点的染色：心事/恋人=粉，被选中=琥珀，吃醋=冷蓝
   const dotColor: Record<SignatureKind, string> = {
     feeling: 'bg-rose-400', lover: 'bg-rose-400', chosen: 'bg-amber-400', jealous: 'bg-sky-400',
@@ -91,7 +90,7 @@ export default function PhoneHomeScreen({ onOpenContact, onOpenBrowser }: PhoneH
       // 她当前的签名（她的状态）+ 是否有"没看过的特别变化"
       const avatarMood: 'chosen' | 'jealous' | null = !playerAvatarSource
         ? null : playerAvatarSource === oc.characterId ? 'chosen' : (aff >= 30 ? 'jealous' : null);
-      const sig = signatureDetail(char, { isLover: xinyiTarget === oc.characterId, avatarMood, affinity: aff, daySeed: today, hour });
+      const sig = signatureDetail(char, { isLover: xinyiTarget === oc.characterId, avatarMood, affinity: aff, daySeed: today });
       const sigIsNew = sig.special && signatureSeen[oc.characterId] !== sig.text;
       return { char, last, unread, tier, lastTs: last?.timestamp ?? 0, sig, sigIsNew };
     })
