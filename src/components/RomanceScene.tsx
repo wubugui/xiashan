@@ -83,18 +83,21 @@ export default function RomanceScene({ characterId, beat, onComplete }: Props) {
       {/* 她的立绘 */}
       {character && (
         <div
-          className="pointer-events-none absolute inset-x-0 top-[12vh] z-10 flex items-end justify-center"
-          style={{ bottom: 'calc(max(var(--dlg-h, 0px), var(--romance-panel-h, 0px)) - 14px)' }}
+          className="pointer-events-none absolute inset-x-0 top-[10vh] z-10 flex items-end justify-center"
+          style={{ bottom: 'calc(max(var(--dlg-h, 0px), var(--romance-panel-h, 0px)) - 6vh)' }}
         >
+          {/* 立绘 PNG 底部约 5% 透明留白，多压 6vh 进对白框（被框盖住）以消除底边缝隙；scale 从底部放大 */}
           <motion.img
             src={assetUrl(character.portraitUrl)}
             alt={character.name}
+            style={{ transformOrigin: 'bottom center' }}
             animate={{
               opacity: phase === 'choice' || sheSpeaking ? 1 : 0.8,
+              scale: phase === 'choice' || sheSpeaking ? 1.12 : 1.08,
               filter: phase === 'choice' || sheSpeaking ? 'brightness(1)' : 'brightness(0.78)',
             }}
             transition={{ duration: 0.35 }}
-            className="max-h-full max-w-[92vw] object-contain object-bottom drop-shadow-2xl"
+            className="max-h-full max-w-[96vw] object-contain object-bottom drop-shadow-2xl"
           />
         </div>
       )}

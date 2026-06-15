@@ -268,20 +268,23 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
           不加 key——同一元素平滑过渡明暗，避免重挂载打断渐变导致卡在半透明 */}
       {client && (
         <div
-          className="pointer-events-none absolute inset-x-0 top-[13vh] z-10 flex items-end justify-center"
-          style={{ bottom: 'calc(max(var(--dlg-h, 0px), var(--theater-panel-h, 0px)) - 14px)' }}
+          className="pointer-events-none absolute inset-x-0 top-[10vh] z-10 flex items-end justify-center"
+          style={{ bottom: 'calc(max(var(--dlg-h, 0px), var(--theater-panel-h, 0px)) - 6vh)' }}
         >
-          {/* 居中由外层 flex 负责——motion 接管 img 的 transform，Tailwind translate 会被覆盖 */}
+          {/* 居中由外层 flex 负责——motion 接管 img 的 transform，Tailwind translate 会被覆盖。
+              立绘 PNG 底部约 5% 透明留白，故容器多压 6vh 进对白框（被框盖住），保证人物底边不露缝。
+              scale 从底部放大，让人物更有存在感且底边更深地扎进框里。 */}
           <motion.img
             src={assetUrl(client.portraitUrl)}
             alt={client.name}
+            style={{ transformOrigin: 'bottom center' }}
             animate={{
               opacity: clientSpeaking || inChallenge ? 1 : 0.82,
-              scale: clientSpeaking ? 1 : 0.985,
+              scale: clientSpeaking ? 1.12 : 1.08,
               filter: clientSpeaking || inChallenge ? 'brightness(1)' : 'brightness(0.8)',
             }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="max-h-full max-w-[92vw] object-contain object-bottom drop-shadow-2xl"
+            className="max-h-full max-w-[96vw] object-contain object-bottom drop-shadow-2xl"
           />
         </div>
       )}
