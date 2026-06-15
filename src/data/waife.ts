@@ -63,6 +63,8 @@ export interface WaifeConfig {
   };
   /** 她在睡眠时段收到消息时的迷糊回复（不分意图；空/无则已读不回） */
   asleep?: { wechat?: string[]; sms?: string[] };
+  /** 约她且她答应后（亲密档），过一会儿她会主动发来的"后续"（确认/期待这次约） */
+  inviteFollowup?: { wechat?: string[]; sms?: string[] };
   /** 事件角色反应（被设头像/别人被设/被冷落/主动找你/被错过…），中央引擎按角色取用 */
   reactions: {
     sweet?: string[]; reject?: string[]; flattered?: string[]; jealous?: string[];

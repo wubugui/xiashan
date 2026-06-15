@@ -1,7 +1,8 @@
 import { ChevronLeft, MoreVertical } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
-import { replyTo, type ChatIntent } from '@/engine/chatReply';
+import { replyTo, replyTier, type ChatIntent } from '@/engine/chatReply';
+import { waifeConfig } from '@/data/waifes';
 import MessageBubble from './MessageBubble';
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -106,6 +107,18 @@ export default function ChatDetail({ characterId, onBack, hideHeader = false }: 
         read: true,
       });
       setNewMessageIds((prev) => new Set(prev).add(replyId));
+
+      // 约她且她答应了（亲密档）→ 过一会儿主动发来后续，约这件事不再"说完就完"
+      const accepted = intent === 'invite' && replyTier(affinityMap[characterId] ?? 0, xinyiTarget === characterId) === '亲密';
+      const followups = waifeConfig(characterId)?.inviteFollowup?.wechat;
+      if (accepted && followups && followups.length) {
+        const fu = followups[Math.floor(Math.random() * followups.length)];
+        const fuId = `invitefu_${characterId}_${Date.now()}`;
+        setTimeout(() => {
+          addPhoneMessage({ id: fuId, characterId, type: 'wechat', content: fu, timestamp: Date.now(), read: false });
+          setNewMessageIds((prev) => new Set(prev).add(fuId));
+        }, 4000 + Math.random() * 3000);
+      }
     }, delay);
   };
 

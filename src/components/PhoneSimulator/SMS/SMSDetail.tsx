@@ -1,7 +1,8 @@
 import { ChevronLeft } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
-import { replyTo, type ChatIntent } from '@/engine/chatReply';
+import { replyTo, replyTier, type ChatIntent } from '@/engine/chatReply';
+import { waifeConfig } from '@/data/waifes';
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { assetUrl } from '@/lib/assets';
@@ -104,6 +105,18 @@ export default function SMSDetail({ characterId, onBack, hideHeader = false, wil
         read: true,
       });
       setNewMessageIds((prev) => new Set(prev).add(replyId));
+
+      // 约她且她答应了（亲密档）→ 过一会儿主动发来后续
+      const accepted = intent === 'invite' && replyTier(affinityMap[characterId] ?? 0, xinyiTarget === characterId) === '亲密';
+      const followups = waifeConfig(characterId)?.inviteFollowup?.sms;
+      if (accepted && followups && followups.length) {
+        const fu = followups[Math.floor(Math.random() * followups.length)];
+        const fuId = `invitefu_sms_${characterId}_${Date.now()}`;
+        setTimeout(() => {
+          addPhoneMessage({ id: fuId, characterId, type: 'sms', content: fu, timestamp: Date.now(), read: false });
+          setNewMessageIds((prev) => new Set(prev).add(fuId));
+        }, 4000 + Math.random() * 3000);
+      }
     }, 1200 + Math.random() * 1200);
   };
 
