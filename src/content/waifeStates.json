@@ -2,39 +2,6 @@
   "_comment": "老婆的状态化内容：随关系/头像博弈变化的微信签名(sig*) + 头像博弈反应(react*) + 被冷落主动找你(reactNeglect)。signatureFor 读 sig*；avatarFallout 读 reactSweet/Reject/Flattered/Jealous；neglect 读 reactNeglect。每条贴各自人设。",
   "_note_suli": "苏音音已迁入 src/content/waifes/suli.json（单一数据源），此处不再保留。",
   "states": {
-    "murongxue": {
-      "sigLover": "这一篇的作者，有两个名字。",
-      "sigChosen": "被写进你的主页了。第一次，我是被记录的那个。",
-      "sigJealous": "观察记录：头像已更换为他人。结论暂缓。",
-      "sigDistant": "记录者，不轻易出现在镜头里。",
-      "sigClose": "最近的笔记里，有个名字出现得有点频繁。",
-      "reactSweet": [
-        "我注意到了。你把我，放在了最显眼的版面。",
-        "这一次，我不打算保持客观了。……谢谢你。"
-      ],
-      "reactReject": [
-        "未经核实就把我登上头版，不太严谨。撤下吧。",
-        "我们的关系，还没到可以引用的程度。"
-      ],
-      "reactFlattered": [
-        "不合采访伦理。但…我把这条，记进了私人笔记。"
-      ],
-      "reactJealous": [
-        "你的头像换成她了。我观察到了。结论：暂缓。",
-        "嗯，我记下了。（只是记下，没说别的。）"
-      ],
-      "reactNeglect": [
-        "观察记录：你已多日未联系。我承认，我在数。",
-        "没有新消息。这条，是我主动写的——很罕见。"
-      ],
-      "reactAmbient": [
-        "路过一条新闻，第一反应是发你。",
-        "笔记写满了，最后一行又是你。"
-      ],
-      "reactPassedOver": [
-        "我记下了这个结果。客观地说……恭喜。（这条，删了吧。）"
-      ]
-    },
     "yunzhiyi": {
       "sigLover": "不管从哪儿出发，终点都是你！",
       "sigChosen": "我！我上头像啦！这趟跑得最值！",
