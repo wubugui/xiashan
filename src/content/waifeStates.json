@@ -1,39 +1,5 @@
 {
   "_comment": "老婆的状态化内容：随关系/头像博弈变化的微信签名(sig*) + 头像博弈反应(react*) + 被冷落主动找你(reactNeglect)。signatureFor 读 sig*；avatarFallout 读 reactSweet/Reject/Flattered/Jealous；neglect 读 reactNeglect。每条贴各自人设。",
   "_note_suli": "苏音音已迁入 src/content/waifes/suli.json（单一数据源），此处不再保留。",
-  "states": {
-    "linxia": {
-      "sigLover": "新清单第一页，写的全是『一起』。",
-      "sigChosen": "清单又添一条：他把我设成头像了（重点标注）。",
-      "sigJealous": "今天的清单上，多了一行没敢写完的字。",
-      "sigDistant": "新人一枚，请多关照。",
-      "sigClose": "清单角落，悄悄多了个名字。",
-      "reactSweet": [
-        "你…你把我设成头像了？我清单上要记一笔大的！",
-        "（脸红）那我就当，你也把我放心上了，好不好。"
-      ],
-      "reactReject": [
-        "等、等等！我们还没到这一步吧？！我没准备好！",
-        "你先换回去啦…等我再攒攒勇气，好不好。"
-      ],
-      "reactFlattered": [
-        "虽然突然…但我偷偷把它记进清单了，不许笑。"
-      ],
-      "reactJealous": [
-        "你的头像…是别人。（她在清单上划掉了一行。）",
-        "嗯，挺好看的。（今天的清单，她写得很慢。）"
-      ],
-      "reactNeglect": [
-        "清单上空了一栏——是你好几天没来了。",
-        "那个…没事找你也可以的吧？有点想你。"
-      ],
-      "reactAmbient": [
-        "清单提前做完了，多出来的时间……想你。",
-        "便利店上新了你爱喝的，给你留着。"
-      ],
-      "reactPassedOver": [
-        "恭喜你们…！我清单上那行字，就划掉好啦。真的，祝福你。"
-      ]
-    }
-  }
+  "states": {}
 }
