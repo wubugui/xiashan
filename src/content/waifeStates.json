@@ -2,39 +2,6 @@
   "_comment": "老婆的状态化内容：随关系/头像博弈变化的微信签名(sig*) + 头像博弈反应(react*) + 被冷落主动找你(reactNeglect)。signatureFor 读 sig*；avatarFallout 读 reactSweet/Reject/Flattered/Jealous；neglect 读 reactNeglect。每条贴各自人设。",
   "_note_suli": "苏音音已迁入 src/content/waifes/suli.json（单一数据源），此处不再保留。",
   "states": {
-    "aman": {
-      "sigLover": "这一次，换你来接住我。",
-      "sigChosen": "被你选中啦，像只被轻轻抱住的小猫。",
-      "sigJealous": "……我没事的。（其实，有点难过。）",
-      "sigDistant": "宠物护理，也接收容所咨询~",
-      "sigClose": "最近总想多留一个人，喝杯热的再走。",
-      "reactSweet": [
-        "呀…你把我设成头像了！我、我好开心，像被抱住一样~",
-        "那我也要把你设成我的头像，我们互相的，好不好？"
-      ],
-      "reactReject": [
-        "诶？这样…会不会太快了呀。我有点不好意思…",
-        "先换回去好不好？等我们再熟一点，好不好嘛。"
-      ],
-      "reactFlattered": [
-        "虽然有点突然…但谢谢你这么喜欢我，嘿嘿。"
-      ],
-      "reactJealous": [
-        "你的头像…是别的女孩子呀。（小声）我没关系的…",
-        "嗯…挺可爱的。（她抱紧了怀里的猫。）"
-      ],
-      "reactNeglect": [
-        "最近好忙吗？团子和我，都有点想你了。",
-        "没关系的，就是…有点想你。一点点。"
-      ],
-      "reactAmbient": [
-        "团子今天打了三个喷嚏，超可爱，拍给你！",
-        "路过花店，想起你也该被送花了。"
-      ],
-      "reactPassedOver": [
-        "太好了，真为你高兴…（小声）我会把这份心意，好好收起来的。"
-      ]
-    },
     "shenzhaoning": {
       "sigLover": "责任人一栏，从此填两个名字。",
       "sigChosen": "权限已授予。你是最高优先级。",
