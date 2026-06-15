@@ -12,9 +12,10 @@ import sangluo from '@/content/waifes/sangluo.json';
 import aman from '@/content/waifes/aman.json';
 import shenzhaoning from '@/content/waifes/shenzhaoning.json';
 import murongxue from '@/content/waifes/murongxue.json';
+import yunzhiyi from '@/content/waifes/yunzhiyi.json';
 
 // 已迁入「一角色一配置」的角色（其余角色暂走旧数据文件回退）
-const CONFIGS: WaifeConfig[] = [suli as WaifeConfig, aruo as WaifeConfig, sangluo as WaifeConfig, aman as WaifeConfig, shenzhaoning as WaifeConfig, murongxue as WaifeConfig];
+const CONFIGS: WaifeConfig[] = [suli as WaifeConfig, aruo as WaifeConfig, sangluo as WaifeConfig, aman as WaifeConfig, shenzhaoning as WaifeConfig, murongxue as WaifeConfig, yunzhiyi as WaifeConfig];
 
 const byId = new Map<string, WaifeConfig>(CONFIGS.map((c) => [c.id, c]));
 

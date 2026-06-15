@@ -2,39 +2,6 @@
   "_comment": "老婆的状态化内容：随关系/头像博弈变化的微信签名(sig*) + 头像博弈反应(react*) + 被冷落主动找你(reactNeglect)。signatureFor 读 sig*；avatarFallout 读 reactSweet/Reject/Flattered/Jealous；neglect 读 reactNeglect。每条贴各自人设。",
   "_note_suli": "苏音音已迁入 src/content/waifes/suli.json（单一数据源），此处不再保留。",
   "states": {
-    "yunzhiyi": {
-      "sigLover": "不管从哪儿出发，终点都是你！",
-      "sigChosen": "我！我上头像啦！这趟跑得最值！",
-      "sigJealous": "那个头像…不是我呀。（是我跑慢了吗？）",
-      "sigDistant": "配送跑腿，使命必达！",
-      "sigClose": "最近跑单，总忍不住绕到某人那条街。",
-      "reactSweet": [
-        "哇！我是你头像啦！这是我今天最开心的事！！",
-        "那我也把你设成我的头像！咱俩一对儿！冲！"
-      ],
-      "reactReject": [
-        "诶诶诶？！咱、咱俩还没那么熟吧？！我脸好烫！",
-        "你先换回去啦！等我再努力努力的，好不好！"
-      ],
-      "reactFlattered": [
-        "虽然吓我一跳…但、但我没让你换回去哦！嘿嘿！"
-      ],
-      "reactJealous": [
-        "你头像那个…不是我呀。（声音一下子小了）",
-        "哦…没关系！我跑快点就好了！（其实有点闷闷的。）"
-      ],
-      "reactNeglect": [
-        "好几天没你影儿啦！是不是把我忘了！",
-        "我跑得快，可追不上不理我的你呀…快回我！"
-      ],
-      "reactAmbient": [
-        "跑单路过你那条街，挥手了你看见没！",
-        "买了俩能量棒，分你一根！"
-      ],
-      "reactPassedOver": [
-        "诶…是她呀。恭喜恭喜！我、我还是你最好的搭档，对吧？"
-      ]
-    },
     "linxia": {
       "sigLover": "新清单第一页，写的全是『一起』。",
       "sigChosen": "清单又添一条：他把我设成头像了（重点标注）。",
