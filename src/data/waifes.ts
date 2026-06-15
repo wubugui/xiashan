@@ -7,9 +7,10 @@ import type { Character } from '@/data/types';
 import type { RomanceArc } from '@/data/romanceArcs';
 import { type WaifeConfig, configToCharacter } from '@/data/waife';
 import suli from '@/content/waifes/suli.json';
+import aruo from '@/content/waifes/aruo.json';
 
 // 已迁入「一角色一配置」的角色（其余角色暂走旧数据文件回退）
-const CONFIGS: WaifeConfig[] = [suli as WaifeConfig];
+const CONFIGS: WaifeConfig[] = [suli as WaifeConfig, aruo as WaifeConfig];
 
 const byId = new Map<string, WaifeConfig>(CONFIGS.map((c) => [c.id, c]));
 

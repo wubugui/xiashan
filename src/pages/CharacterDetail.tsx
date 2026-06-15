@@ -216,10 +216,10 @@ export default function CharacterDetail() {
     }
     const self = reactions.find((r) => r.characterId === id);
     const jealous = reactions.filter((r) => r.kind === 'jealous').length;
-    const head = self?.kind === 'sweet' ? `已设为我的头像 · ${character?.name} 甜蜜暴击 💗`
-      : self?.kind === 'flattered' ? `已设为我的头像 · ${character?.name} 有点受宠若惊`
-        : `已设为我的头像 · ${character?.name} 似乎不太自在…`;
-    flash(jealous > 0 ? `${head}（${jealous} 位老婆吃醋了，去微信看看）` : `${head}（去微信看她的反应）`);
+    const head = self?.kind === 'sweet' ? `头像换成了 ${character?.name} · 她很受用 💗`
+      : self?.kind === 'flattered' ? `头像换成了 ${character?.name} · 她有点受宠若惊`
+        : `头像换成了 ${character?.name} · 她似乎不太自在…`;
+    flash(jealous > 0 ? `${head}（另外 ${jealous} 个人也看到了，去微信看看）` : `${head}（去微信看她的反应）`);
   };
 
   if (!character) {
@@ -407,7 +407,7 @@ export default function CharacterDetail() {
           return (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
               <p className="text-xs text-slate-400">收藏 {unlockedCount}/{items.length} · 刷得越多，集得越全</p>
-              <p className="text-[11px] text-slate-500">点已解锁的图：可设为她的头像/专属主视觉，或设成你自己的头像（高博弈）；带 📖 的短篇点开回看。</p>
+              <p className="text-[11px] text-slate-500">点已解锁的图：可设为她的头像、专属主视觉，或设成你自己的头像；带 📖 的短篇点开回看。</p>
               <div className="grid grid-cols-3 gap-2">
                 {items.map((it) => {
                   const unlocked = evaluateAll(it.unlock, condState);
@@ -581,7 +581,7 @@ export default function CharacterDetail() {
                       : affinity < nextStage.threshold
                         ? '好感不足'
                         : !hasDupesForNext
-                          ? `还差 ${dupesNeeded - dupes} 张她的信物卡（抽卡/引荐获得）`
+                          ? `还差 ${dupesNeeded - dupes} 张她的信物卡（补给/引荐获得）`
                           : '加深关系'}
                   </button>
                 </>
@@ -592,7 +592,7 @@ export default function CharacterDetail() {
 
             {!owned && (
               <p className="rounded-lg bg-slate-800/30 px-3 py-2 text-xs leading-relaxed text-slate-500">
-                她还只是便利屋的委托人。继续帮她完成委托，好感不会丢失；好感攒到 40 后人物频道触发心动UP，抽到她即可加深关系。
+                她还只是便利屋的委托人。多帮她完成委托、好感不会白攒；等你们够熟，补给频道里就有机会遇见她，把她留在身边。
               </p>
             )}
 
@@ -750,8 +750,8 @@ export default function CharacterDetail() {
           >
             <p className="mb-2 text-base font-black text-rose-200">把头像换成{character.name}？</p>
             <p className="mb-4 text-xs leading-relaxed text-slate-300">
-              这是一步要心理准备的棋——关系到位了，她会甜蜜暴击；还没到位，她可能会不自在、关系变淡。
-              而且<span className="text-rose-300">其他和你走得近的老婆看到，未必高兴</span>。她们的反应，会在微信里等你。
+              这是一步要想清楚的棋——你俩够近，她会惊喜；还没到那份上，她可能会别扭、生分。
+              而且<span className="text-rose-300">其他跟你走得近的人看到，未必高兴</span>。她们的反应，会在微信里等你。
             </p>
             <div className="flex gap-2">
               <button onClick={() => setConfirmMine(null)} className="flex-1 rounded-xl bg-slate-800 py-2.5 text-sm font-bold text-slate-300">再想想</button>

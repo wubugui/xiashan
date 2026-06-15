@@ -44,7 +44,7 @@
   ],
   "effects": [
     { "type": "passive", "description": "零点频段：安抚类热点匹配时信任+3，并恢复1点精力", "value": 3, "level": 1 },
-    { "type": "story", "description": "零点频段：专属委托《末班车的遗失物》主役；在末班车屏幕、楼梯间、弹幕屏触发专属台词", "value": 1, "level": 3 }
+    { "type": "story", "description": "零点频段：《末班车的遗失物》这桩委托由她出马；在末班车屏幕、楼梯间等地，会遇到只属于她的对白。", "value": 1, "level": 3 }
   ],
   "romance": {
     "theme": "她听尽所有人没说出口的情绪，却把自己锁在话筒后面；你慢慢成为唯一一个，她愿意关掉录音键、卸下「主播声音」说真心话的人。",
@@ -53,7 +53,7 @@
         "id": "suli_b1",
         "phase": "共事",
         "title": "末班车的遗失物",
-        "guide": "抽到她、攒一点好感（约 8）后，接她那桩《末班车的遗失物》——看看这位午夜主播怎么干活。",
+        "guide": "她接了桩《末班车的遗失物》。陪她跑第一趟夜班，搭把手。",
         "trigger": [
           { "type": "has_character", "characterId": "suli" },
           { "type": "affinity", "characterId": "suli", "minValue": 8 }
@@ -82,7 +82,7 @@
         "id": "suli_b2",
         "phase": "熟络",
         "title": "关掉录音键",
-        "guide": "多陪她跑几趟夜班、攒点好感（约 25），某个下播后的深夜，她会难得地多说几句。",
+        "guide": "多陪她跑几趟夜班、攒点好感，某个下播后的深夜，她会难得地多说几句。",
         "trigger": [ { "type": "affinity", "characterId": "suli", "minValue": 25 } ],
         "scene": {
           "location": "studio",
@@ -108,7 +108,7 @@
         "id": "suli_b3",
         "phase": "暧昧",
         "title": "第十三封",
-        "guide": "你们更近了（好感约 45）。某个零点，她会让你听一封，只跟你有关的来信。",
+        "guide": "你们更近了。某个零点，她会让你听一封，只跟你有关的来信。",
         "trigger": [ { "type": "affinity", "characterId": "suli", "minValue": 45 } ],
         "scene": {
           "location": "store",
@@ -135,7 +135,7 @@
         "id": "suli_b4",
         "phase": "告白门",
         "title": "零点的频段",
-        "guide": "零点，回到她的录音室（好感约 70）。今晚没有节目，她想关掉录音键，只对你说一句话。",
+        "guide": "零点，回到她的录音室。今晚没有节目，她想关掉录音键，只对你说一句话。",
         "trigger": [ { "type": "affinity", "characterId": "suli", "minValue": 70 } ],
         "isGate": true,
         "scene": {
@@ -161,7 +161,7 @@
         "id": "suli_b5",
         "phase": "终幕",
         "title": "两个人的频段",
-        "guide": "确认心意之后，慢慢走到这里（好感约 110）。",
+        "guide": "确认心意之后，慢慢走到这里。",
         "trigger": [ { "type": "affinity", "characterId": "suli", "minValue": 110 } ],
         "scene": {
           "location": "store",

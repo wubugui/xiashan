@@ -62,7 +62,7 @@
         },
         {
           "type": "story",
-          "description": "零点频段：专属委托《末班车的遗失物》主役；在末班车屏幕、楼梯间、弹幕屏触发专属台词",
+          "description": "零点频段：《末班车的遗失物》这桩委托由她出马；在末班车屏幕、楼梯间、弹幕屏，会遇到只属于她的对白。",
           "value": 1,
           "level": 3
         }
@@ -93,99 +93,6 @@
         "calm": "/characters/face/suli/calm.png"
       },
       "gachaBackgroundUrl": "/bg/gacha/suli-02.jpg"
-    },
-    {
-      "id": "aruo",
-      "name": "云晓蔻",
-      "rarity": "SSR",
-      "title": "直播主播兼活动主持",
-      "description": "直播主播兼活动主持，擅长救场、带节奏和处理突发舆论。她明亮外放，甜感强，很会接梗和控场；表面像永远开心的主播，实际上对气氛和人群情绪非常敏锐。",
-      "element": "星",
-      "serviceType": "表达",
-      "portraitUrl": "/characters/face/aruo/calm.png",
-      "avatarUrl": "/characters/face/aruo/avatar.png",
-      "dialogues": [
-        {
-          "level": 1,
-          "text": "嗨，新朋友？欢迎来到云晓蔻的临时救场频道！"
-        },
-        {
-          "level": 5,
-          "text": "别怕冷场，空气安静三秒以内都算铺垫。"
-        },
-        {
-          "level": 10,
-          "text": "你这反应速度，来我直播间当场控都屈才了。"
-        },
-        {
-          "level": 20,
-          "text": "有人起哄也别急，先让他们跟着你的节奏走。"
-        },
-        {
-          "level": 30,
-          "text": "其实下播之后的我，也会突然不知道说什么。你不许笑。"
-        },
-        {
-          "level": 50,
-          "text": "你是唯一一个，让我下播之后还想继续聊天的人。"
-        }
-      ],
-      "interactions": [
-        {
-          "type": "touch",
-          "response": "云晓蔻一把拍开你的手：镜头外也不行！……好吧，就一下。",
-          "level": 1
-        },
-        {
-          "type": "gift",
-          "response": "哇！给我的？这段我可以剪进今日高光吗？",
-          "level": 1
-        },
-        {
-          "type": "talk",
-          "response": "来来来，说说今天的现场，我帮你复盘节奏。",
-          "level": 1
-        }
-      ],
-      "effects": [
-        {
-          "type": "passive",
-          "description": "弹幕反打：表达类热点匹配时信任+3，并提升1点口碑",
-          "value": 3,
-          "level": 1
-        },
-        {
-          "type": "story",
-          "description": "周年直播：专属委托《直播事故救场》主役；在弹幕屏、收银台、闸机口触发专属台词",
-          "value": 1,
-          "level": 3
-        }
-      ],
-      "phonePersonality": {
-        "wechatStyle": "playful",
-        "responseSpeed": "instant",
-        "commonPhrases": [
-          "我来了！",
-          "接梗！",
-          "别慌别慌",
-          "镜头给我",
-          "你猜？"
-        ],
-        "signature": "下播了，但还在线哦。"
-      },
-      "gachaPortraitUrl": "/characters/face/aruo/smile.png",
-      "gachaVoiceUrls": [
-        "/audio/gacha-voice/aruo-01.mp3"
-      ],
-      "expressionUrls": {
-        "smile": "/characters/face/aruo/smile.png",
-        "shy": "/characters/face/aruo/shy.png",
-        "laugh": "/characters/face/aruo/laugh.png",
-        "angry": "/characters/face/aruo/angry.png",
-        "cry": "/characters/face/aruo/cry.png",
-        "calm": "/characters/face/aruo/calm.png"
-      },
-      "gachaBackgroundUrl": "/bg/gacha/aruo-02.jpg"
     },
     {
       "id": "sangluo",
@@ -249,7 +156,7 @@
         },
         {
           "type": "story",
-          "description": "失眠终结者：专属委托《今晚必须睡着》主役；在楼梯间、末班车屏幕、收银台触发专属台词",
+          "description": "失眠终结者：《今晚必须睡着》这桩委托由她出马；在楼梯间、末班车屏幕、收银台，会遇到只属于她的对白。",
           "value": 1,
           "level": 3
         }
@@ -342,7 +249,7 @@
         },
         {
           "type": "story",
-          "description": "新家的灯：专属委托《搬家日的兵荒马乱》主役；在楼道猫叫、楼梯间、末班车屏幕触发专属台词",
+          "description": "新家的灯：《搬家日的兵荒马乱》这桩委托由她出马；在楼道猫叫、楼梯间、末班车屏幕，会遇到只属于她的对白。",
           "value": 1,
           "level": 3
         }
@@ -432,7 +339,7 @@
         },
         {
           "type": "story",
-          "description": "九十分钟战役：专属委托《晨会前九十分钟》主役；在闸机口、前台、遗失物柜触发专属台词",
+          "description": "九十分钟战役：《晨会前九十分钟》这桩委托由她出马；在闸机口、前台、遗失物柜，会遇到只属于她的对白。",
           "value": 1,
           "level": 3
         }
@@ -519,7 +426,7 @@
         },
         {
           "type": "story",
-          "description": "盲区里的善意：专属委托《便利店蹲守笔记》主役；在监控屏、门口快递、遗失物柜触发专属台词",
+          "description": "盲区里的善意：《便利店蹲守笔记》这桩委托由她出马；在监控屏、门口快递、遗失物柜，会遇到只属于她的对白。",
           "value": 1,
           "level": 3
         }
@@ -606,7 +513,7 @@
         },
         {
           "type": "story",
-          "description": "夜班守护：专属委托《夜班便利店风波》主役；在货架、收银台触发专属台词",
+          "description": "夜班守护：《夜班便利店风波》这桩委托由她出马；在货架、收银台，会遇到只属于她的对白。",
           "value": 1,
           "level": 3
         }
@@ -693,7 +600,7 @@
         },
         {
           "type": "story",
-          "description": "人生转弯处：专属委托《面试前的最后十分钟》主役；在收银台、货架触发专属台词",
+          "description": "人生转弯处：《面试前的最后十分钟》这桩委托由她出马；在收银台、货架，会遇到只属于她的对白。",
           "value": 1,
           "level": 3
         }
