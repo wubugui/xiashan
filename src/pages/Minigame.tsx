@@ -5,6 +5,8 @@ import { ChevronLeft, Grid3x3, Puzzle, Boxes, Lock } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import LinkGame from '@/components/minigames/LinkGame';
+import PuzzleGame from '@/components/minigames/PuzzleGame';
+import SokobanGame from '@/components/minigames/SokobanGame';
 import { cn } from '@/lib/utils';
 import PageBackdrop from '@/components/PageBackdrop';
 import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
@@ -24,8 +26,8 @@ type GameDef = {
 
 const GAMES: GameDef[] = [
   { id: 'link', name: '打烊后的理货时间', desc: '把今晚的货架理整齐，营业额换月光；可以邀她一起', icon: Grid3x3, color: 'from-amber-500 to-amber-700', ready: true },
-  { id: 'puzzle', name: '立绘拼图', desc: '拼好即可欣赏角色立绘', icon: Puzzle, color: 'from-rose-500 to-rose-700', ready: false },
-  { id: 'sokoban', name: '推箱寻宝', desc: '推动机关，闯关夺月光', icon: Boxes, color: 'from-blue-500 to-blue-700', ready: false },
+  { id: 'puzzle', name: '立绘拼图', desc: '拼好即可欣赏角色立绘', icon: Puzzle, color: 'from-rose-500 to-rose-700', ready: true },
+  { id: 'sokoban', name: '推箱寻宝', desc: '推动机关，闯关夺月光', icon: Boxes, color: 'from-blue-500 to-blue-700', ready: true },
 ];
 
 export default function Minigame() {
@@ -34,6 +36,8 @@ export default function Minigame() {
   const [active, setActive] = useState<string | null>(null);
 
   if (active === 'link') return <LinkGame onExit={() => setActive(null)} />;
+  if (active === 'puzzle') return <PuzzleGame onExit={() => setActive(null)} />;
+  if (active === 'sokoban') return <SokobanGame onExit={() => setActive(null)} />;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#050914] pb-nav">
