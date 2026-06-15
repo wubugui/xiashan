@@ -275,7 +275,7 @@ const SOUNDS: Record<string, () => void> = {
     tone(300, 0.07, c.currentTime, { type: 'triangle', freqEnd: 180, gain: 0.22 });
   },
 
-  // 出货：道具/灵石
+  // 出货：道具/月光
   'gacha-item': () => {
     const c = ctx(); if (!c) return;
     tone(1319, 0.12, c.currentTime, { gain: 0.19 });

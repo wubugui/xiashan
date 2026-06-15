@@ -346,7 +346,7 @@ export default function Shop() {
     lastAdvancedRef.current = tutorialStep;
     if (tutStep.reward?.stones) {
       addSpiritStones(tutStep.reward.stones);
-      addLog(`🎁 江夏的谢礼:灵石 +${tutStep.reward.stones}。`, 'good');
+      addLog(`🎁 江夏的谢礼:月光 +${tutStep.reward.stones}。`, 'good');
     }
     setTutorialStep(tutorialStep + 1);
   }, [tutorialActive, tutStep, tutorialStep, addSpiritStones, addLog, setTutorialStep]);
@@ -447,12 +447,12 @@ export default function Shop() {
           setRevealItem({ tier: 'normal', icon: '💡', name: '消消乐提示券', sub: '道具 ×1', desc: '消消乐每日免费提示用完后，消耗 1 张继续获得提示。', pityRemain: remain });
         } else if (result.kind === 'stones') {
           addSpiritStones(result.amount);
-          addLog(`便利屋补给：${result.big ? '✨ 稀有出货！【灵石大袋】' : '抽到【灵石小包】'} +${result.amount} 灵石。距人物保底还剩 ${remain} 抽。`, result.big ? 'good' : 'draw');
+          addLog(`便利屋补给：${result.big ? '✨ 稀有出货！【月光大袋】' : '抽到【月光小包】'} +${result.amount} 月光。距人物保底还剩 ${remain} 抽。`, result.big ? 'good' : 'draw');
           setRevealItem({
             tier: result.big ? 'rare' : 'normal',
-            icon: result.big ? '💎' : '💰',
-            name: result.big ? '灵石大袋' : '灵石小包',
-            sub: `+${result.amount} 灵石`,
+            icon: result.big ? '🌙' : '💰',
+            name: result.big ? '月光大袋' : '月光小包',
+            sub: `+${result.amount} 月光`,
             desc: result.big ? '沉甸甸的一袋——今天的运气都花在这了？不，人物保底还在走！' : '零花钱到账，攒着抽卡或培养角色。',
             pityRemain: remain,
           });

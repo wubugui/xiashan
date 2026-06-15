@@ -1,6 +1,6 @@
 /**
  * 便利屋 · 局内状态（每日一局，非持久化，但可断点续局）
- * 持久资产（角色/灵石/票）仍在 usePlayerStore。
+ * 持久资产（角色/月光/票）仍在 usePlayerStore。
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';

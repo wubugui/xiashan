@@ -211,7 +211,7 @@ export default function Home() {
     {
       id: 'minigame',
       label: '星夜小憩',
-      hint: '理货赚灵石',
+      hint: '理货赚月光',
       icon: Gamepad2,
       color: 'from-emerald-500 to-teal-700',
       art: {
@@ -294,9 +294,9 @@ export default function Home() {
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-slate-500">灵石</p>
+              <p className="text-xs text-slate-500">月光</p>
               <p className="mt-0.5 text-sm font-bold text-amber-300">
-                💎 {spiritStones.toLocaleString()}
+                🌙 {spiritStones.toLocaleString()}
               </p>
             </div>
             <div className="text-right">
@@ -461,7 +461,7 @@ export default function Home() {
                 >
                   每日登录奖励
                 </motion.div>
-                <p className="mt-1 text-xs text-slate-500">每日签到领取灵石</p>
+                <p className="mt-1 text-xs text-slate-500">每日签到领取月光</p>
               </div>
 
               <div className="mb-6 flex items-center justify-center gap-3">
@@ -472,10 +472,10 @@ export default function Home() {
                     'border border-amber-500/30',
                   )}
                 >
-                  <span className="text-3xl">💎</span>
+                  <span className="text-3xl">🌙</span>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-amber-300">灵石 x {REWARDS.daily_login}</p>
+                  <p className="text-lg font-bold text-amber-300">月光 x {REWARDS.daily_login}</p>
                   <p className="text-xs text-slate-500">可用于抽卡和角色升级</p>
                 </div>
               </div>

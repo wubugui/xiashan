@@ -296,7 +296,7 @@ export default function DevPanel() {
 
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <Stat label="灵石" value={spiritStones.toLocaleString()} />
+                <Stat label="月光" value={spiritStones.toLocaleString()} />
                 <Stat label="普通券" value={normalTickets} />
                 <Stat label="手牌" value={hand.length} />
                 <Stat label="教程" value={tutorialStep === -1 ? '关闭' : tutorialStep} />
@@ -304,10 +304,10 @@ export default function DevPanel() {
 
               <Section title="资源" icon={Gem}>
                 <div className="grid grid-cols-3 gap-2">
-                  <DevButton onClick={() => changeStones(1_000)} tone="good">灵石 +1k</DevButton>
-                  <DevButton onClick={() => changeStones(100_000)} tone="good">灵石 +10w</DevButton>
+                  <DevButton onClick={() => changeStones(1_000)} tone="good">月光 +1k</DevButton>
+                  <DevButton onClick={() => changeStones(100_000)} tone="good">月光 +10w</DevButton>
                   <DevButton onClick={() => usePlayerStore.setState({ spiritStones: MAX_DEV_STONES })} tone="warn">拉满</DevButton>
-                  <DevButton onClick={() => changeStones(-1_000)} tone="bad">灵石 -1k</DevButton>
+                  <DevButton onClick={() => changeStones(-1_000)} tone="bad">月光 -1k</DevButton>
                   <DevButton onClick={() => changeNormalTickets(10)}><Ticket size={13} className="mr-1 inline" />券 +10</DevButton>
                   <DevButton onClick={() => changeHintTokens(10)}>提示券 +10</DevButton>
                   <DevButton onClick={() => changeReputation(10)}>声望 +10</DevButton>

@@ -7,7 +7,7 @@ import { vibrate, VIBE, shakeKeyframes } from '@/lib/fx';
 
 /**
  * 补给池非人物出货的开箱演出：悬念抖动 → 翻牌揭示。
- * tier 'rare'（SR 卡 / 灵石大袋）带金光特写 + 彩带，需点击关闭；
+ * tier 'rare'（SR 卡 / 月光大袋）带金光特写 + 彩带，需点击关闭；
  * tier 'normal' 短暂展示后自动关闭。
  * 人物出货不走这里（用全屏 GachaAnimation）。
  */

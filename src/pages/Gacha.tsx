@@ -84,11 +84,11 @@ export default function Gacha() {
         } else if (result.kind === 'stones') {
           addSpiritStones(result.amount);
           entries.push({
-            icon: result.big ? '💎' : '💰',
-            name: result.big ? '灵石大袋' : '灵石小包',
-            sub: `+${result.amount} 灵石`,
+            icon: result.big ? '🌙' : '💰',
+            name: result.big ? '月光大袋' : '月光小包',
+            sub: `+${result.amount} 月光`,
             tier: result.big ? 'rare' : 'normal',
-            desc: result.big ? '沉甸甸的一袋灵石——稀有补给！' : '零花钱到账。',
+            desc: result.big ? '沉甸甸的一袋月光——稀有补给！' : '零花钱到账。',
           });
         } else {
           addHandCard(result.card);
@@ -201,7 +201,7 @@ export default function Gacha() {
         </button>
         <div className="flex-1" />
         <div className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/50 px-3 py-1.5 shadow-lg backdrop-blur-xl">
-          <span className="text-sm">💎</span>
+          <span className="text-sm">🌙</span>
           <span className="text-sm font-bold text-amber-300">{spiritStones.toLocaleString()}</span>
         </div>
       </div>
@@ -397,7 +397,7 @@ export default function Gacha() {
           >
             <span className="text-base font-bold">单抽</span>
             <span className="flex items-center gap-1 text-xs text-amber-300">
-              💎 {GACHA_CONFIG.singleCost}
+              🌙 {GACHA_CONFIG.singleCost}
             </span>
           </motion.button>
 
@@ -419,7 +419,7 @@ export default function Gacha() {
           >
             <span className="text-base font-bold">十连</span>
             <span className="flex items-center gap-1 text-xs text-amber-300">
-              💎 {GACHA_CONFIG.tenCost}
+              🌙 {GACHA_CONFIG.tenCost}
             </span>
           </motion.button>
         </div>

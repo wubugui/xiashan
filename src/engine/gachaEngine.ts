@@ -116,7 +116,7 @@ export type SupplyPullResult =
   | { kind: 'card'; card: ServiceCard }
   /** 消消乐提示券（计数道具，不进手牌） */
   | { kind: 'hint' }
-  /** 灵石奖励（big 为稀有大袋，给特写） */
+  /** 月光奖励（big 为稀有大袋，给特写） */
   | { kind: 'stones'; amount: number; big: boolean };
 
 function rollCharacterRarity(): 'SSR' | 'SR' | 'R' | 'N' {

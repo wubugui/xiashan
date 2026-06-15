@@ -23,9 +23,9 @@ type GameDef = {
 };
 
 const GAMES: GameDef[] = [
-  { id: 'link', name: '打烊后的理货时间', desc: '把今晚的货架理整齐，营业额换灵石；可以邀她一起', icon: Grid3x3, color: 'from-amber-500 to-amber-700', ready: true },
+  { id: 'link', name: '打烊后的理货时间', desc: '把今晚的货架理整齐，营业额换月光；可以邀她一起', icon: Grid3x3, color: 'from-amber-500 to-amber-700', ready: true },
   { id: 'puzzle', name: '立绘拼图', desc: '拼好即可欣赏角色立绘', icon: Puzzle, color: 'from-rose-500 to-rose-700', ready: false },
-  { id: 'sokoban', name: '推箱寻宝', desc: '推动机关，闯关夺灵石', icon: Boxes, color: 'from-blue-500 to-blue-700', ready: false },
+  { id: 'sokoban', name: '推箱寻宝', desc: '推动机关，闯关夺月光', icon: Boxes, color: 'from-blue-500 to-blue-700', ready: false },
 ];
 
 export default function Minigame() {
@@ -56,10 +56,10 @@ export default function Minigame() {
             </button>
             <div className="min-w-0 flex-1">
               <h1 className="text-lg font-black tracking-wide text-white">小游戏</h1>
-              <p className="text-xs font-medium text-amber-300">玩游戏赚灵石，用于抽卡与养成</p>
+              <p className="text-xs font-medium text-amber-300">玩游戏赚月光，用于抽卡与养成</p>
             </div>
             <div className="rounded-full bg-white/10 px-3 py-1.5 text-sm font-bold text-amber-300">
-              💎 {spiritStones.toLocaleString()}
+              🌙 {spiritStones.toLocaleString()}
             </div>
           </div>
         </div>

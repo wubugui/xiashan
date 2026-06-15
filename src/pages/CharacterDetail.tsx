@@ -655,7 +655,7 @@ export default function CharacterDetail() {
               )}
             >
               <TrendingUp size={18} />
-              培养角色 (💎 {UPGRADE_COST})
+              培养角色 (🌙 {UPGRADE_COST})
             </motion.button>
 
             {/* 下一级效果预览 */}

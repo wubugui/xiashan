@@ -13,21 +13,21 @@ import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 
 /**
  * 打烊后的理货时间 — 便利屋日结小游戏。
- * 拖动交换相邻商品，三连上架获得灵石（营业额）；支持连锁、提示、死局自动洗牌。
+ * 拖动交换相邻商品，三连上架获得月光（营业额）；支持连锁、提示、死局自动洗牌。
  * 可邀请一位已入伙的女主陪玩：按服务类型给小被动、大消除时有台词反应、每日首次陪玩 +2 好感。
  */
 
 const ROWS = 8;
 const COLS = 6;
 const CELL = 52;
-const REWARD_PER_TILE = 5; // 每上架一件 5 灵石
+const REWARD_PER_TILE = 5; // 每上架一件 5 月光
 const DRAG_THRESHOLD = CELL * 0.28;
 const HINT_COOLDOWN = 3; // 提示冷却（秒）
 const FREE_HINTS_PER_DAY = 3;
 
 /** 六种便利屋商品：颜色 + 图案双重区分 */
 const TILE_STYLES: Record<string, { emoji: string; label: string; bg: string; border: string }> = {
-  gem:     { emoji: '💎', label: '灵石',   bg: 'bg-gradient-to-br from-sky-400/80 to-blue-700/80',      border: 'border-sky-200/60' },
+  gem:     { emoji: '🌙', label: '月光',   bg: 'bg-gradient-to-br from-sky-400/80 to-blue-700/80',      border: 'border-sky-200/60' },
   coffee:  { emoji: '☕', label: '热咖啡', bg: 'bg-gradient-to-br from-amber-500/80 to-orange-800/80',  border: 'border-amber-200/60' },
   oden:    { emoji: '🍢', label: '关东煮', bg: 'bg-gradient-to-br from-rose-400/80 to-red-700/80',      border: 'border-rose-200/60' },
   catfood: { emoji: '🥫', label: '猫罐头', bg: 'bg-gradient-to-br from-violet-400/80 to-purple-800/80', border: 'border-violet-200/60' },
@@ -39,7 +39,7 @@ const KINDS = Object.keys(TILE_STYLES);
 /** 陪玩被动：按服务类型 */
 const PASSIVES: Record<string, { key: string; desc: string }> = {
   补给: { key: 'supply',  desc: '营业额 +15%' },
-  安抚: { key: 'soothe',  desc: '洗牌时她安慰你：补偿 +40 灵石' },
+  安抚: { key: 'soothe',  desc: '洗牌时她安慰你：补偿 +40 月光' },
   表达: { key: 'chain',   desc: '连锁加成 +1 层' },
   情报: { key: 'hint',    desc: '每日免费提示 +1 次' },
   流程: { key: 'cool',    desc: '提示冷却减半' },
@@ -381,7 +381,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
             </button>
             <div className="min-w-0 flex-1">
               <h1 className="text-lg font-black tracking-wide text-white">🏪 打烊后的理货时间</h1>
-              <p className="text-xs font-medium text-amber-300">三连上架商品，营业额换灵石</p>
+              <p className="text-xs font-medium text-amber-300">三连上架商品，营业额换月光</p>
             </div>
             <div className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-sm font-bold text-white">
               <Timer size={14} className="text-amber-300" />
@@ -420,7 +420,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
         {/* 营业额 + 提示 + 重开 */}
         <div className="mx-auto flex max-w-md items-center justify-between px-4 pt-2 pb-1 text-xs text-slate-300">
           <span>
-            🧾 今晚营业额 <b className="text-lg font-black text-amber-300">{score}</b> 💎
+            🧾 今晚营业额 <b className="text-lg font-black text-amber-300">{score}</b> 🌙
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -562,7 +562,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
               <p className="text-xl font-black text-amber-950">
                 {combo >= 2 ? `🔗 连续上架 ×${combo}！` : flashing.size >= 9 ? '🔥 货架爆满！' : flashing.size >= 6 ? '✨ 大补货！' : '🛒 上架成功！'}
               </p>
-              <p className="text-sm font-bold text-amber-900">营业额 +{flashing.size * REWARD_PER_TILE * Math.max(1, combo)}💎{combo >= 2 ? '（连锁加成）' : ''}</p>
+              <p className="text-sm font-bold text-amber-900">营业额 +{flashing.size * REWARD_PER_TILE * Math.max(1, combo)}🌙{combo >= 2 ? '（连锁加成）' : ''}</p>
             </motion.div>
           )}
           {hintNotice && (
@@ -585,7 +585,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
               className="pointer-events-none fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-sky-500/90 px-6 py-3 text-center shadow-xl"
             >
               <p className="text-base font-black text-sky-950">🔀 货架没法整理了，重新摆一遍</p>
-              {passive?.key === 'soothe' && <p className="text-xs font-bold text-sky-900">她拍拍你："没关系。"补偿 +40💎</p>}
+              {passive?.key === 'soothe' && <p className="text-xs font-bold text-sky-900">她拍拍你："没关系。"补偿 +40🌙</p>}
             </motion.div>
           )}
         </AnimatePresence>
