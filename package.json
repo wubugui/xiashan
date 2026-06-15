@@ -14,7 +14,8 @@
     "content:graph": "node tools/content-manager.mjs graph tools/story-graph.mmd",
     "content:build-editor": "vite build --config tools/story-editor.vite.config.ts",
     "content:tools": "node tools/content-manager.mjs serve",
-    "content:story": "node tools/content-manager.mjs serve"
+    "content:story": "node tools/content-manager.mjs serve",
+    "npc:bake": "node tools/npc-bake-studio.mjs"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.3",

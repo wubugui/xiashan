@@ -129,7 +129,21 @@ const INITIAL: Omit<ShopState, keyof { [K in keyof ShopState as ShopState[K] ext
 
 let _uid = 1;
 
-/** 掷今日委托板：未完成的委托优先随机补满 3 张，余位用已完成的回访单填充。
+/** 委托板稀有度权重：目标手感 ≈ SSR 20% · SR 25% · R 55%（非SSR 共 80%，R 比 SR 常见）。
+ *  委托稀有度已与角色稀有度对齐（见 commissions.json / characters.json）。调这里即可改手感。 */
+const BOARD_RARITY_WEIGHT: Record<string, number> = { N: 1, R: 1, SR: 0.9, SSR: 0.7 };
+
+/** 按权重洗牌：Efraimidis-Spirakis 加权随机（key = random^(1/weight)，取 key 最大者）。 */
+function weightedShuffle(ids: string[]): string[] {
+  const weightOf = (id: string) =>
+    BOARD_RARITY_WEIGHT[commissions.find(c => c.id === id)?.rarity ?? 'SR'] ?? 2.5;
+  return ids
+    .map(id => ({ id, key: Math.pow(Math.random(), 1 / weightOf(id)) }))
+    .sort((a, b) => b.key - a.key)
+    .map(x => x.id);
+}
+
+/** 掷今日委托板：未完成的委托优先按稀有度加权补满 3 张，余位用已完成的回访单填充。
  *  冷淡期角色（被放弃过委托）的单不上板——她暂时不想见你。 */
 function rollBoard(forced: string[] = []): string[] {
   const player = usePlayerStore.getState();
@@ -141,11 +155,11 @@ function rollBoard(forced: string[] = []): string[] {
   const pool = commissions.filter(c => !excluded.has(c.id) && !isCold(c));
   const fresh = pool.filter(c => !isDone(c.id)).map(c => c.id);
   const revisit = pool.filter(c => isDone(c.id)).map(c => c.id);
-  for (const id of [...fresh].sort(() => Math.random() - 0.5)) {
+  for (const id of weightedShuffle(fresh)) {
     if (board.length >= 3) break;
     board.push(id);
   }
-  for (const id of [...revisit].sort(() => Math.random() - 0.5)) {
+  for (const id of weightedShuffle(revisit)) {
     if (board.length >= 3) break;
     board.push(id);
   }

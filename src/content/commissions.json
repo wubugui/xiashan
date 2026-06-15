@@ -3,7 +3,7 @@
     {
       "id": "interview",
       "name": "面试前的最后十分钟",
-      "rarity": "SR",
+      "rarity": "R",
       "target": "linxia",
       "client": "linxia",
       "need": 7,
@@ -387,7 +387,7 @@
     {
       "id": "live",
       "name": "直播事故救场",
-      "rarity": "SR",
+      "rarity": "SSR",
       "target": "aruo",
       "client": "aruo",
       "need": 8,
@@ -1130,7 +1130,7 @@
     {
       "id": "insomnia",
       "name": "今晚必须睡着",
-      "rarity": "SSR",
+      "rarity": "SR",
       "target": "sangluo",
       "client": "sangluo",
       "need": 9,
@@ -1503,7 +1503,7 @@
     {
       "id": "moving",
       "name": "搬家日的兵荒马乱",
-      "rarity": "SSR",
+      "rarity": "SR",
       "target": "aman",
       "client": "aman",
       "need": 8,
@@ -1880,7 +1880,7 @@
     {
       "id": "boardroom",
       "name": "晨会前九十分钟",
-      "rarity": "SR",
+      "rarity": "R",
       "target": "shenzhaoning",
       "client": "shenzhaoning",
       "need": 8,
@@ -2622,7 +2622,7 @@
     {
       "id": "stakeout",
       "name": "便利店蹲守笔记",
-      "rarity": "SR",
+      "rarity": "R",
       "target": "murongxue",
       "client": "murongxue",
       "need": 7,

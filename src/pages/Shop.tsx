@@ -683,7 +683,8 @@ export default function Shop() {
         addReputation(1);
         setCharacterRateUp(commission.target, RATE_UP_DAYS);
         dispatchAvailablePhoneEvents(addLog);
-        addLog(`委托交付：【${commission.name}】。奖励：普通券+4，口碑+1，缘分UP——这几天更容易遇到她。`, 'good');
+        const herName = getCharacterById(commission.target)?.name ?? '她';
+        addLog(`委托交付：【${commission.name}】完成！❤️ 与${herName}的好感大涨，💫缘分 UP——接下来几天她在「便利屋补给」更容易抽到。去抽卡把${herName}请进店里吧！（普通券+4，口碑+1）`, 'good');
       }
       playSound('commission-success');
       clearCommission();

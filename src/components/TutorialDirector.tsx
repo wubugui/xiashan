@@ -9,7 +9,7 @@
  *
  * 台词每句带稳定 id（tutorialScript.json），后续语音按 id 挂载即可。
  */
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { assetUrl } from '@/lib/assets';
 import { playSound } from '@/lib/sound';
@@ -17,6 +17,25 @@ import { TUTORIAL_NUDGES } from '@/lib/tutorialFlow';
 import type { TutorialCtx, TutorialLine, TutorialStep } from '@/lib/tutorialFlow';
 
 const PAD = 6;
+
+/**
+ * 引导台词富文本：把关键文字标色，帮玩家一眼抓住重点。
+ * - 「…」/【…】：名词 / 卡 / 类型 / 地点 / 按钮 / 目标 → 琥珀金
+ * - **…**：规则要点（机制说明）→ 青色加粗，最醒目
+ */
+function renderRichText(text: string): ReactNode {
+  const parts = text.split(/(「[^」]*」|【[^】]*】|\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (!part) return null;
+    if (part.startsWith('「') || part.startsWith('【')) {
+      return <span key={i} className="font-semibold text-amber-300">{part}</span>;
+    }
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <span key={i} className="font-bold text-sky-300">{part.slice(2, -2)}</span>;
+    }
+    return <Fragment key={i}>{part}</Fragment>;
+  });
+}
 
 function linxiaFace(expression: string) {
   return `/characters/face/linxia/${expression}.png`;
@@ -136,7 +155,7 @@ export function TutorialSpotlight({
                 <p key={nudge.line.id} className="text-xs font-bold leading-relaxed text-amber-200">{nudge.line.text}</p>
               ) : (
                 lines.map(line => (
-                  <p key={line.id} className="text-xs leading-relaxed text-slate-100 mb-1 last:mb-0">{line.text}</p>
+                  <p key={line.id} className="text-xs leading-relaxed text-slate-100 mb-1 last:mb-0">{renderRichText(line.text)}</p>
                 ))
               )}
               {button && onButton && (
@@ -171,7 +190,7 @@ function TutorialModal({ step, onButton }: { step: TutorialStep; onButton: () =>
       <div className="relative z-10 w-full bg-slate-900/98 border-t border-white/10 px-5 pt-4 pb-8">
         <p className="text-[11px] font-bold text-amber-300 mb-2 tracking-wide">江夏</p>
         {step.lines.map(line => (
-          <p key={line.id} className="text-sm leading-relaxed text-slate-100 mb-1.5">{line.text}</p>
+          <p key={line.id} className="text-sm leading-relaxed text-slate-100 mb-1.5">{renderRichText(line.text)}</p>
         ))}
         <button
           onClick={() => { playSound('tutorial-next'); onButton(); }}

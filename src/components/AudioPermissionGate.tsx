@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { Music2, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { primeBackgroundMusic, setBackgroundMusicEnabled } from '@/lib/backgroundMusic';
+import { setGlobalMute } from '@/lib/globalMute';
+import { setSoundEnabled } from '@/lib/sound';
 
 interface AudioPermissionGateProps {
   onComplete: () => void;
@@ -9,12 +11,17 @@ interface AudioPermissionGateProps {
 
 export default function AudioPermissionGate({ onComplete }: AudioPermissionGateProps) {
   const enterWithAudio = () => {
+    setGlobalMute(false);
+    setSoundEnabled(true);
     setBackgroundMusicEnabled(true);
     primeBackgroundMusic();
     onComplete();
   };
 
   const enterMuted = () => {
+    // 浏览器级全局静音：视频、BGM、配音、音效一律禁声
+    setGlobalMute(true);
+    setSoundEnabled(false);
     setBackgroundMusicEnabled(false);
     onComplete();
   };
