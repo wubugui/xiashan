@@ -1,0 +1,68 @@
+{
+  "characterId": "suli",
+  "dimensions": [
+    {
+      "id": "autonomy_pressure",
+      "label": "被安排感",
+      "kind": "bucket",
+      "values": [
+        "无",
+        "轻微",
+        "明显",
+        "强烈"
+      ],
+      "evidence": [
+        {
+          "file": "02_final_script.md",
+          "quote": "她可以接受喜欢，但不能接受别人替她决定“我们已经到哪一步了”。"
+        }
+      ],
+      "usage": [
+        "约见",
+        "边界修复",
+        "推进过快"
+      ]
+    },
+    {
+      "id": "need_connection",
+      "label": "连接需求",
+      "kind": "bucket",
+      "values": [
+        "低",
+        "中",
+        "高"
+      ],
+      "evidence": [
+        {
+          "file": "02_final_script.md",
+          "quote": "下播之后，是否还有一个人不是因为节目才留下。"
+        }
+      ],
+      "usage": [
+        "下播后",
+        "雨夜",
+        "冷落"
+      ]
+    },
+    {
+      "id": "boundary_safety",
+      "label": "边界安全感",
+      "kind": "bucket",
+      "values": [
+        "低",
+        "中",
+        "高"
+      ],
+      "evidence": [
+        {
+          "file": "02_final_script.md",
+          "quote": "如果玩家放轻，她会把这件事记成安全感。"
+        }
+      ],
+      "usage": [
+        "退后后的修复",
+        "关系推进"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "characterId": "suli",
+  "events": [
+    {
+      "id": "player.keep_quiet",
+      "label": "安静陪她",
+      "actor": "player",
+      "channel": "wechat",
+      "meaning": "陪伴但不追问"
+    },
+    {
+      "id": "player.care_voice",
+      "label": "关心嗓子",
+      "actor": "player",
+      "channel": "wechat",
+      "meaning": "具体照顾"
+    },
+    {
+      "id": "player.end_topic",
+      "label": "先结束话题",
+      "actor": "player",
+      "channel": "wechat",
+      "meaning": "把休息还给她"
+    },
+    {
+      "id": "player.tease",
+      "label": "轻轻逗她",
+      "actor": "player",
+      "channel": "wechat",
+      "meaning": "试探靠近"
+    },
+    {
+      "id": "player.invite_after_show",
+      "label": "约下播后见",
+      "actor": "player",
+      "channel": "wechat",
+      "meaning": "进入她的时间"
+    },
+    {
+      "id": "player.goodnight",
+      "label": "发晚安",
+      "actor": "player",
+      "channel": "wechat",
+      "meaning": "轻确认"
+    },
+    {
+      "id": "player.open_window",
+      "label": "只开着窗口",
+      "actor": "player",
+      "channel": "wechat",
+      "meaning": "低侵入陪伴"
+    },
+    {
+      "id": "player.arrive_early",
+      "label": "提前到达",
+      "actor": "player",
+      "channel": "world",
+      "meaning": "兑现约定"
+    },
+    {
+      "id": "player.cancel_meet",
+      "label": "取消见面",
+      "actor": "player",
+      "channel": "world",
+      "meaning": "破坏约定"
+    },
+    {
+      "id": "player.push_again",
+      "label": "继续推进",
+      "actor": "player",
+      "channel": "wechat",
+      "meaning": "无视退后"
+    },
+    {
+      "id": "player.offer_pickup",
+      "label": "去接她",
+      "actor": "player",
+      "channel": "world",
+      "meaning": "行动照顾"
+    },
+    {
+      "id": "system.next_day",
+      "label": "进入下一天",
+      "actor": "system",
+      "channel": "time",
+      "meaning": "时间推进"
+    },
+    {
+      "id": "system.life_tick.rain",
+      "label": "雨夜生活事件",
+      "actor": "system",
+      "channel": "life",
+      "meaning": "她自己的生活推进"
+    }
+  ]
+}

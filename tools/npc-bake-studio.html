@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NPC Bake Studio</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #080d16;
+        --panel: #101827;
+        --panel-2: #0d1422;
+        --line: #273347;
+        --muted: #9aa9bd;
+        --text: #edf4ff;
+        --accent: #7dd3fc;
+        --gold: #f8c76d;
+        --green: #93e6b7;
+        --red: #fca5a5;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      button, textarea, select, input {
+        font: inherit;
+      }
+
+      button {
+        border: 1px solid #42526a;
+        border-radius: 7px;
+        background: #1b2638;
+        color: var(--text);
+        padding: 8px 10px;
+        cursor: pointer;
+      }
+
+      button.primary {
+        background: #d6a13c;
+        border-color: #f5c76d;
+        color: #14100a;
+        font-weight: 800;
+      }
+
+      button.agent {
+        background: #103045;
+        border-color: #2f8bb7;
+        color: #dff6ff;
+      }
+
+      button.danger {
+        background: #511b22;
+        border-color: #a3404d;
+      }
+
+      button:disabled {
+        opacity: 0.55;
+        cursor: default;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--line);
+        background: #111a2b;
+      }
+
+      h1, h2, h3 {
+        margin: 0;
+        letter-spacing: 0;
+      }
+
+      h1 { font-size: 20px; }
+      h2 { font-size: 15px; }
+      h3 { font-size: 13px; color: #c8d6e8; }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 250px minmax(620px, 1fr) 390px;
+        min-height: calc(100vh - 61px);
+      }
+
+      nav, aside {
+        background: var(--panel-2);
+        border-right: 1px solid var(--line);
+        overflow: auto;
+      }
+
+      aside {
+        border-right: 0;
+        border-left: 1px solid var(--line);
+      }
+
+      main {
+        min-width: 0;
+        overflow: auto;
+        padding: 16px;
+      }
+
+      .section {
+        display: none;
+      }
+
+      .section.active {
+        display: grid;
+        gap: 14px;
+      }
+
+      .nav-button {
+        display: block;
+        width: calc(100% - 20px);
+        margin: 10px;
+        text-align: left;
+      }
+
+      .nav-button.active {
+        border-color: var(--gold);
+        background: #2b2414;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 14px;
+      }
+
+      .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 340px;
+        resize: vertical;
+        border: 1px solid #344055;
+        border-radius: 7px;
+        background: #050914;
+        color: #edf4ff;
+        padding: 11px;
+        line-height: 1.5;
+      }
+
+      textarea.code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12px;
+      }
+
+      select, input {
+        border: 1px solid #344055;
+        border-radius: 7px;
+        background: #050914;
+        color: #edf4ff;
+        padding: 8px 10px;
+      }
+
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        overflow: auto;
+        max-height: 320px;
+        border: 1px solid #344055;
+        border-radius: 7px;
+        background: #050914;
+        padding: 10px;
+        color: #dbeafe;
+      }
+
+      .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .metric {
+        border: 1px solid #334155;
+        border-radius: 7px;
+        padding: 9px;
+        background: #0c1525;
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 22px;
+        color: var(--gold);
+      }
+
+      .status-ok { color: var(--green); }
+      .status-bad { color: var(--red); }
+      .status-warn { color: var(--gold); }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        border: 1px solid #3f5068;
+        border-radius: 999px;
+        padding: 3px 8px;
+        color: #c8d6e8;
+        background: #111d2d;
+        font-size: 12px;
+      }
+
+      .list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .item {
+        border: 1px solid #334155;
+        border-radius: 7px;
+        background: #0b1320;
+        padding: 10px;
+      }
+
+      .item.selected {
+        border-color: var(--gold);
+        background: #211a0d;
+      }
+
+      .item-title {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        color: #edf4ff;
+        font-weight: 800;
+        font-size: 13px;
+      }
+
+      .item-body {
+        margin-top: 6px;
+        color: #b8c7d9;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .edge-output {
+        border-left: 3px solid #3b82f6;
+        padding-left: 8px;
+        margin: 6px 0;
+        color: #dbeafe;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        border: 1px solid #3f5068;
+        border-radius: 7px;
+        background: #111a2b;
+        padding: 9px 12px;
+        color: var(--text);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        display: none;
+        z-index: 10;
+      }
+
+      @media (max-width: 1100px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        nav, aside {
+          border: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>NPC Bake Studio</h1>
+        <div class="muted">人类脚本 -> Agent 抽取 -> Storylet -> Validator -> Compiler -> Baked DAG</div>
+      </div>
+      <div class="row">
+        <span class="pill" id="codexStatus">Codex: -</span>
+        <button class="primary" id="refreshBtn">刷新</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav>
+        <button class="nav-button active" data-section="script">1. 脚本源文件</button>
+        <button class="nav-button" data-section="models">2. 状态/事件/局面</button>
+        <button class="nav-button" data-section="storylets">3. Storylet</button>
+        <button class="nav-button" data-section="compile">4. 校验与编译</button>
+        <button class="nav-button" data-section="review">5. 节点审查</button>
+      </nav>
+
+      <main>
+        <section class="section active" id="script">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h2>脚本源文件</h2>
+                <div class="muted">这里是创作源头。Agent 只生成 draft，人确认后才应用。</div>
+              </div>
+              <div class="row">
+                <select id="scriptFile">
+                  <option value="00_brief.md">00_brief.md</option>
+                  <option value="01_raw_script.md">01_raw_script.md</option>
+                  <option value="02_final_script.md">02_final_script.md</option>
+                </select>
+                <button id="saveScript">保存</button>
+              </div>
+            </div>
+            <textarea id="scriptEditor"></textarea>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <h2>Agent 任务</h2>
+            </div>
+            <div class="row">
+              <button class="agent" data-job="draft_script">根据 Brief 生成原始脚本 draft</button>
+              <button class="agent" data-job="finalize_script">整理最终脚本 draft</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="models">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h2>半规则模型</h2>
+                <div class="muted">状态、事件、局面都必须可追溯到最终脚本。</div>
+              </div>
+              <div class="row">
+                <select id="modelFile">
+                  <option value="state_model.json">state_model.json</option>
+                  <option value="event_model.json">event_model.json</option>
+                  <option value="situation_model.json">situation_model.json</option>
+                </select>
+                <button id="saveModel">保存</button>
+              </div>
+            </div>
+            <textarea class="code" id="modelEditor"></textarea>
+          </div>
+          <div class="card">
+            <h2>Agent 抽取</h2>
+            <div class="row" style="margin-top: 10px;">
+              <button class="agent" data-job="extract_state_model">抽取状态模型 draft</button>
+              <button class="agent" data-job="extract_event_model">抽取事件模型 draft</button>
+              <button class="agent" data-job="extract_situation_model">抽取局面库 draft</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="storylets">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <h2>Storylet 迁移卡</h2>
+                <div class="muted">每张卡都是 from + event -> to + outputs + effects。</div>
+              </div>
+              <button id="saveStorylets">保存</button>
+            </div>
+            <textarea class="code" id="storyletEditor"></textarea>
+          </div>
+          <div class="card">
+            <h2>Agent 生成/修复</h2>
+            <div class="row" style="margin-top: 10px;">
+              <button class="agent" data-job="generate_storylets">生成 storylet draft</button>
+              <button class="agent" data-job="repair_storylets">根据校验报告修复 draft</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="compile">
+          <div class="grid two">
+            <div class="card">
+              <div class="card-head">
+                <h2>校验</h2>
+                <button class="primary" id="validateBtn">运行校验</button>
+              </div>
+              <pre id="validationBox">等待校验...</pre>
+            </div>
+            <div class="card">
+              <div class="card-head">
+                <h2>编译</h2>
+                <button class="primary" id="compileBtn">编译 baked DAG</button>
+              </div>
+              <pre id="compileBox">等待编译...</pre>
+            </div>
+          </div>
+          <div class="card">
+            <h2>统计</h2>
+            <div class="metric-grid" id="metricGrid"></div>
+          </div>
+        </section>
+
+        <section class="section" id="review">
+          <div class="grid two">
+            <div class="card">
+              <h2>节点列表</h2>
+              <div class="list" id="nodeList" style="margin-top: 10px;"></div>
+            </div>
+            <div class="card">
+              <h2>节点详情</h2>
+              <div id="nodeDetail" style="margin-top: 10px;"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <aside>
+        <div class="card" style="margin: 12px;">
+          <h2>Draft 审批</h2>
+          <div class="muted">Agent 输出只进 draft。确认后才应用到正式文件。</div>
+          <div class="list" id="draftList" style="margin-top: 10px;"></div>
+        </div>
+        <div class="card" style="margin: 12px;">
+          <h2>Agent Jobs</h2>
+          <div class="list" id="jobList" style="margin-top: 10px;"></div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      const state = {
+        project: null,
+        currentSection: 'script',
+        selectedNodeId: '',
+      };
+
+      const $ = (selector) => document.querySelector(selector);
+      const $$ = (selector) => [...document.querySelectorAll(selector)];
+
+      function toast(text) {
+        const el = $('#toast');
+        el.textContent = text;
+        el.style.display = 'block';
+        clearTimeout(toast.timer);
+        toast.timer = setTimeout(() => { el.style.display = 'none'; }, 2200);
+      }
+
+      async function api(path, options = {}) {
+        const response = await fetch(path, {
+          ...options,
+          headers: {
+            'content-type': 'application/json',
+            ...(options.headers || {}),
+          },
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || response.statusText);
+        return data;
+      }
+
+      async function loadProject() {
+        state.project = await api('/api/project');
+        renderAll();
+      }
+
+      function renderAll() {
+        renderCodexStatus();
+        renderEditors();
+        renderMetrics();
+        renderValidation();
+        renderDrafts();
+        renderJobs();
+        renderNodes();
+      }
+
+      function renderCodexStatus() {
+        const codex = state.project.codex;
+        const el = $('#codexStatus');
+        el.textContent = codex.exists ? `Codex: ${codex.bin}` : 'Codex: 未找到';
+        el.className = `pill ${codex.exists ? 'status-ok' : 'status-bad'}`;
+      }
+
+      function renderEditors() {
+        const scriptPath = $('#scriptFile').value;
+        $('#scriptEditor').value = state.project.files[scriptPath] || '';
+
+        const modelPath = $('#modelFile').value;
+        $('#modelEditor').value = state.project.files[modelPath] || '';
+
+        $('#storyletEditor').value = state.project.files['storylets/storylets.json'] || '';
+      }
+
+      function renderMetrics() {
+        const validation = state.project.validation;
+        const compiled = state.project.compiled;
+        const counts = validation.counts || {};
+        const metrics = [
+          ['状态维度', counts.dimensions ?? '-'],
+          ['事件', counts.events ?? '-'],
+          ['局面', counts.situations ?? '-'],
+          ['Storylet', counts.storylets ?? '-'],
+          ['编译节点', compiled.nodes.length],
+          ['编译边', compiled.edges.length],
+        ];
+        $('#metricGrid').innerHTML = metrics.map(([label, value]) => `
+          <div class="metric"><strong>${value}</strong>${label}</div>
+        `).join('');
+      }
+
+      function renderValidation() {
+        const report = state.project.validation;
+        const lines = [];
+        lines.push(report.ok ? '校验通过。' : '校验未通过。');
+        if (report.issues?.length) {
+          lines.push('\nIssues:');
+          report.issues.forEach((issue) => lines.push(`- ${issue}`));
+        }
+        if (report.warnings?.length) {
+          lines.push('\nWarnings:');
+          report.warnings.forEach((warning) => lines.push(`- ${warning}`));
+        }
+        $('#validationBox').textContent = lines.join('\n');
+      }
+
+      function renderDrafts() {
+        const drafts = state.project.drafts || [];
+        $('#draftList').innerHTML = drafts.length ? drafts.map((draft) => `
+          <div class="item">
+            <div class="item-title">
+              <span>${escapeHtml(draft.label)}</span>
+              <span>${escapeHtml(draft.target)}</span>
+            </div>
+            <div class="item-body">${escapeHtml(draft.summary || '')}</div>
+            <div class="row" style="margin-top: 8px;">
+              <button data-view-draft="${escapeHtml(draft.relPath)}">查看</button>
+              <button class="primary" data-apply-draft="${escapeHtml(draft.relPath)}" data-target="${escapeHtml(draft.target)}">应用</button>
+            </div>
+          </div>
+        `).join('') : '<div class="muted">暂无 draft。</div>';
+      }
+
+      function renderJobs() {
+        const jobs = state.project.jobs || [];
+        $('#jobList').innerHTML = jobs.length ? jobs.slice().reverse().map((job) => `
+          <div class="item">
+            <div class="item-title">
+              <span>${escapeHtml(job.label)}</span>
+              <span class="${job.status === 'completed' ? 'status-ok' : job.status === 'failed' ? 'status-bad' : 'status-warn'}">${escapeHtml(job.status)}</span>
+            </div>
+            <div class="item-body">
+              draft: ${escapeHtml(job.draft || '')}<br />
+              target: ${escapeHtml(job.target || '')}<br />
+              ${escapeHtml((job.logs || []).join('').slice(-500))}
+            </div>
+          </div>
+        `).join('') : '<div class="muted">暂无任务。</div>';
+      }
+
+      function renderNodes() {
+        const nodes = state.project.compiled.nodes || [];
+        if (!state.selectedNodeId && nodes.length) state.selectedNodeId = nodes[0].id;
+        $('#nodeList').innerHTML = nodes.length ? nodes.map((node) => `
+          <button class="item ${node.id === state.selectedNodeId ? 'selected' : ''}" data-node="${escapeHtml(node.id)}">
+            <div class="item-title">
+              <span>${escapeHtml(node.label || node.id)}</span>
+              <span>#${node.timeIndex}</span>
+            </div>
+            <div class="item-body">${escapeHtml(node.summary || '')}</div>
+          </button>
+        `).join('') : '<div class="muted">还没有编译节点。</div>';
+        renderNodeDetail();
+      }
+
+      function renderNodeDetail() {
+        const tree = state.project.compiled.bakedTree || { nodes: {} };
+        const node = tree.nodes?.[state.selectedNodeId];
+        if (!node) {
+          $('#nodeDetail').innerHTML = '<div class="muted">选择一个节点查看。</div>';
+          return;
+        }
+        const edges = Object.entries(node.edges || {});
+        $('#nodeDetail').innerHTML = `
+          <div class="item">
+            <div class="item-title">
+              <span>${escapeHtml(node.snapshot.label || node.nodeId)}</span>
+              <span>${escapeHtml(node.nodeId)}</span>
+            </div>
+            <div class="item-body">
+              <strong>Snapshot</strong>
+              <pre>${escapeHtml(JSON.stringify(node.snapshot, null, 2))}</pre>
+            </div>
+          </div>
+          <h3 style="margin-top: 12px;">可走边</h3>
+          <div class="list" style="margin-top: 8px;">
+            ${edges.length ? edges.map(([eventId, edge]) => `
+              <div class="item">
+                <div class="item-title">
+                  <span>${escapeHtml(eventId)}</span>
+                  <span>to ${escapeHtml(edge.to)}</span>
+                </div>
+                <div class="item-body">
+                  storylet: ${escapeHtml(edge.storyletId)}
+                  ${(edge.outputs || []).map((output) => `
+                    <div class="edge-output">${escapeHtml(output.speaker || output.type || 'output')}: ${escapeHtml(output.text || '')}</div>
+                  `).join('')}
+                  <pre>${escapeHtml(JSON.stringify(edge.effects || {}, null, 2))}</pre>
+                </div>
+              </div>
+            `).join('') : '<div class="muted">这个节点没有边。</div>'}
+          </div>
+        `;
+      }
+
+      async function saveFile(path, content) {
+        await api('/api/file', {
+          method: 'POST',
+          body: JSON.stringify({ path, content }),
+        });
+        toast(`已保存 ${path}`);
+        await loadProject();
+      }
+
+      async function startJob(type) {
+        const job = await api('/api/job', {
+          method: 'POST',
+          body: JSON.stringify({ type }),
+        });
+        toast(`已启动 Agent job: ${job.label}`);
+        await loadProject();
+      }
+
+      async function validate() {
+        const result = await api('/api/validate', { method: 'POST', body: '{}' });
+        state.project.validation = result;
+        renderAll();
+        toast(result.ok ? '校验通过' : '校验发现问题');
+      }
+
+      async function compile() {
+        const result = await api('/api/compile', { method: 'POST', body: '{}' });
+        $('#compileBox').textContent = result.ok
+          ? `编译完成。\n节点: ${result.nodes.length}\n边: ${result.edges.length}`
+          : `编译失败。\n${(result.report.issues || []).map((issue) => `- ${issue}`).join('\n')}`;
+        await loadProject();
+      }
+
+      async function applyDraft(relPath, target) {
+        await api('/api/apply-draft', {
+          method: 'POST',
+          body: JSON.stringify({ draft: relPath, target }),
+        });
+        toast(`已应用 draft -> ${target}`);
+        await loadProject();
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      }
+
+      function bindEvents() {
+        $$('.nav-button').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.currentSection = btn.dataset.section;
+            $$('.nav-button').forEach((item) => item.classList.toggle('active', item === btn));
+            $$('.section').forEach((section) => section.classList.toggle('active', section.id === state.currentSection));
+          });
+        });
+
+        $('#refreshBtn').addEventListener('click', loadProject);
+        $('#scriptFile').addEventListener('change', renderEditors);
+        $('#modelFile').addEventListener('change', renderEditors);
+
+        $('#saveScript').addEventListener('click', () => saveFile($('#scriptFile').value, $('#scriptEditor').value));
+        $('#saveModel').addEventListener('click', () => saveFile($('#modelFile').value, $('#modelEditor').value));
+        $('#saveStorylets').addEventListener('click', () => saveFile('storylets/storylets.json', $('#storyletEditor').value));
+
+        $('#validateBtn').addEventListener('click', validate);
+        $('#compileBtn').addEventListener('click', compile);
+
+        document.body.addEventListener('click', async (event) => {
+          const jobButton = event.target.closest('[data-job]');
+          if (jobButton) {
+            await startJob(jobButton.dataset.job);
+            return;
+          }
+          const applyButton = event.target.closest('[data-apply-draft]');
+          if (applyButton) {
+            await applyDraft(applyButton.dataset.applyDraft, applyButton.dataset.target);
+            return;
+          }
+          const viewButton = event.target.closest('[data-view-draft]');
+          if (viewButton) {
+            const draft = state.project.drafts.find((item) => item.relPath === viewButton.dataset.viewDraft);
+            alert(`${draft.label}\n\n${draft.summary}`);
+            return;
+          }
+          const nodeButton = event.target.closest('[data-node]');
+          if (nodeButton) {
+            state.selectedNodeId = nodeButton.dataset.node;
+            renderNodes();
+          }
+        });
+
+        setInterval(async () => {
+          if ((state.project?.jobs || []).some((job) => job.status === 'running')) await loadProject();
+        }, 3000);
+      }
+
+      bindEvents();
+      loadProject().catch((error) => {
+        document.body.innerHTML = `<pre>${escapeHtml(error.stack || error.message)}</pre>`;
+      });
+    </script>
+  </body>
+</html>
+

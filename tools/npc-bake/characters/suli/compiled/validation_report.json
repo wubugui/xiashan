@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "issues": [],
+  "warnings": [
+    "未覆盖边: after_broadcast_empty + player.keep_quiet",
+    "未覆盖边: after_broadcast_empty + player.care_voice",
+    "未覆盖边: after_broadcast_given_space + player.open_window",
+    "未覆盖边: after_broadcast_given_space + system.next_day",
+    "未覆盖边: before_appointment + player.arrive_early",
+    "未覆盖边: before_appointment + player.cancel_meet",
+    "未覆盖边: autonomy_boundary_touched + player.open_window",
+    "未覆盖边: autonomy_boundary_touched + player.push_again",
+    "未覆盖边: rain_missed_train + player.open_window",
+    "未覆盖边: rain_missed_train + player.offer_pickup"
+  ],
+  "counts": {
+    "dimensions": 3,
+    "events": 13,
+    "situations": 5,
+    "storylets": 8
+  },
+  "generatedAt": "2026-06-14T17:20:55.604Z"
+}

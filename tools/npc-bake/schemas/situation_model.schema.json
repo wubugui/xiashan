@@ -1,0 +1,51 @@
+{
+  "type": "object",
+  "properties": {
+    "characterId": {
+      "type": "string"
+    },
+    "initialSituation": {
+      "type": "string"
+    },
+    "situations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "snapshot": {
+            "type": "object"
+          },
+          "allowedEvents": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "summary",
+          "snapshot",
+          "allowedEvents"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": [
+    "characterId",
+    "initialSituation",
+    "situations"
+  ],
+  "additionalProperties": false
+}

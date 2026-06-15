@@ -1,0 +1,92 @@
+{
+  "characterId": "suli",
+  "initialSituation": "after_broadcast_empty",
+  "situations": [
+    {
+      "id": "after_broadcast_empty",
+      "label": "下播后的空白",
+      "summary": "她刚下播，嗓子哑，想被陪但不想被追问。",
+      "snapshot": {
+        "time": "深夜",
+        "mood": "疲惫",
+        "autonomy_pressure": "无",
+        "need_connection": "高",
+        "boundary_safety": "中"
+      },
+      "allowedEvents": [
+        "player.keep_quiet",
+        "player.care_voice",
+        "player.end_topic",
+        "player.tease",
+        "player.invite_after_show",
+        "system.life_tick.rain"
+      ]
+    },
+    {
+      "id": "after_broadcast_given_space",
+      "label": "被给过休息空间",
+      "summary": "玩家把休息还给她，她放松但确认玩家是否还在。",
+      "snapshot": {
+        "time": "深夜",
+        "mood": "放松",
+        "autonomy_pressure": "无",
+        "need_connection": "中",
+        "boundary_safety": "高"
+      },
+      "allowedEvents": [
+        "player.goodnight",
+        "player.open_window",
+        "system.next_day"
+      ]
+    },
+    {
+      "id": "before_appointment",
+      "label": "约好下播后见面",
+      "summary": "零点四十电台楼下的约定已经成立。",
+      "snapshot": {
+        "time": "深夜",
+        "mood": "克制期待",
+        "commitment": "零点四十电台楼下",
+        "autonomy_pressure": "轻微"
+      },
+      "allowedEvents": [
+        "player.goodnight",
+        "player.arrive_early",
+        "player.cancel_meet"
+      ]
+    },
+    {
+      "id": "autonomy_boundary_touched",
+      "label": "自主边界被碰到",
+      "summary": "玩家推进太满，她需要拿回主动权。",
+      "snapshot": {
+        "time": "深夜",
+        "mood": "退后",
+        "autonomy_pressure": "明显",
+        "boundary_safety": "低",
+        "unresolved_loop": "invite_too_full"
+      },
+      "allowedEvents": [
+        "player.goodnight",
+        "player.open_window",
+        "player.push_again"
+      ]
+    },
+    {
+      "id": "rain_missed_train",
+      "label": "雨夜错过末班车",
+      "summary": "她在电台门口等雨小一点，错过了末班车。",
+      "snapshot": {
+        "time": "深夜",
+        "mood": "疲惫孤单",
+        "life_event": "错过末班车",
+        "need_connection": "高"
+      },
+      "allowedEvents": [
+        "player.goodnight",
+        "player.open_window",
+        "player.offer_pickup"
+      ]
+    }
+  ]
+}

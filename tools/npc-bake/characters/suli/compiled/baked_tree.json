@@ -1,0 +1,382 @@
+{
+  "characterId": "suli",
+  "initialNodeId": "after_broadcast_empty",
+  "generatedAt": "2026-06-14T17:20:55.604Z",
+  "runtimeContract": "currentNodeId + eventId -> edge.to + play(edge.outputs)",
+  "nodes": {
+    "after_broadcast_empty": {
+      "nodeId": "after_broadcast_empty",
+      "timeIndex": 0,
+      "snapshot": {
+        "situation": "after_broadcast_empty",
+        "label": "下播后的空白",
+        "summary": "她刚下播，嗓子哑，想被陪但不想被追问。",
+        "time": "深夜",
+        "mood": "疲惫",
+        "autonomy_pressure": "无",
+        "need_connection": "高",
+        "boundary_safety": "中"
+      },
+      "edges": {
+        "player.end_topic": {
+          "to": "after_broadcast_given_space",
+          "storyletId": "after_broadcast_end_topic",
+          "outputs": [
+            {
+              "type": "dialogue",
+              "speaker": "player",
+              "text": "你先休息。今晚不用照顾任何人的情绪。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "这句话我收下。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "那我关机十分钟。只十分钟。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "如果醒着，别走太远。"
+            }
+          ],
+          "effects": {
+            "boundary_safety": "高",
+            "need_connection_delta": -1,
+            "memory_add": "玩家把休息还给她"
+          },
+          "sourceRefs": [
+            {
+              "file": "02_final_script.md",
+              "section": "after_broadcast_empty",
+              "quote": "她想被陪着，但不想被追问。"
+            }
+          ]
+        },
+        "player.invite_after_show": {
+          "to": "before_appointment",
+          "storyletId": "after_broadcast_invite_after_show",
+          "outputs": [
+            {
+              "type": "dialogue",
+              "speaker": "player",
+              "text": "今晚下播后，我能见你一面吗？"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "下播后？"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "那个时间，街上只剩清扫车和末班车。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "零点四十，电台楼下。别站在风口。"
+            }
+          ],
+          "effects": {
+            "commitment_set": "零点四十电台楼下",
+            "autonomy_pressure": "轻微",
+            "memory_add": "玩家主动约她在下播后的时间见面"
+          },
+          "sourceRefs": [
+            {
+              "file": "02_final_script.md",
+              "section": "before_appointment",
+              "quote": "她答应零点四十在电台楼下见。"
+            }
+          ]
+        },
+        "player.tease": {
+          "to": "autonomy_boundary_touched",
+          "storyletId": "after_broadcast_tease_boundary",
+          "outputs": [
+            {
+              "type": "dialogue",
+              "speaker": "player",
+              "text": "三百多次晚安里，有没有哪一次是单独说给我的？"
+            },
+            {
+              "type": "silence",
+              "speaker": "system",
+              "text": "她的输入状态亮了，又灭掉。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "这句我听见了。只是如果马上接，会显得我太容易被你逗出来。"
+            }
+          ],
+          "effects": {
+            "autonomy_pressure": "明显",
+            "unresolved_loop": "tease_too_fast",
+            "memory_add": "玩家在她防备时用玩笑试探过她"
+          },
+          "sourceRefs": [
+            {
+              "file": "02_final_script.md",
+              "section": "autonomy_boundary_touched",
+              "quote": "玩家在她防备还高时把约见说得太满，她没有完全拒绝，但需要把主动权拿回来。"
+            }
+          ]
+        },
+        "system.life_tick.rain": {
+          "to": "rain_missed_train",
+          "storyletId": "after_broadcast_rain_life_tick",
+          "outputs": [
+            {
+              "type": "event",
+              "speaker": "system",
+              "text": "下播后外面突然下大雨，她在电台门口多站了二十分钟。"
+            },
+            {
+              "type": "signature",
+              "speaker": "suli",
+              "text": "雨还没停。末班车也不会等人。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "刚才在台阶上等雨小一点。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "末班车没赶上。倒也不是第一次。"
+            }
+          ],
+          "effects": {
+            "life_event": "错过末班车",
+            "need_connection": "高",
+            "memory_add": "雨夜错过末班车"
+          },
+          "sourceRefs": [
+            {
+              "file": "02_final_script.md",
+              "section": "rain_missed_train",
+              "quote": "下播后下雨，她错过末班车。"
+            }
+          ]
+        }
+      }
+    },
+    "after_broadcast_given_space": {
+      "nodeId": "after_broadcast_given_space",
+      "timeIndex": 1,
+      "snapshot": {
+        "situation": "after_broadcast_given_space",
+        "label": "被给过休息空间",
+        "summary": "玩家把休息还给她，她放松但确认玩家是否还在。",
+        "time": "深夜",
+        "mood": "放松",
+        "autonomy_pressure": "无",
+        "need_connection": "中",
+        "boundary_safety": "高"
+      },
+      "edges": {
+        "player.goodnight": {
+          "to": "after_broadcast_given_space",
+          "storyletId": "goodnight_after_giving_space",
+          "outputs": [
+            {
+              "type": "dialogue",
+              "speaker": "player",
+              "text": "晚安。今晚这句不是群发。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "嗯。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "你刚刚把休息还给我，现在又没有走远。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "这句晚安，我会真的拿去睡。"
+            }
+          ],
+          "effects": {
+            "memory_add": "玩家在给她休息空间后又轻轻道晚安",
+            "need_connection_delta": -1
+          },
+          "sourceRefs": [
+            {
+              "file": "02_final_script.md",
+              "section": "after_broadcast_given_space",
+              "quote": "她会观察玩家是不是说完就离开。"
+            }
+          ]
+        }
+      }
+    },
+    "before_appointment": {
+      "nodeId": "before_appointment",
+      "timeIndex": 2,
+      "snapshot": {
+        "situation": "before_appointment",
+        "label": "约好下播后见面",
+        "summary": "零点四十电台楼下的约定已经成立。",
+        "time": "深夜",
+        "mood": "克制期待",
+        "commitment": "零点四十电台楼下",
+        "autonomy_pressure": "轻微"
+      },
+      "edges": {
+        "player.goodnight": {
+          "to": "before_appointment",
+          "storyletId": "goodnight_before_appointment",
+          "outputs": [
+            {
+              "type": "dialogue",
+              "speaker": "player",
+              "text": "晚安。今晚这句不是群发。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "嗯。晚安我收到了。不是群发，也不是结束聊天。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "零点四十，电台楼下。你如果先到，就站在便利店灯下面。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "我会下楼。"
+            }
+          ],
+          "effects": {
+            "commitment_keep": "零点四十电台楼下",
+            "memory_add": "玩家在赴约前发过一句不是结束聊天的晚安"
+          },
+          "sourceRefs": [
+            {
+              "file": "02_final_script.md",
+              "section": "before_appointment",
+              "quote": "晚安不能被理解为结束聊天，而是约定前的轻确认。"
+            }
+          ]
+        }
+      }
+    },
+    "autonomy_boundary_touched": {
+      "nodeId": "autonomy_boundary_touched",
+      "timeIndex": 3,
+      "snapshot": {
+        "situation": "autonomy_boundary_touched",
+        "label": "自主边界被碰到",
+        "summary": "玩家推进太满，她需要拿回主动权。",
+        "time": "深夜",
+        "mood": "退后",
+        "autonomy_pressure": "明显",
+        "boundary_safety": "低",
+        "unresolved_loop": "invite_too_full"
+      },
+      "edges": {
+        "player.goodnight": {
+          "to": "after_broadcast_given_space",
+          "storyletId": "goodnight_after_autonomy_boundary",
+          "outputs": [
+            {
+              "type": "dialogue",
+              "speaker": "player",
+              "text": "晚安。今晚这句不是群发。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "刚才那句不是拒绝你。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "是我不想被安排好。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "你现在只说晚安，反而让我松了一点。"
+            }
+          ],
+          "effects": {
+            "autonomy_pressure": "轻微",
+            "unresolved_loop": null,
+            "memory_add": "玩家在她退后之后没有继续逼近"
+          },
+          "sourceRefs": [
+            {
+              "file": "02_final_script.md",
+              "section": "autonomy_boundary_touched",
+              "quote": "她没有完全拒绝，但需要把主动权拿回来。"
+            }
+          ]
+        }
+      }
+    },
+    "rain_missed_train": {
+      "nodeId": "rain_missed_train",
+      "timeIndex": 4,
+      "snapshot": {
+        "situation": "rain_missed_train",
+        "label": "雨夜错过末班车",
+        "summary": "她在电台门口等雨小一点，错过了末班车。",
+        "time": "深夜",
+        "mood": "疲惫孤单",
+        "life_event": "错过末班车",
+        "need_connection": "高"
+      },
+      "edges": {
+        "player.goodnight": {
+          "to": "rain_missed_train",
+          "storyletId": "goodnight_after_rain_missed_train",
+          "outputs": [
+            {
+              "type": "dialogue",
+              "speaker": "player",
+              "text": "晚安。今晚这句不是群发。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "嗯。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "这句晚安刚好落在雨声里。"
+            },
+            {
+              "type": "dialogue",
+              "speaker": "suli",
+              "text": "我还没到家，但手机亮了一下，就没那么像一个人在等车。"
+            }
+          ],
+          "effects": {
+            "memory_add": "她雨夜错过末班车时，玩家给过一句贴着当下的晚安",
+            "need_connection_delta": -1
+          },
+          "sourceRefs": [
+            {
+              "file": "02_final_script.md",
+              "section": "rain_missed_train",
+              "quote": "轻的陪伴理解成“不是一个人在等车”。"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

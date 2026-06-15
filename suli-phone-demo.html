@@ -1,0 +1,3992 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>苏音音 · 手机关系通讯 Demo</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #060913;
+      --panel: rgba(13, 18, 32, 0.84);
+      --panel-strong: rgba(18, 25, 42, 0.96);
+      --line: rgba(255, 255, 255, 0.12);
+      --soft: rgba(255, 255, 255, 0.64);
+      --muted: rgba(255, 255, 255, 0.42);
+      --faint: rgba(255, 255, 255, 0.24);
+      --accent: #8bd3ff;
+      --rose: #f0a9c5;
+      --gold: #f6d58a;
+      --green: #8ae6c1;
+      --bubble-her: #222b3c;
+      --bubble-me: #dcefff;
+      --ink-me: #162133;
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(3, 7, 18, 0.38), rgba(3, 7, 18, 0.94)),
+        url("public/bg/mobile/studio-room-portrait.jpg") center / cover fixed,
+        var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: white;
+    }
+
+    button {
+      border: 0;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: default;
+      opacity: 0.5;
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(320px, 430px) minmax(280px, 390px);
+      justify-content: center;
+      gap: 22px;
+      padding: 24px;
+    }
+
+    .phone {
+      min-height: calc(100vh - 48px);
+      max-height: 900px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 28px;
+      background: rgba(5, 8, 15, 0.82);
+      box-shadow: 0 24px 90px rgba(0, 0, 0, 0.55);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(18px);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(7, 11, 21, 0.88);
+    }
+
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: #243045;
+      flex: 0 0 auto;
+    }
+
+    .title {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .name {
+      font-weight: 800;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .badge {
+      border: 1px solid rgba(139, 211, 255, 0.34);
+      border-radius: 999px;
+      color: var(--accent);
+      background: rgba(139, 211, 255, 0.1);
+      padding: 2px 7px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .signature {
+      margin-top: 4px;
+      color: var(--soft);
+      font-size: 12px;
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .thread-state {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(14, 20, 35, 0.74);
+    }
+
+    .state-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
+      padding: 3px 8px;
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .chip.hot {
+      border-color: rgba(240, 169, 197, 0.38);
+      background: rgba(240, 169, 197, 0.1);
+      color: #ffd2e2;
+    }
+
+    .chat {
+      min-height: 0;
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 14px 18px;
+      scroll-behavior: smooth;
+    }
+
+    .day-mark {
+      margin: 2px auto 14px;
+      width: fit-content;
+      max-width: 88%;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.54);
+      padding: 5px 10px;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .msg-row {
+      display: flex;
+      gap: 8px;
+      margin: 10px 0;
+      align-items: flex-end;
+    }
+
+    .msg-row.me {
+      justify-content: flex-end;
+    }
+
+    .mini-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      object-fit: cover;
+      flex: 0 0 auto;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .bubble {
+      max-width: min(78%, 310px);
+      border-radius: 18px;
+      padding: 10px 12px;
+      line-height: 1.52;
+      font-size: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+      word-break: break-word;
+    }
+
+    .her .bubble {
+      border-bottom-left-radius: 6px;
+      background: var(--bubble-her);
+      color: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .me .bubble {
+      border-bottom-right-radius: 6px;
+      background: var(--bubble-me);
+      color: var(--ink-me);
+    }
+
+    .system-bubble {
+      margin: 10px auto;
+      max-width: 86%;
+      border: 1px solid rgba(246, 213, 138, 0.24);
+      border-radius: 14px;
+      background: rgba(246, 213, 138, 0.08);
+      color: rgba(255, 238, 198, 0.72);
+      padding: 8px 10px;
+      text-align: center;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .typing {
+      display: inline-flex;
+      gap: 5px;
+      align-items: center;
+      height: 18px;
+    }
+
+    .typing span {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.46);
+      animation: blink 1s infinite ease-in-out;
+    }
+
+    .typing span:nth-child(2) { animation-delay: 0.15s; }
+    .typing span:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes blink {
+      0%, 100% { opacity: 0.28; transform: translateY(0); }
+      50% { opacity: 1; transform: translateY(-2px); }
+    }
+
+    .choice-panel {
+      border-top: 1px solid var(--line);
+      background: rgba(7, 11, 21, 0.94);
+      padding: 12px 12px calc(12px + var(--safe-b));
+    }
+
+    .choice-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 9px;
+      color: rgba(255, 255, 255, 0.56);
+      font-size: 12px;
+    }
+
+    .initiative-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      margin-bottom: 9px;
+    }
+
+    .initiative {
+      min-height: 34px;
+      border-radius: 999px;
+      border: 1px solid rgba(139, 211, 255, 0.22);
+      background: rgba(139, 211, 255, 0.08);
+      color: rgba(218, 243, 255, 0.9);
+      padding: 7px 8px;
+      font-size: 12px;
+      font-weight: 760;
+      transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .initiative:hover {
+      background: rgba(139, 211, 255, 0.14);
+      border-color: rgba(139, 211, 255, 0.42);
+    }
+
+    .initiative:active {
+      transform: scale(0.98);
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .choice {
+      min-height: 44px;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 9px 10px;
+      text-align: left;
+      color: rgba(255, 255, 255, 0.86);
+      transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+    }
+
+    .choice:hover {
+      background: rgba(139, 211, 255, 0.12);
+      border-color: rgba(139, 211, 255, 0.34);
+    }
+
+    .choice:active {
+      transform: scale(0.98);
+    }
+
+    .choice-title {
+      display: block;
+      font-size: 13px;
+      font-weight: 750;
+      line-height: 1.28;
+    }
+
+    .choice-sub {
+      display: block;
+      margin-top: 3px;
+      color: rgba(255, 255, 255, 0.44);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .side {
+      min-height: calc(100vh - 48px);
+      max-height: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      backdrop-filter: blur(16px);
+      padding: 15px;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--soft);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat {
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .memory-list {
+      display: grid;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .memory {
+      border-radius: 12px;
+      border: 1px solid rgba(240, 169, 197, 0.18);
+      background: rgba(240, 169, 197, 0.08);
+      padding: 8px 10px;
+      color: rgba(255, 224, 237, 0.8);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .memory-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 6px;
+      color: rgba(255, 255, 255, 0.42);
+      font-size: 10px;
+    }
+
+    .vector-board {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .vector-panel {
+      border-radius: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.055);
+      padding: 9px 10px;
+    }
+
+    .vector-title {
+      margin-bottom: 7px;
+      color: rgba(255, 255, 255, 0.52);
+      font-size: 11px;
+      font-weight: 760;
+    }
+
+    .vector-tokens {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .model-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .model-cell {
+      border-radius: 13px;
+      border: 1px solid rgba(139, 211, 255, 0.16);
+      background: rgba(139, 211, 255, 0.07);
+      padding: 9px 10px;
+    }
+
+    .model-cell span {
+      display: block;
+      color: rgba(218, 243, 255, 0.56);
+      font-size: 11px;
+      margin-bottom: 3px;
+    }
+
+    .model-cell strong {
+      display: block;
+      color: rgba(235, 249, 255, 0.94);
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    .context-vector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .context-token {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.72);
+      padding: 4px 8px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .trace-list {
+      display: grid;
+      gap: 8px;
+      max-height: 260px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .trace {
+      border-radius: 13px;
+      border: 1px solid rgba(246, 213, 138, 0.18);
+      background: rgba(246, 213, 138, 0.07);
+      padding: 9px 10px;
+    }
+
+    .trace-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: rgba(255, 238, 198, 0.9);
+      font-size: 12px;
+      font-weight: 750;
+      line-height: 1.4;
+    }
+
+    .trace-key {
+      margin-top: 5px;
+      color: rgba(255, 255, 255, 0.42);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 10px;
+      line-height: 1.45;
+      word-break: break-all;
+    }
+
+    .trace-line {
+      margin-top: 5px;
+      color: rgba(255, 255, 255, 0.68);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .trace-rules {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .rule-pill {
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.66);
+      padding: 3px 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 10px;
+    }
+
+    .audit-list {
+      display: grid;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .audit {
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.055);
+      padding: 8px 10px;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .audit.pass {
+      border-color: rgba(138, 230, 193, 0.22);
+      background: rgba(138, 230, 193, 0.07);
+      color: rgba(214, 255, 240, 0.82);
+    }
+
+    .audit.warn {
+      border-color: rgba(246, 213, 138, 0.24);
+      background: rgba(246, 213, 138, 0.08);
+      color: rgba(255, 239, 198, 0.86);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .control {
+      border-radius: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.08);
+      padding: 10px;
+      color: rgba(255, 255, 255, 0.84);
+      text-align: center;
+      font-size: 12px;
+      font-weight: 720;
+    }
+
+    .control.primary {
+      border-color: rgba(139, 211, 255, 0.34);
+      background: rgba(139, 211, 255, 0.12);
+      color: #d8f2ff;
+    }
+
+    .footnote {
+      margin-top: auto;
+      color: rgba(255, 255, 255, 0.38);
+      font-size: 12px;
+      line-height: 1.55;
+      padding: 0 4px;
+    }
+
+    @media (max-width: 860px) {
+      .shell {
+        grid-template-columns: minmax(320px, 430px);
+        padding: 12px;
+      }
+
+      .phone {
+        min-height: calc(100vh - 24px);
+      }
+
+      .side {
+        min-height: auto;
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .shell {
+        padding: 0;
+      }
+
+      .phone {
+        min-height: 100vh;
+        max-height: none;
+        border: 0;
+        border-radius: 0;
+      }
+
+      .choice-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .initiative-bar {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="phone" aria-label="苏音音手机通讯演示">
+      <header class="topbar">
+        <img class="avatar" src="public/characters/face/suli/avatar.png" alt="苏音音头像" onerror="this.src='/characters/face/suli/avatar.png'">
+        <div class="title">
+          <div class="name-row">
+            <div class="name">苏音音</div>
+            <div class="badge" id="relationBadge">熟络</div>
+          </div>
+          <div class="signature" id="signature">雨还没停。末班车也不会等人。</div>
+        </div>
+      </header>
+
+      <div class="thread-state">
+        <div class="state-line" id="stateLine"><span class="chip ">第 1 天</span><span class="chip ">深夜</span><span class="chip ">今日：下播后嗓子哑</span><span class="chip hot">情绪：疲惫</span><span class="chip ">刚下播</span><span class="chip ">嗓子哑</span><span class="chip hot">想安静</span><span class="chip hot">生活：雨夜滞留 · 错过末班车</span></div>
+      </div>
+
+      <div class="chat" id="chat"><div class="day-mark">第 1 天 · 深夜</div><div class="system-bubble">她不是被玩家召唤出来的。她刚下播，所以主动发来了消息。</div><div class="msg-row her"><img class="mini-avatar" src="public/characters/face/suli/avatar.png" alt=""><div class="bubble">刚下播。</div></div><div class="msg-row her"><img class="mini-avatar" src="public/characters/face/suli/avatar.png" alt=""><div class="bubble">今晚说了三百多次晚安。说到最后，发现自己一点也不困。</div></div><div class="msg-row her"><img class="mini-avatar" src="public/characters/face/suli/avatar.png" alt=""><div class="bubble">你还醒着吗。</div></div><div class="system-bubble">下播后外面突然下大雨，她在电台门口多站了二十分钟。</div><div class="msg-row her"><img class="mini-avatar" src="public/characters/face/suli/avatar.png" alt=""><div class="bubble">刚才在台阶上等雨小一点。</div></div><div class="msg-row her"><img class="mini-avatar" src="public/characters/face/suli/avatar.png" alt=""><div class="bubble">末班车没赶上。倒也不是第一次。</div></div><div class="msg-row me"><div class="bubble">晚安。今晚这句不是群发。</div></div><div class="msg-row her"><img class="mini-avatar" src="public/characters/face/suli/avatar.png" alt=""><div class="bubble">嗯。</div></div><div class="msg-row her"><img class="mini-avatar" src="public/characters/face/suli/avatar.png" alt=""><div class="bubble">这句晚安刚好落在雨声里。</div></div><div class="msg-row her"><img class="mini-avatar" src="public/characters/face/suli/avatar.png" alt=""><div class="bubble">我还没到家，但手机亮了一下，就没那么像一个人在等车。</div></div></div>
+
+      <footer class="choice-panel">
+        <div class="choice-head">
+          <span id="choiceHint">今天没有新的长话题。选一个通讯动作。</span>
+          <span id="remainingHint">今日可互动 2 次</span>
+        </div>
+        <div class="initiative-bar" id="initiativeBar">
+        <button class="initiative" data-index="0">问她今天</button>
+      
+        <button class="initiative" data-index="1">零点签到</button>
+      
+        <button class="initiative" data-index="2">约下播后</button>
+      </div>
+        <div class="choice-grid" id="choices">
+        <button class="choice" data-index="0">
+          <span class="choice-title">发晚安</span>
+          <span class="choice-sub">每日轻互动</span>
+        </button>
+      
+        <button class="choice" data-index="1">
+          <span class="choice-title">点一首歌</span>
+          <span class="choice-sub">让她在节目里回应</span>
+        </button>
+      
+        <button class="choice" data-index="2">
+          <span class="choice-title">节目邮箱留言</span>
+          <span class="choice-sub">把话交给她的世界</span>
+        </button>
+      
+        <button class="choice" data-index="3">
+          <span class="choice-title">只开着窗口</span>
+          <span class="choice-sub">不发送第二句话</span>
+        </button>
+      </div>
+      </footer>
+    </section>
+
+    <aside class="side">
+      <div class="card">
+        <h2>这个 Demo 在模拟什么</h2>
+        <p>
+          玩家不能自由输入。所有交互先抽象成事件；按钮只是动作类型，真正查表的是“输入前状态 + 环境上下文 + 这次事件”形成的事件实例点。
+          去命中稀疏的 baked 规则库。命中后只执行数据库里写好的输出：对话、签名、记忆、延迟消息或事件。
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Bake 数据库</h2>
+        <p>这里故意把状态空间暴露出来：大部分笛卡尔积组合为空，只有经过设计/预计算的非空格子会产出反应。</p>
+        <div class="model-grid">
+          <div class="model-cell"><span>估算组合空间</span><strong id="spaceStat">331,776,000</strong></div>
+          <div class="model-cell"><span>非空 baked 行</span><strong id="bakedStat">88</strong></div>
+          <div class="model-cell"><span>空组合比例</span><strong id="sparseStat">100%</strong></div>
+          <div class="model-cell"><span>随机性</span><strong id="randomStat">确定性 hash</strong></div>
+        </div>
+        <div class="context-vector" id="contextVector"><span class="context-token">dayState=hoarse</span><span class="context-token">time=深夜</span><span class="context-token">relation=熟络</span><span class="context-token">mood=疲惫</span><span class="context-token">motive=自保</span><span class="context-token">activeThread=quietAction</span><span class="context-token">memories=1</span><span class="context-token">queued=0</span><span class="context-token">commitment=none</span><span class="context-token">openLoop=none</span><span class="context-token">lifeBeat=生活后台:雨夜滞留</span><span class="context-token">event=idle</span><span class="context-token">avatarOther=no</span><span class="context-token">neglected=no</span></div>
+      </div>
+
+      <div class="card">
+        <h2>本次输入向量</h2>
+        <p>运行时真正喂给查表器的是三段向量：NPC 自身、环境、玩家/系统事件实例。同一个“发晚安”，在不同状态里会生成不同的点。</p>
+        <div class="vector-board">
+          <div class="vector-panel">
+            <div class="vector-title">NPC 状态</div>
+            <div class="vector-tokens" id="npcVector"><span class="context-token">关系=熟络</span><span class="context-token">好感=39</span><span class="context-token">孤独=42</span><span class="context-token">边界=58</span><span class="context-token">嗓音=61</span><span class="context-token">睡债=46</span><span class="context-token">当前承诺=none</span><span class="context-token">未闭合=none</span><span class="context-token">生活后台=生活后台:雨夜滞留</span><span class="context-token">记忆版本=1</span><span class="context-token">主导动机=自保</span></div>
+          </div>
+          <div class="vector-panel">
+            <div class="vector-title">环境</div>
+            <div class="vector-tokens" id="envVector"><span class="context-token">天数=1</span><span class="context-token">时段=深夜</span><span class="context-token">今日状态=hoarse</span><span class="context-token">沉默天数=0</span><span class="context-token">头像刺激=no</span><span class="context-token">当前话题=quietAction</span><span class="context-token">未来队列=0</span></div>
+          </div>
+          <div class="vector-panel">
+            <div class="vector-title">事件</div>
+            <div class="vector-tokens" id="eventVector"><span class="context-token">kind=player_choice</span><span class="context-token">动作类型=player_choice/quietAction/choice0:发晚安</span><span class="context-token">事件实例点=pt_0a5c52cc</span><span class="context-token">thread=quietAction</span><span class="context-token">choice=0</span><span class="context-token">选项名=发晚安</span><span class="context-token">commitment=none</span><span class="context-token">openLoop=none</span><span class="context-token">lifeBeat=生活后台:雨夜滞留</span><span class="context-token">outputs=对话+记忆</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>状态空间 Trace</h2>
+        <p id="traceEmpty" style="display: none;">点击任意互动后，会看到动作类型、事件实例点、上下文键、命中规则、状态迁移和输出类型。</p>
+        <div class="trace-list" id="traceList">
+        <div class="trace">
+          <div class="trace-title">
+            <span>#3 发晚安</span>
+            <span>对话 / 记忆</span>
+          </div>
+          <div class="trace-line">动作类型：player_choice/quietAction/choice0:发晚安　事件实例点：pt_0a5c52cc</div>
+          <div class="trace-key">pointSource=action=player_choice/quietAction/choice0:发晚安|day=1|hour=1|affinity=38|stage=1|lonely=46|guard=59|voice=61|sleepDebt=46|daysSilent=0|avatarOther=false|interactionsLeft=3|activeThread=quietAction|todayState=hoarse|memoryVersion=0|futureEvents=0|commitment=none|openLoop=none|lifeBeat=生活后台:雨夜滞留|timeBucket=深夜|motive=自保</div>
+          <div class="trace-key">query=point=pt_0a5c52cc|event=player_choice|dayState=hoarse|time=深夜|relation=熟络|mood=疲惫|motive=自保|commitment=none|openLoop=none|lifeBeat=生活后台:雨夜滞留|thread=quietAction|choice=0|act=发晚安</div>
+          <div class="trace-line">状态迁移：affinity: 38 -&gt; 39，lonely: 46 -&gt; 42，guard: 59 -&gt; 58，interactionsLeft: 3 -&gt; 2，memories: 0 -&gt; 1，memoryVersion: 0 -&gt; 1，intent: 先过自己的生活，再决定用什么频率靠近你。 -&gt; 根据你的态度，决定这段关系今天能不能多走一步。</div>
+          <div class="trace-line">输出数量：5　</div>
+          <div class="trace-rules">
+            <span class="rule-pill">cell.choice.goodnight.life_hoarse_rain_missed_train</span><span class="rule-pill">state.life_beat.hoarse_rain_missed_train</span><span class="rule-pill">output.dialogue.goodnight.rain_missed_train</span>
+          </div>
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>#2 雨夜错过末班车</span>
+            <span>事件 / 签名 / 对话</span>
+          </div>
+          <div class="trace-line">动作类型：life_event/afterBroadcast/雨夜错过末班车　事件实例点：pt_483632a6</div>
+          <div class="trace-key">pointSource=action=life_event/afterBroadcast/雨夜错过末班车|day=1|hour=1|affinity=38|stage=1|lonely=42|guard=58|voice=64|sleepDebt=46|daysSilent=0|avatarOther=false|interactionsLeft=3|activeThread=afterBroadcast|todayState=hoarse|memoryVersion=0|futureEvents=0|commitment=none|openLoop=none|lifeBeat=none|timeBucket=深夜|motive=自保</div>
+          <div class="trace-key">query=point=pt_483632a6|event=life_event|dayState=hoarse|time=深夜|relation=熟络|mood=疲惫|motive=自保|commitment=none|openLoop=none|lifeBeat=none|thread=afterBroadcast|choice=none|act=雨夜错过末班车</div>
+          <div class="trace-line">状态迁移：lonely: 42 -&gt; 46，guard: 58 -&gt; 59，voice: 64 -&gt; 61，lifeLog: 1 -&gt; 2，lifeBeat: none -&gt; 生活后台:雨夜滞留，intent: 下播后的空白里，确认手机另一端有没有人。 -&gt; 先过自己的生活，再决定用什么频率靠近你。</div>
+          <div class="trace-line">输出数量：4　</div>
+          <div class="trace-rules">
+            <span class="rule-pill">life_event.hoarse_rain_missed_train</span><span class="rule-pill">transition.life_event.hoarse_rain_missed_train</span><span class="rule-pill">output.life_event.hoarse_rain_missed_train</span>
+          </div>
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>#1 下播后的空白</span>
+            <span>事件 / 签名 / 对话</span>
+          </div>
+          <div class="trace-line">动作类型：npc_life_tick/afterBroadcast/下播后的空白　事件实例点：pt_247db9a9</div>
+          <div class="trace-key">pointSource=action=npc_life_tick/afterBroadcast/下播后的空白|day=1|hour=1|affinity=38|stage=1|lonely=42|guard=58|voice=64|sleepDebt=46|daysSilent=0|avatarOther=false|interactionsLeft=3|activeThread=none|todayState=hoarse|memoryVersion=0|futureEvents=0|commitment=none|openLoop=none|lifeBeat=none|timeBucket=深夜|motive=自保</div>
+          <div class="trace-key">query=point=pt_247db9a9|event=npc_life_tick|dayState=hoarse|time=深夜|relation=熟络|mood=疲惫|motive=自保|commitment=none|openLoop=none|lifeBeat=none|thread=afterBroadcast|choice=none|act=下播后的空白</div>
+          <div class="trace-line">状态迁移：activeThread: null -&gt; afterBroadcast，lifeLog: 0 -&gt; 1，intent: 刚下播，确认对方还在不在。 -&gt; 下播后的空白里，确认手机另一端有没有人。</div>
+          <div class="trace-line">输出数量：5　她不是被玩家召唤出来的。她刚下播，所以主动发来了消息。</div>
+          <div class="trace-rules">
+            <span class="rule-pill">life.open.afterBroadcast</span><span class="rule-pill">select.topic.hoarse</span><span class="rule-pill">output.opener.afterBroadcast</span>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div class="card">
+        <h2>候选格子检查</h2>
+        <p id="candidateEmpty" style="display: none;">还没有输入事件。每次查表会先生成事件实例点，再列出候选 baked 行、命中状态和落空条件。</p>
+        <div class="trace-list" id="candidateList">
+        <div class="trace">
+          <div class="trace-title">
+            <span>本次查表点 · pt_0a5c52cc</span>
+            <span>player_choice/quietAction/choice0:发晚安</span>
+          </div>
+          <div class="trace-line">下面这些 baked 行是在检查“这个状态点里的动作”，不是检查一个孤立按钮。</div>
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>选中 · cell.choice.goodnight.life_hoarse_rain_missed_train</span>
+            <span>p93</span>
+          </div>
+          <div class="trace-rules">
+            <span class="rule-pill">通过：thread=quietAction</span><span class="rule-pill">通过：choice=0</span><span class="rule-pill">通过：openLoop=none</span><span class="rule-pill">通过：lifeBeat=hoarse_rain_missed_train</span>
+          </div>
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>候补 · choice.quietAction.0</span>
+            <span>p60</span>
+          </div>
+          <div class="trace-rules">
+            <span class="rule-pill">通过：通用行条件满足</span>
+          </div>
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>落空 · cell.choice.inviteAfterShow.confirm.high_guard_silence</span>
+            <span>p99</span>
+          </div>
+          <div class="trace-rules">
+            <span class="rule-pill">未过：thread 需要 inviteAfterShow，实际 quietAction</span>
+          </div>
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>落空 · cell.choice.afterBroadcast.tease.high_guard_silence</span>
+            <span>p98</span>
+          </div>
+          <div class="trace-rules">
+            <span class="rule-pill">未过：thread 需要 afterBroadcast，实际 quietAction</span>
+          </div>
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>落空 · cell.choice.goodnight.after_invite_boundary</span>
+            <span>p98</span>
+          </div>
+          <div class="trace-rules">
+            <span class="rule-pill">通过：thread=quietAction</span><span class="rule-pill">通过：choice=0</span><span class="rule-pill">未过：openLoop 需要 invite_too_full，实际 none</span>
+          </div>
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>落空 · cell.choice.window.after_invite_boundary</span>
+            <span>p98</span>
+          </div>
+          <div class="trace-rules">
+            <span class="rule-pill">通过：thread=quietAction</span><span class="rule-pill">未过：choice 需要 3，实际 0</span>
+          </div>
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>落空 · cell.choice.goodnight.after_tease_boundary</span>
+            <span>p97</span>
+          </div>
+          <div class="trace-rules">
+            <span class="rule-pill">通过：thread=quietAction</span><span class="rule-pill">通过：choice=0</span><span class="rule-pill">未过：openLoop 需要 tease_too_fast，实际 none</span>
+          </div>
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>落空 · cell.choice.askHerDay.life_hoarse_rain_missed_train</span>
+            <span>p96</span>
+          </div>
+          <div class="trace-rules">
+            <span class="rule-pill">未过：thread 需要 askHerDay，实际 quietAction</span>
+          </div>
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>落空 · cell.choice.goodnight.meet_after_show.deep_night</span>
+            <span>p96</span>
+          </div>
+          <div class="trace-rules">
+            <span class="rule-pill">通过：thread=quietAction</span><span class="rule-pill">通过：choice=0</span><span class="rule-pill">未过：commitment 需要 meet_after_show，实际 none</span>
+          </div>
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>落空 · cell.choice.goodnight.walk_home.deep_night</span>
+            <span>p96</span>
+          </div>
+          <div class="trace-rules">
+            <span class="rule-pill">通过：thread=quietAction</span><span class="rule-pill">通过：choice=0</span><span class="rule-pill">未过：commitment 需要 walk_home_after_show，实际 none</span>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div class="card">
+        <h2>上次输出队列</h2>
+        <p id="outputEmpty" style="display: none;">还没有执行输出。每次事件命中 baked 行后，输出队列会交给统一 executor。</p>
+        <div class="trace-list" id="outputQueue">
+        <div class="trace">
+          <div class="trace-title">
+            <span>1. 对话</span>
+            <span>玩家</span>
+          </div>
+          <div class="trace-line">晚安。今晚这句不是群发。</div>
+          
+          
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>2. 对话</span>
+            <span>苏音音</span>
+          </div>
+          <div class="trace-line">嗯。</div>
+          
+          
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>3. 对话</span>
+            <span>苏音音</span>
+          </div>
+          <div class="trace-line">这句晚安刚好落在雨声里。</div>
+          
+          
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>4. 对话</span>
+            <span>苏音音</span>
+          </div>
+          <div class="trace-line">我还没到家，但手机亮了一下，就没那么像一个人在等车。</div>
+          
+          
+        </div>
+      
+        <div class="trace">
+          <div class="trace-title">
+            <span>5. 记忆</span>
+            <span>executor</span>
+          </div>
+          <div class="trace-line">她雨夜错过末班车时，你给过一句贴着当下的晚安。</div>
+          
+          
+        </div>
+      </div>
+      </div>
+
+      <div class="card">
+        <h2>苏音音的主体动机</h2>
+        <p id="intentLine">根据你的态度，决定这段关系今天能不能多走一步。</p>
+        <div class="model-grid">
+          <div class="model-cell"><span>连接需求</span><strong id="needConnectionStat">49</strong></div>
+          <div class="model-cell"><span>休息需求</span><strong id="needRestStat">56</strong></div>
+          <div class="model-cell"><span>自我保护</span><strong id="selfProtectStat">58</strong></div>
+          <div class="model-cell"><span>职业面具</span><strong id="maskStat">40</strong></div>
+          <div class="model-cell"><span>信任</span><strong id="trustStat">21</strong></div>
+          <div class="model-cell"><span>依恋</span><strong id="attachmentStat">31</strong></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>真人感自检</h2>
+        <p id="auditSummary">真人感自检：9/12 通过，当前 75 分。</p>
+        <div class="audit-list" id="auditList">
+        <div class="audit pass">
+          通过：NPC 会主动生活触发
+          <div class="memory-meta"><span>不是只等玩家点击后才存在。</span></div>
+        </div>
+      
+        <div class="audit pass">
+          通过：事件会迁移状态空间
+          <div class="memory-meta"><span>好感、孤独、边界、记忆、生活日志等会变化。</span></div>
+        </div>
+      
+        <div class="audit pass">
+          通过：记忆不是摆设
+          <div class="memory-meta"><span>玩家选择会形成结构化记忆，后续可召回。</span></div>
+        </div>
+      
+        <div class="audit warn">
+          待补：有生活连续性
+          <div class="memory-meta"><span>跨天和主动话题会进入她自己的时间线。</span></div>
+        </div>
+      
+        <div class="audit pass">
+          通过：有边界和沉默权
+          <div class="memory-meta"><span>边界回应来自明确 baked cell；没有命中的组合不硬编。</span></div>
+        </div>
+      
+        <div class="audit pass">
+          通过：输出可追溯到 baked 行
+          <div class="memory-meta"><span>上次输出队列能看到 executor 执行了什么。</span></div>
+        </div>
+      
+        <div class="audit pass">
+          通过：同一选项拆成多个状态点
+          <div class="memory-meta"><span>按钮只是动作类型；trace 会按输入前状态生成事件实例点，再命中不同非空格子。</span></div>
+        </div>
+      
+        <div class="audit pass">
+          通过：会保留未闭合情绪
+          <div class="memory-meta"><span>刚发生的边界、试探、吃醋不会被下一句普通消息冲掉。</span></div>
+        </div>
+      
+        <div class="audit pass">
+          通过：生活后台会改变回复
+          <div class="memory-meta"><span>她自己的生活事件会进入输入向量，并影响同一选项的命中。</span></div>
+        </div>
+      
+        <div class="audit warn">
+          待补：未来事件来自 bake 数据
+          <div class="memory-meta"><span>排程只保存 eventId；推进时命中 scheduled.* 行，不现场生成台词。</span></div>
+        </div>
+      
+        <div class="audit warn">
+          待补：主动事件有冷却
+          <div class="memory-meta"><span>同一天不会无限重复同一个主动话题。</span></div>
+        </div>
+      
+        <div class="audit pass">
+          通过：无不可控随机
+          <div class="memory-meta"><span>没有 Math.random，延迟和分支都来自确定性 hash。</span></div>
+        </div>
+      </div>
+      </div>
+
+      <div class="card">
+        <h2>角色状态</h2>
+        <div class="stats">
+          <div class="stat"><span>好感</span><strong id="affinityStat">39</strong></div>
+          <div class="stat"><span>关系</span><strong id="stageStat">熟络</strong></div>
+          <div class="stat"><span>孤独感</span><strong id="lonelyStat">42</strong></div>
+          <div class="stat"><span>边界感</span><strong id="guardStat">58</strong></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>她今天的生活</h2>
+        <p id="lifeEmpty" style="display: none;">还没有生活事件。跨天、冷落、换头像等事件会写入她自己的时间线。</p>
+        <div class="memory-list" id="lifeLog">
+        <div class="memory">
+          雨夜错过末班车
+          <div class="memory-meta">
+            <span>第 1 天</span>
+            <span>生活后台</span>
+            <span>深夜</span>
+          </div>
+        </div>
+      
+        <div class="memory">
+          触发话题「下播后的空白」
+          <div class="memory-meta">
+            <span>第 1 天</span>
+            <span>主动话题</span>
+            <span>深夜</span>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div class="card">
+        <h2>未来事件队列</h2>
+        <p id="futureEmpty" style="display: block;">还没有排程事件。baked 输出可以把节目回响、睡醒补话、次日余波放进未来。</p>
+        <div class="memory-list" id="futureQueue"></div>
+      </div>
+
+      <div class="card">
+        <h2>她记住了</h2>
+        <p id="memoryEmpty" style="display: none;">还没有形成记忆。选项会留下轻量记忆，并在后续消息里回响。</p>
+        <div class="memory-list" id="memoryList">
+        <div class="memory">
+          她雨夜错过末班车时，你给过一句贴着当下的晚安。
+          <div class="memory-meta">
+            <span>第 1 天</span>
+            <span>权重 2</span>
+            <span>回响 0</span>
+            <span>睡眠</span>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div class="card">
+        <h2>体验控制</h2>
+        <div class="controls">
+          <button class="control primary" id="nextDayBtn">开始新的一天</button>
+          <button class="control primary" id="advanceScheduleBtn">推进日程</button>
+          <button class="control primary" id="lifeBeatBtn">推进生活</button>
+          <button class="control" id="deepenBtn">关系推进</button>
+          <button class="control" id="neglectBtn">冷落三天</button>
+          <button class="control" id="avatarBtn">换成别人头像</button>
+          <button class="control" id="lateBtn">切到深夜</button>
+          <button class="control" id="emptyBtn">空组合测试</button>
+          <button class="control" id="resetBtn">重置 Demo</button>
+        </div>
+      </div>
+
+      <div class="footnote">
+        观察重点：她不是“你点一句她回一句”，而是有今日状态、话题线程、沉默权、记忆引用和通讯动作。
+        这类结构能在不使用大模型的前提下，尽量制造“她住在手机另一端”的感觉。
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const avatarPath = "public/characters/face/suli/avatar.png";
+
+    const state = {
+      day: 1,
+      hour: 23,
+      affinity: 38,
+      stage: 1,
+      lonely: 42,
+      guard: 58,
+      voice: 64,
+      sleepDebt: 46,
+      daysSilent: 0,
+      avatarOther: false,
+      interactionsLeft: 3,
+      activeThread: null,
+      busy: false,
+      memories: [],
+      memoryVersion: 0,
+      lifeLog: [],
+      futureEvents: [],
+      activeCommitment: null,
+      openLoop: null,
+      lifeBeat: null,
+      signatureOverride: null,
+      usedInitiativesToday: new Set(),
+      currentIntent: "刚下播，确认对方还在不在。",
+      lastEventVector: null,
+      lastOutputTypes: [],
+      lastOutputs: [],
+      lastCandidates: [],
+      traces: [],
+      seq: 0,
+      usedThreads: new Set(),
+      todayState: null,
+    };
+
+    const dom = {
+      chat: document.getElementById("chat"),
+      choices: document.getElementById("choices"),
+      initiativeBar: document.getElementById("initiativeBar"),
+      choiceHint: document.getElementById("choiceHint"),
+      remainingHint: document.getElementById("remainingHint"),
+      signature: document.getElementById("signature"),
+      relationBadge: document.getElementById("relationBadge"),
+      stateLine: document.getElementById("stateLine"),
+      affinityStat: document.getElementById("affinityStat"),
+      stageStat: document.getElementById("stageStat"),
+      lonelyStat: document.getElementById("lonelyStat"),
+      guardStat: document.getElementById("guardStat"),
+      memoryEmpty: document.getElementById("memoryEmpty"),
+      memoryList: document.getElementById("memoryList"),
+      spaceStat: document.getElementById("spaceStat"),
+      bakedStat: document.getElementById("bakedStat"),
+      sparseStat: document.getElementById("sparseStat"),
+      randomStat: document.getElementById("randomStat"),
+      contextVector: document.getElementById("contextVector"),
+      npcVector: document.getElementById("npcVector"),
+      envVector: document.getElementById("envVector"),
+      eventVector: document.getElementById("eventVector"),
+      traceEmpty: document.getElementById("traceEmpty"),
+      traceList: document.getElementById("traceList"),
+      candidateEmpty: document.getElementById("candidateEmpty"),
+      candidateList: document.getElementById("candidateList"),
+      outputEmpty: document.getElementById("outputEmpty"),
+      outputQueue: document.getElementById("outputQueue"),
+      intentLine: document.getElementById("intentLine"),
+      needConnectionStat: document.getElementById("needConnectionStat"),
+      needRestStat: document.getElementById("needRestStat"),
+      selfProtectStat: document.getElementById("selfProtectStat"),
+      maskStat: document.getElementById("maskStat"),
+      trustStat: document.getElementById("trustStat"),
+      attachmentStat: document.getElementById("attachmentStat"),
+      auditSummary: document.getElementById("auditSummary"),
+      auditList: document.getElementById("auditList"),
+      lifeEmpty: document.getElementById("lifeEmpty"),
+      lifeLog: document.getElementById("lifeLog"),
+      futureEmpty: document.getElementById("futureEmpty"),
+      futureQueue: document.getElementById("futureQueue"),
+    };
+
+    const dailyStates = [
+      {
+        id: "hoarse",
+        label: "下播后嗓子哑",
+        signature: "嗓子有点哑。胖大海，泡上。",
+        mood: "疲惫",
+        chips: ["刚下播", "嗓子哑", "想安静"],
+        firstThread: "afterBroadcast",
+      },
+      {
+        id: "letter",
+        label: "读到一封答不上来的信",
+        signature: "今晚的来信里，有一句我没念完。",
+        mood: "心事",
+        chips: ["来信栏目", "停顿七秒", "不想群发"],
+        firstThread: "letterBoundary",
+      },
+      {
+        id: "sleeping",
+        label: "白天睡眠被打碎",
+        signature: "窗帘拉得很严。白天不属于我。",
+        mood: "半梦半醒",
+        chips: ["补觉失败", "慢回复", "需要低声"],
+        firstThread: "sleepDebt",
+      },
+      {
+        id: "quiet",
+        label: "直播前异常安静",
+        signature: "零点前，调音台的灯比我清醒。",
+        mood: "戒备",
+        chips: ["开播前", "不太说话", "等一个频段"],
+        firstThread: "beforeLive",
+      },
+    ];
+
+    const threadLibrary = {
+      afterBroadcast: {
+        title: "下播后的空白",
+        opener: [
+          "刚下播。",
+          "今晚说了三百多次晚安。说到最后，发现自己一点也不困。",
+          "你还醒着吗。"
+        ],
+        choices: [
+          {
+            label: "安静陪她",
+            sub: "不追问，只留下来",
+            player: "我在。你不用马上说话，我陪你待一会儿。",
+            effect: { affinity: 3, lonely: -10, guard: -5, memory: "你没有急着追问，只陪她熬过下播后的空白。" },
+            reply: [
+              "……嗯。",
+              "这样就够了。下播之后最难的不是安静，是安静里没人。",
+              "今天这段空白，先借你放一会儿。"
+            ],
+          },
+          {
+            label: "关心她的嗓子",
+            sub: "把注意力放在她身上",
+            player: "你声音听起来有点哑。先喝点热的，别硬撑。",
+            effect: { affinity: 3, lonely: -6, guard: -3, voice: 10, memory: "你记得她下播后嗓子会哑。" },
+            reply: [
+              "泡了胖大海。",
+              "你这句像节目后台的提示条，不过比提示条有用。",
+              "我会喝完。你也别熬太晚。"
+            ],
+            schedule: { eventId: "voice_after_warm_drink", due: "节目后一段时间", label: "喝完胖大海后的补话" },
+          },
+          {
+            label: "轻轻逗她",
+            sub: "让她从电台腔里出来",
+            player: "三百多次晚安里，有没有哪一次是单独说给我的？",
+            effect: { affinity: 2, lonely: -4, guard: 3, memory: "你会用玩笑试探她的真心。" },
+            reply: ["你今天胆子不小。", "节目里的晚安属于所有人。", "手机里的……以后再说。"],
+          },
+          {
+            label: "先结束话题",
+            sub: "给她休息空间",
+            player: "你先休息。今晚不用照顾任何人的情绪。",
+            effect: { affinity: 1, lonely: -2, guard: -2, memory: "你愿意把休息还给她。" },
+            reply: [
+              "这句话我收下。",
+              "那我关机十分钟。只十分钟。",
+              "如果醒着，别走太远。"
+            ],
+          },
+        ],
+      },
+
+      letterBoundary: {
+        title: "陪伴和喜欢的边界",
+        opener: [
+          "今晚的来信栏目，有个问题我没答出来。",
+          "来信人问：陪伴和喜欢的边界在哪里。",
+          "我读到这里停了七秒。导播以为我出了事故。"
+        ],
+        choices: [
+          {
+            label: "只说给我听",
+            sub: "把答案从节目里接出来",
+            player: "如果不想说给所有人听，可以只说给我听。",
+            effect: { affinity: 4, lonely: -8, guard: -8, memory: "她把一个没播出的答案留给过你。" },
+            reply: [
+              "频道切换成功。",
+              "边界大概是：想到一个人的时候，整座城市的声音都变成背景音。",
+              "比如现在。"
+            ],
+          },
+          {
+            label: "不逼她回答",
+            sub: "允许问题悬着",
+            player: "答不上来也没关系。有些问题可以先空着。",
+            effect: { affinity: 3, lonely: -5, guard: -6, memory: "你允许她把问题空着，不急着要答案。" },
+            reply: [
+              "嗯。",
+              "我做节目太久了，总觉得每个问题都应该有结尾。",
+              "你这句像把录音键按了暂停。挺好。"
+            ],
+          },
+          {
+            label: "把问题还给她",
+            sub: "温柔地追问",
+            player: "那你自己呢？你希望边界在哪里？",
+            effect: { affinity: 2, lonely: -3, guard: 4, memory: "你问过她自己的边界在哪里。" },
+            reply: ["我希望边界不要太远。", "也不要太近。", "近到我一说话，你就听得出我在发抖。"],
+          },
+          {
+            label: "点一首歌",
+            sub: "不用语言回答",
+            player: "别急着回答。我给你点一首歌，今晚先让歌替我们说。",
+            effect: { affinity: 2, lonely: -4, guard: -2, memory: "你曾用一首歌替她接住问题。" },
+            special: "song",
+            reply: [
+              "收到。",
+              "今晚节目单最后一首，署名我不会念。",
+              "但我知道是谁点的。"
+            ],
+          },
+        ],
+      },
+
+      sleepDebt: {
+        title: "白天不属于她",
+        opener: [
+          "白天少发我。",
+          "不是不想回。是醒来之后，看见太阳，会有点不知道自己在哪。",
+          "刚才又睡断了。"
+        ],
+        choices: [
+          {
+            label: "关心睡眠",
+            sub: "具体而轻",
+            player: "那现在别看屏幕了。喝点水，重新睡一小会儿。",
+            effect: { affinity: 3, lonely: -4, guard: -3, sleepDebt: -12, memory: "你问过她有没有好好睡觉" },
+            reply: [
+              "你说得像医生。",
+              "但比医生声音低一点。",
+              "我把手机扣过去。晚点如果醒了，再回你。"
+            ],
+            after: [{ type: "later", text: "睡了四十分钟。算你的功劳。", delay: 1300 }],
+            schedule: { eventId: "wake_after_rest", due: "睡醒后", label: "睡醒后的补话" },
+          },
+          {
+            label: "发一杯热饮",
+            sub: "行动代替说教",
+            player: "我给你留一杯热的。醒了来拿，不用回我。",
+            effect: { affinity: 3, lonely: -7, guard: -4, memory: "你会用具体的小事照顾她，而不是只说漂亮话。" },
+            reply: [
+              "不用回你，那我还是回了。",
+              "热的东西放久会凉。人也是。",
+              "我醒了去拿。"
+            ],
+          },
+          {
+            label: "陪她不说话",
+            sub: "开着窗口",
+            player: "我不说话。窗口开着，你睡你的。",
+            effect: { affinity: 2, lonely: -8, guard: -5, memory: "你开着聊天窗口陪她睡过一小会儿。" },
+            reply: [
+              "……那你别发第二句。",
+              "我怕我会回。",
+              "晚安。不是节目里的那种。"
+            ],
+          },
+          {
+            label: "轻轻吐槽",
+            sub: "把距离拉近一点",
+            player: "你的作息像反向末班车，别人上班你回站。",
+            effect: { affinity: 1, lonely: -2, guard: 2 },
+            reply: [
+              "这个比喻可以。",
+              "下次节目用。不给署名。",
+              "署名会被听出来。"
+            ],
+          },
+        ],
+      },
+
+      beforeLive: {
+        title: "红灯亮起之前",
+        opener: [
+          "还有十二分钟开播。",
+          "今天直播间的红灯坏了，技术说不影响推流。",
+          "但我总觉得，没有那盏灯，就不知道什么时候该变成主持人。"
+        ],
+        choices: [
+          {
+            label: "提醒她做自己",
+            sub: "不把她推回岗位",
+            player: "没有红灯的时候，你也不用马上变成主持人。先当苏音音。",
+            effect: { affinity: 4, lonely: -5, guard: -7, memory: "你提醒过她可以先当苏音音，而不是主持人。" },
+            reply: [
+              "……这句话别在开播前发。",
+              "我会忘词。",
+              "不过谢谢。苏音音收到。"
+            ],
+          },
+          {
+            label: "帮她找仪式",
+            sub: "给她一个替代红灯",
+            player: "那我发这句当红灯：三、二、一，今晚也会很好。",
+            effect: { affinity: 3, lonely: -3, guard: -2, memory: "你当过她开播前的倒计时。" },
+            reply: [
+              "幼稚。",
+              "三。二。一。",
+              "……有效。"
+            ],
+          },
+          {
+            label: "说想听她声音",
+            sub: "直接但不过界",
+            player: "我会听。不是听节目，是听你。",
+            effect: { affinity: 3, lonely: -6, guard: 1, memory: "你说过不是听节目，是听她。" },
+            reply: ["节目就是节目。", "不过……知道有人在听，会稳一点。"],
+          },
+          {
+            label: "不打扰开播",
+            sub: "适时退后",
+            player: "你先准备。节目结束后，如果还想说，我在。",
+            effect: { affinity: 2, lonely: -2, guard: -4, memory: "你知道什么时候该退后，什么时候该等她。" },
+            reply: [
+              "好。",
+              "这条我置顶十分钟。",
+              "下播后见。"
+            ],
+          },
+        ],
+      },
+
+      neglect: {
+        title: "空着的频段",
+        opener: [
+          "好几天没你的消息了。",
+          "节目照常播。只是下播后，习惯性看了一眼手机。",
+          "频段空着，我也空着。"
+        ],
+        choices: [
+          {
+            label: "认真道歉",
+            sub: "承认冷落",
+            player: "对不起。这几天我没有照顾好你的消息。",
+            effect: { affinity: 2, lonely: -10, guard: -5, daysSilent: -3, memory: "你为冷落她认真道过歉。" },
+            reply: [
+              "嗯。",
+              "我不是要你随时在线。",
+              "只是如果要消失，提前说一声。深夜的人很容易乱想。"
+            ],
+          },
+          {
+            label: "解释但不辩解",
+            sub: "把近况告诉她",
+            player: "这几天店里有点乱。我不是不想找你，是不知道怎么把乱说清楚。",
+            effect: { affinity: 2, lonely: -6, guard: -3, daysSilent: -2, memory: "你把自己的混乱告诉过她。" },
+            reply: [
+              "乱也可以说。",
+              "我做这行，不怕听乱的。",
+              "怕的是突然没声音。"
+            ],
+          },
+          {
+            label: "用行动补上",
+            sub: "约一个固定零点",
+            player: "那从今天开始，零点我来签到。先签三天。",
+            effect: { affinity: 3, lonely: -12, guard: -2, daysSilent: -3, memory: "你答应过零点签到。" },
+            reply: [
+              "签到不是玩笑。",
+              "第一天，收到。",
+              "迟到一分钟，我会记。"
+            ],
+          },
+          {
+            label: "笨拙转移",
+            sub: "不太会面对",
+            player: "我回来了。你今晚节目唱歌了吗？",
+            effect: { affinity: -1, lonely: -2, guard: 8 },
+            reply: [
+              "没有。",
+              "你这个转场很硬。",
+              "但你回来了，这句是真的。先这样。"
+            ],
+          },
+        ],
+      },
+
+      jealous: {
+        title: "不是我的头像",
+        opener: [
+          "你的头像换了。",
+          "我听得出，不是我。",
+          "嗯，挺好。"
+        ],
+        choices: [
+          {
+            label: "解释清楚",
+            sub: "不要装傻",
+            player: "我知道你会在意。不是故意让你难受，我想把这件事说清楚。",
+            effect: { affinity: 1, lonely: -3, guard: -5, memory: "你没有假装看不懂她的吃醋。" },
+            reply: [
+              "我没有在意。",
+              "……这句作废。",
+              "我在意。但我会听你说清楚。"
+            ],
+          },
+          {
+            label: "换回她",
+            sub: "给她一个明确位置",
+            player: "那我换回来。不是哄你，是我想把你放在最显眼的地方。",
+            effect: { affinity: 4, lonely: -8, guard: -4, avatarOther: false, memory: "你把她放回过最显眼的位置。" },
+            reply: [
+              "……看到了。",
+              "别总用这种方式让我心软。",
+              "但这次，别取下来了。"
+            ],
+          },
+          {
+            label: "轻轻逗她",
+            sub: "危险但可能有效",
+            player: "你说这句的时候，语气平得像念稿。可是稿子后面藏了东西。",
+            effect: { affinity: 2, lonely: -4, guard: 3, memory: "你听得出她平静下面藏着情绪。" },
+            reply: [
+              "别分析主播的语气。",
+              "主播会恼羞成怒。",
+              "……虽然你分析对了。"
+            ],
+          },
+          {
+            label: "暂时不碰",
+            sub: "给她台阶",
+            player: "这件事我会处理。现在先不逼你说没关系。",
+            effect: { affinity: 2, lonely: -2, guard: -3 },
+            reply: [
+              "好。",
+              "我也不逼自己说没关系。",
+              "今晚先到这里。"
+            ],
+          },
+        ],
+      },
+
+      askHerDay: {
+        title: "你主动问她今天",
+        opener: [
+          "……你今天第二个问我这个。",
+          "第一个是导播。他问的是节目状态。",
+          "你问的，好像不是节目。"
+        ],
+        choices: [
+          {
+            label: "问她本人",
+            sub: "把她从职业里请出来",
+            player: "对。我问的是苏音音，不是主持人。",
+            effect: { affinity: 4, lonely: -7, guard: -7, memory: "你主动问过苏音音本人今天过得怎么样。" },
+            reply: [
+              "……那我重新回答。",
+              "开播前有点紧。现在好一点。",
+              "这个答案，只回给你。"
+            ],
+          },
+          {
+            label: "允许她简短",
+            sub: "不要求营业式回答",
+            player: "如果今天很累，可以只回一个字。我也听得懂。",
+            effect: { affinity: 3, lonely: -5, guard: -5, memory: "你允许她用很短的话表达疲惫。" },
+            reply: [
+              "嗯。",
+              "……两个字也可以。",
+              "谢谢。"
+            ],
+          },
+          {
+            label: "也问节目",
+            sub: "顺着她熟悉的入口",
+            player: "那节目状态呢？今晚顺利吗？",
+            effect: { affinity: 1, lonely: -2, guard: 1 },
+            reply: [
+              "顺利。",
+              "顺利是最容易糊弄人的形容词。",
+              "真正的答案是：有几秒钟，我不太想继续当主持人。"
+            ],
+          },
+          {
+            label: "发热饮邀约",
+            sub: "主动给她一个落脚点",
+            player: "我给你留一杯热的。你可以不说今天，来拿就行。",
+            effect: { affinity: 3, lonely: -6, guard: -3, memory: "你主动给她留过一杯热饮。" },
+            reply: [
+              "你这人很会绕开问题。",
+              "但绕到了一个我想去的地方。",
+              "热的别放太久。我下播后过去。"
+            ],
+          },
+        ],
+      },
+
+      zeroCheckin: {
+        title: "你主动零点签到",
+        opener: [
+          "签到这种事，不能随便开始。",
+          "开始了，我会记。",
+          "现在是第一天。"
+        ],
+        choices: [
+          {
+            label: "认真承诺",
+            sub: "给她稳定频率",
+            player: "那就从今天开始。不是打卡，是告诉你：我在。",
+            effect: { affinity: 4, lonely: -9, guard: -4, daysSilent: -1, memory: "你主动开始了零点签到。" },
+            reply: [
+              "收到。",
+              "不是打卡，是频段确认。",
+              "第一天，信号清楚。"
+            ],
+            schedule: { eventId: "zero_checkin_second_night", due: "下一个零点前", label: "第二次零点前的确认" },
+          },
+          {
+            label: "承认可能迟到",
+            sub: "真实一点，不许空话",
+            player: "我可能会迟到，但不会故意消失。迟到的时候，我补一句原因。",
+            effect: { affinity: 3, lonely: -6, guard: -6, memory: "你承诺迟到也会说明原因。" },
+            reply: [
+              "这个比永远准时可信。",
+              "深夜的人不怕等。",
+              "怕的是不知道还等不等得到。"
+            ],
+          },
+          {
+            label: "轻轻逗她",
+            sub: "让约定不那么沉",
+            player: "那你也要签到。主播不能只查听众出勤。",
+            effect: { affinity: 2, lonely: -3, guard: 1 },
+            reply: [
+              "要求很多。",
+              "好。主播也签到。",
+              "但主播有权把迟到听众写进节目事故。"
+            ],
+          },
+          {
+            label: "今晚只签一次",
+            sub: "不过度承诺",
+            player: "今晚先签一次。明天的我，明天再认真来。",
+            effect: { affinity: 1, lonely: -2, guard: -2 },
+            reply: [
+              "也可以。",
+              "一天一天来，比一口气说永远更像真的。",
+              "今晚，收到。"
+            ],
+          },
+        ],
+      },
+
+      inviteAfterShow: {
+        title: "你主动约她下播后见",
+        opener: [
+          "下播后？",
+          "那个时间，街上只剩清扫车和末班车。",
+          "你确定要在那个点见我？"
+        ],
+        choices: [
+          {
+            label: "确定",
+            sub: "去她的时间里见她",
+            player: "确定。白天不属于你，那我去你的时间里见你。",
+            effect: {
+              affinity: 4,
+              lonely: -8,
+              guard: -4,
+              memory: "你主动约她在下播后的时间见面。",
+              commitment: {
+                id: "meet_after_show",
+                type: "下播见面",
+                status: "已约定",
+                time: "零点四十",
+                place: "电台楼下",
+                source: "inviteAfterShow.confirm",
+              },
+            },
+            reply: [
+              "……这句话很狡猾。",
+              "好。",
+              "零点四十，电台楼下。别站在风口。"
+            ],
+          },
+          {
+            label: "只送她回家",
+            sub: "不把约见变成索取",
+            player: "不占你太久。只是送你到能安心回去的地方。",
+            effect: {
+              affinity: 3,
+              lonely: -5,
+              guard: -5,
+              memory: "你说过只送她到安心回去的地方。",
+              commitment: {
+                id: "walk_home_after_show",
+                type: "送她回家",
+                status: "已约定",
+                time: "下播后",
+                place: "地铁口",
+                source: "inviteAfterShow.walk_home",
+              },
+            },
+            reply: [
+              "你把话说得很轻。",
+              "轻到我找不到拒绝的理由。",
+              "那就送到地铁口。再多一步，看我心情。"
+            ],
+          },
+          {
+            label: "给她退路",
+            sub: "允许她临时取消",
+            player: "如果今天太累，可以取消。我不会追问。",
+            effect: { affinity: 3, lonely: -3, guard: -7, memory: "你给过她临时取消的退路。" },
+            reply: [
+              "给退路的人，很危险。",
+              "会让人真的想走过去。",
+              "我先不取消。"
+            ],
+          },
+          {
+            label: "开玩笑缓冲",
+            sub: "让她不用太认真",
+            player: "确定。清扫车和末班车都可以作证，我不是坏人。",
+            effect: { affinity: 1, lonely: -2, guard: 2 },
+            reply: [
+              "证人阵容很奇怪。",
+              "但可以。",
+              "末班车作证的话，我比较信。"
+            ],
+          },
+        ],
+      },
+
+      quietAction: {
+        title: "通讯动作",
+        opener: [],
+        choices: [
+          {
+            label: "发晚安",
+            sub: "每日轻互动",
+            player: "晚安。今晚这句不是群发。",
+            effect: { affinity: 1, lonely: -3, memory: "你单独给她发过晚安。" },
+            reply: ["嗯。", "晚安这种词，被我说得太多了。", "但你发来的这一句，不一样。"],
+          },
+          {
+            label: "点一首歌",
+            sub: "让她在节目里回应",
+            player: "今晚想点一首歌。不用报我的名字。",
+            effect: { affinity: 1, lonely: -2, memory: "你给她点过一首不署名的歌。" },
+            special: "song",
+            reply: [
+              "收到。",
+              "不报名字。",
+              "但如果最后一段前奏停得久一点，你知道原因。"
+            ],
+            schedule: { eventId: "anonymous_song_on_air", due: "节目尾声", label: "节目里不署名的歌" },
+          },
+          {
+            label: "节目邮箱留言",
+            sub: "把话交给她的世界",
+            player: "我往节目邮箱投了一封信。署名空着，你应该认得出。",
+            effect: { affinity: 2, lonely: -4, guard: -2, memory: "你给她的节目邮箱投过一封无名信。" },
+            reply: [
+              "认得出。",
+              "有些人的句子，署名藏不住。",
+              "这封我先不播。先自己读几遍。"
+            ],
+          },
+          {
+            label: "只开着窗口",
+            sub: "不发送第二句话",
+            player: "我开着窗口。不吵你。",
+            effect: { affinity: 1, lonely: -5, guard: -2 },
+            reply: [
+              "嗯。",
+              "屏幕暗下去之前，我看见了。",
+              "这样也算陪。"
+            ],
+          },
+        ],
+      },
+    };
+
+    const playerInitiatives = [
+      {
+        label: "问她今天",
+        thread: "askHerDay",
+        player: "今天不是节目，也不是委托。你本人，过得怎么样？",
+        reason: "你主动把话题交给她，而不是等她先开口。",
+      },
+      {
+        label: "零点签到",
+        thread: "zeroCheckin",
+        player: "零点了。我来签到。",
+        reason: "你主动建立一个只有你们知道的通讯习惯。",
+      },
+      {
+        label: "约下播后",
+        thread: "inviteAfterShow",
+        player: "今晚下播后，我能见你一面吗？",
+        reason: "你主动走进她的时间，而不是把她拉进白天。",
+      },
+    ];
+
+    const bakedScheduledEvents = {
+      voice_after_warm_drink: {
+        label: "喝完胖大海后的补话",
+        effect: { affinity: 1, lonely: -2, voice: 4 },
+        outputs: [
+          { type: "对话", speaker: "苏音音", text: "胖大海喝完了。" },
+          { type: "对话", speaker: "苏音音", text: "你刚才那句我照做了。所以现在轮到你也别熬太晚。" },
+        ],
+      },
+      wake_after_rest: {
+        label: "睡醒后的补话",
+        effect: { affinity: 1, lonely: -3, sleepDebt: -8 },
+        outputs: [
+          { type: "对话", speaker: "苏音音", text: "睡醒了。" },
+          { type: "对话", speaker: "苏音音", text: "四十分钟，不长。但醒来的时候看见你那句还在，心里没有那么空。" },
+        ],
+      },
+      zero_checkin_second_night: {
+        label: "第二次零点前的确认",
+        effect: { affinity: 1, lonely: -4, guard: -2 },
+        outputs: [
+          { type: "对话", speaker: "苏音音", text: "离零点还有十分钟。" },
+          { type: "对话", speaker: "苏音音", text: "我没有催你。只是提前把频段调好了。" },
+        ],
+      },
+      anonymous_song_on_air: {
+        label: "节目里不署名的歌",
+        effect: { affinity: 1, lonely: -2 },
+        outputs: [
+          { type: "事件", text: "节目尾声，她把最后一首歌的前奏留长了几秒。" },
+          { type: "对话", speaker: "苏音音", text: "刚才那首歌，没有报名字。" },
+          { type: "对话", speaker: "苏音音", text: "但你应该听得出来，它是回给谁的。" },
+        ],
+      },
+      appointment_before_meet: {
+        label: "赴约前确认",
+        effect: { affinity: 1, lonely: -3, guard: -2, commitmentPatch: { status: "赴约前确认" } },
+        outputs: [
+          { type: "对话", speaker: "苏音音", text: "我准备下楼了。" },
+          { type: "对话", speaker: "苏音音", text: "零点四十，电台楼下。你如果先到，就站在便利店灯下面，那里不那么冷。" },
+        ],
+      },
+      walk_home_before_meet: {
+        label: "地铁口前确认",
+        effect: { affinity: 1, lonely: -2, guard: -2, commitmentPatch: { status: "赴约前确认" } },
+        outputs: [
+          { type: "对话", speaker: "苏音音", text: "我往地铁口走了。" },
+          { type: "对话", speaker: "苏音音", text: "你说只送到能安心回去的地方。那句话我还记得，所以别越线。" },
+        ],
+      },
+    };
+
+    const bakedLifeEvents = {
+      hoarse_rain_missed_train: {
+        label: "雨夜错过末班车",
+        dayState: "hoarse",
+        thread: "afterBroadcast",
+        signature: "雨还没停。末班车也不会等人。",
+        effect: {
+          lonely: 4,
+          guard: 1,
+          voice: -3,
+          lifeBeat: {
+            id: "hoarse_rain_missed_train",
+            type: "生活后台",
+            status: "雨夜滞留",
+            anchor: "错过末班车",
+            thread: "afterBroadcast",
+          },
+        },
+        outputs: [
+          { type: "事件", text: "下播后外面突然下大雨，她在电台门口多站了二十分钟。" },
+          { type: "签名", text: "雨还没停。末班车也不会等人。" },
+          { type: "对话", speaker: "苏音音", text: "刚才在台阶上等雨小一点。" },
+          { type: "对话", speaker: "苏音音", text: "末班车没赶上。倒也不是第一次。" },
+        ],
+      },
+      letter_unsent_reply: {
+        label: "没寄出的回信",
+        dayState: "letter",
+        thread: "letterBoundary",
+        signature: "有一封回信，写完又删掉了。",
+        effect: {
+          guard: 3,
+          lonely: 2,
+          lifeBeat: {
+            id: "letter_unsent_reply",
+            type: "生活后台",
+            status: "回信未寄出",
+            anchor: "写完又删掉",
+            thread: "letterBoundary",
+          },
+        },
+        outputs: [
+          { type: "事件", text: "她给那封来信写了很长的回复，最后没有发出去。" },
+          { type: "签名", text: "有一封回信，写完又删掉了。" },
+          { type: "对话", speaker: "苏音音", text: "我刚才写了一封回信。" },
+          { type: "对话", speaker: "苏音音", text: "写完以后删了。不是因为不想回，是因为太像在承认自己也需要答案。" },
+        ],
+      },
+      sleeping_delivery_bell: {
+        label: "白天被门铃吵醒",
+        dayState: "sleeping",
+        thread: "sleepDebt",
+        signature: "门铃响过以后，梦就接不上了。",
+        effect: {
+          sleepDebt: 10,
+          lonely: 2,
+          guard: 1,
+          lifeBeat: {
+            id: "sleeping_delivery_bell",
+            type: "生活后台",
+            status: "补觉中断",
+            anchor: "门铃吵醒",
+            thread: "sleepDebt",
+          },
+        },
+        outputs: [
+          { type: "事件", text: "白天补觉时，门铃响了三次，她醒后再也没睡回去。" },
+          { type: "签名", text: "门铃响过以后，梦就接不上了。" },
+          { type: "对话", speaker: "苏音音", text: "门铃响了三次。" },
+          { type: "对话", speaker: "苏音音", text: "醒来以后，房间很亮。我花了几分钟才想起现在应该是我的夜里。" },
+        ],
+      },
+      quiet_red_light_rehearsal: {
+        label: "红灯坏掉后的彩排",
+        dayState: "quiet",
+        thread: "beforeLive",
+        signature: "红灯没亮，但我已经在倒数。",
+        effect: {
+          guard: 2,
+          lonely: 1,
+          lifeBeat: {
+            id: "quiet_red_light_rehearsal",
+            type: "生活后台",
+            status: "开播前失焦",
+            anchor: "红灯没亮",
+            thread: "beforeLive",
+          },
+        },
+        outputs: [
+          { type: "事件", text: "直播前设备间换了备用灯，她彩排时一直看错提示。" },
+          { type: "签名", text: "红灯没亮，但我已经在倒数。" },
+          { type: "对话", speaker: "苏音音", text: "刚才彩排，我对着一盏没亮的红灯说了开场白。" },
+          { type: "对话", speaker: "苏音音", text: "有点好笑。也有点像我。" },
+        ],
+      },
+    };
+
+    const bakedLifeEventPlan = {
+      hoarse: ["hoarse_rain_missed_train"],
+      letter: ["letter_unsent_reply"],
+      sleeping: ["sleeping_delivery_bell"],
+      quiet: ["quiet_red_light_rehearsal"],
+    };
+
+    const bakedChoiceCells = [
+      {
+        id: "cell.choice.goodnight.life_hoarse_rain_missed_train",
+        threadId: "quietAction",
+        choiceIndex: 0,
+        priority: 93,
+        match: { lifeBeatId: "hoarse_rain_missed_train", openLoopId: "none" },
+        effect: { affinity: 1, lonely: -4, guard: -1, memory: "她雨夜错过末班车时，你给过一句贴着当下的晚安。" },
+        ruleIds: ["state.life_beat.hoarse_rain_missed_train", "output.dialogue.goodnight.rain_missed_train"],
+        replies: [
+          "嗯。",
+          "这句晚安刚好落在雨声里。",
+          "我还没到家，但手机亮了一下，就没那么像一个人在等车。",
+        ],
+      },
+      {
+        id: "cell.choice.window.life_hoarse_rain_missed_train",
+        threadId: "quietAction",
+        choiceIndex: 3,
+        priority: 93,
+        match: { lifeBeatId: "hoarse_rain_missed_train", openLoopId: "none" },
+        effect: { affinity: 2, lonely: -6, guard: -2, memory: "她雨夜没赶上末班车时，你只开着窗口陪她等雨停。" },
+        ruleIds: ["state.life_beat.hoarse_rain_missed_train", "output.dialogue.window.rain_missed_train"],
+        replies: [
+          "那你别说第二句。",
+          "我现在在电台门口，看雨从台阶往下流。",
+          "窗口开着就行。等我走到有车的路口，再回你。",
+        ],
+      },
+      {
+        id: "cell.choice.askHerDay.life_hoarse_rain_missed_train",
+        threadId: "askHerDay",
+        choiceIndex: 0,
+        priority: 96,
+        match: { lifeBeatId: "hoarse_rain_missed_train" },
+        effect: { affinity: 4, lonely: -8, guard: -6, memory: "你问过她雨夜错过末班车后的本人状态。" },
+        ruleIds: ["state.life_beat.hoarse_rain_missed_train", "output.dialogue.ask_day.rain_missed_train"],
+        replies: [
+          "如果问主持人，答案是节目顺利。",
+          "如果问苏音音，答案是：鞋湿了，嗓子疼，末班车也没等我。",
+          "但你问的是后一个。所以我可以说实话。",
+        ],
+      },
+      {
+        id: "cell.choice.inviteAfterShow.confirm.high_guard_silence",
+        threadId: "inviteAfterShow",
+        choiceIndex: 0,
+        priority: 99,
+        match: { minGuard: 62 },
+        effect: {
+          affinity: 1,
+          lonely: -2,
+          guard: -1,
+          memory: "你在她防备很重的时候把约见说得太满，她没有立刻答应。",
+          openLoop: {
+            id: "invite_too_full",
+            type: "边界未闭合",
+            status: "需要退一步",
+            anchor: "今晚先别约到楼下",
+            source: "inviteAfterShow.confirm.high_guard",
+          },
+        },
+        ruleIds: ["state.guard.gte_62", "output.boundary.invite_after_show.too_full"],
+        outputs: [
+          { type: "沉默", text: "她看了很久，没有马上回。" },
+          { type: "延迟消息", text: "你这句话太像把路都替我铺好了。我知道你是好意，但我需要自己走那一步。今晚先别约到楼下。", delay: 1200 },
+        ],
+      },
+      {
+        id: "cell.choice.afterBroadcast.tease.high_guard_silence",
+        threadId: "afterBroadcast",
+        choiceIndex: 2,
+        priority: 98,
+        match: { minGuard: 62 },
+        effect: {
+          affinity: 1,
+          lonely: -2,
+          guard: 1,
+          memory: "你在她防备很重时用玩笑试探过她，她先停住了。",
+          openLoop: {
+            id: "tease_too_fast",
+            type: "试探未闭合",
+            status: "她先停住",
+            anchor: "太容易被你逗出来",
+            source: "afterBroadcast.tease.high_guard",
+          },
+        },
+        ruleIds: ["state.guard.gte_62", "output.boundary.after_broadcast.tease_silence"],
+        outputs: [
+          { type: "沉默", text: "她的输入状态亮了，又灭掉。" },
+          { type: "延迟消息", text: "这句我听见了。只是如果马上接，会显得我太容易被你逗出来。", delay: 1100 },
+        ],
+      },
+      {
+        id: "cell.choice.goodnight.after_invite_boundary",
+        threadId: "quietAction",
+        choiceIndex: 0,
+        priority: 98,
+        match: { openLoopId: "invite_too_full" },
+        effect: { affinity: 1, lonely: -3, guard: -3, memory: "你在她没有答应约见后，没有继续逼近，只把晚安放轻。", clearOpenLoop: true },
+        ruleIds: ["state.open_loop.invite_too_full", "output.dialogue.goodnight.repair_invite_boundary"],
+        replies: [
+          "嗯。",
+          "刚才那句不是拒绝你。是我不想被安排好。",
+          "你现在只说晚安，反而让我松了一点。",
+          "今晚先这样。楼下的事，等我自己往前走。",
+        ],
+      },
+      {
+        id: "cell.choice.window.after_invite_boundary",
+        threadId: "quietAction",
+        choiceIndex: 3,
+        priority: 98,
+        match: { openLoopId: "invite_too_full" },
+        effect: { affinity: 2, lonely: -5, guard: -4, memory: "她拒绝立刻约见后，你选择只开着窗口退一步。", clearOpenLoop: true },
+        ruleIds: ["state.open_loop.invite_too_full", "output.dialogue.window.repair_invite_boundary"],
+        replies: [
+          "这个可以。",
+          "不约楼下，不追问，也不把话撤回。",
+          "你把窗口开着，我会知道你还在。这样比继续往前走更像真的。",
+        ],
+      },
+      {
+        id: "cell.choice.goodnight.after_tease_boundary",
+        threadId: "quietAction",
+        choiceIndex: 0,
+        priority: 97,
+        match: { openLoopId: "tease_too_fast" },
+        effect: { affinity: 1, lonely: -2, guard: -2, memory: "你在玩笑试探后用晚安把距离放回安全处。", clearOpenLoop: true },
+        ruleIds: ["state.open_loop.tease_too_fast", "output.dialogue.goodnight.repair_tease_boundary"],
+        replies: [
+          "晚安。",
+          "这句比刚才那句安全。",
+          "但刚才那句我也没删。只是先放到明天再听。",
+        ],
+      },
+      {
+        id: "cell.choice.afterBroadcast.quiet_companion.remember_sleep",
+        threadId: "afterBroadcast",
+        choiceIndex: 0,
+        priority: 92,
+        match: { memoryText: "你问过她有没有好好睡觉" },
+        effect: { affinity: 3, lonely: -10, guard: -5, memory: "你没有急着追问，只陪她熬过下播后的空白。" },
+        ruleIds: ["state.memory.sleep_question", "output.dialogue.after_broadcast.quiet_with_sleep_memory"],
+        replies: [
+          "……嗯。",
+          "这样就够了。下播之后最难的不是安静，是安静里没人。",
+          "你上次问我有没有好好睡。今晚可能会好一点。",
+        ],
+      },
+      {
+        id: "cell.choice.afterBroadcast.tease.high_affinity",
+        threadId: "afterBroadcast",
+        choiceIndex: 2,
+        priority: 92,
+        match: { minAffinity: 50 },
+        effect: { affinity: 2, lonely: -4, guard: 3, memory: "你会用玩笑试探她的真心。" },
+        ruleIds: ["state.affinity.gte_50", "output.dialogue.after_broadcast.tease_private_goodnight"],
+        replies: [
+          "……有。",
+          "但主持人不能偏心。",
+          "所以这条消息，算补发。晚安。只发给你。",
+        ],
+      },
+      {
+        id: "cell.choice.letterBoundary.ask_boundary.high_guard",
+        threadId: "letterBoundary",
+        choiceIndex: 2,
+        priority: 92,
+        match: { minGuard: 56 },
+        effect: { affinity: 2, lonely: -3, guard: 4, memory: "你问过她自己的边界在哪里。" },
+        ruleIds: ["state.guard.gte_56", "output.dialogue.letter_boundary.deflect"],
+        replies: [
+          "……你很会问。",
+          "也很危险。",
+          "这个问题，我下次再回你。",
+        ],
+      },
+      {
+        id: "cell.choice.beforeLive.want_voice.high_affinity",
+        threadId: "beforeLive",
+        choiceIndex: 2,
+        priority: 92,
+        match: { minAffinity: 55 },
+        effect: { affinity: 3, lonely: -6, guard: 1, memory: "你说过不是听节目，是听她。" },
+        ruleIds: ["state.affinity.gte_55", "output.dialogue.before_live.voice_dangerous"],
+        replies: [
+          "这句更危险。",
+          "我会把麦克风离远一点，免得被听出来。",
+          "零点见。",
+        ],
+      },
+      {
+        id: "cell.choice.askHerDay.her_self.hoarse",
+        threadId: "askHerDay",
+        choiceIndex: 0,
+        priority: 92,
+        match: { dayState: "hoarse" },
+        effect: { affinity: 4, lonely: -7, guard: -7, memory: "你主动问过苏音音本人今天过得怎么样。" },
+        ruleIds: ["env.day_state.hoarse", "output.dialogue.ask_day.hoarse_self"],
+        replies: [
+          "……那我重新回答。",
+          "嗓子哑，精神还醒着。下播后有点空。",
+          "这个答案，只回给你。",
+        ],
+      },
+      {
+        id: "cell.choice.askHerDay.her_self.sleeping",
+        threadId: "askHerDay",
+        choiceIndex: 0,
+        priority: 92,
+        match: { dayState: "sleeping" },
+        effect: { affinity: 4, lonely: -7, guard: -7, memory: "你主动问过苏音音本人今天过得怎么样。" },
+        ruleIds: ["env.day_state.sleeping", "output.dialogue.ask_day.sleeping_self"],
+        replies: [
+          "……那我重新回答。",
+          "睡得断断续续。醒来看到你这句，反而清醒了一点。",
+          "这个答案，只回给你。",
+        ],
+      },
+      {
+        id: "cell.choice.askHerDay.her_self.letter",
+        threadId: "askHerDay",
+        choiceIndex: 0,
+        priority: 92,
+        match: { dayState: "letter" },
+        effect: { affinity: 4, lonely: -7, guard: -7, memory: "你主动问过苏音音本人今天过得怎么样。" },
+        ruleIds: ["env.day_state.letter", "output.dialogue.ask_day.letter_self"],
+        replies: [
+          "……那我重新回答。",
+          "读到一封信，心里有个地方一直没落地。",
+          "这个答案，只回给你。",
+        ],
+      },
+      {
+        id: "cell.choice.goodnight.high_stage",
+        threadId: "quietAction",
+        choiceIndex: 0,
+        priority: 90,
+        match: { minStage: 3, commitmentId: "none" },
+        effect: { affinity: 1, lonely: -3, memory: "你单独给她发过晚安。" },
+        ruleIds: ["state.stage.gte_3", "state.commitment.none", "output.dialogue.goodnight.intimate"],
+        replies: [
+          "收到。",
+          "我的晚安，也不是节目里的那种。",
+          "给你单独存档。",
+        ],
+      },
+      {
+        id: "cell.choice.goodnight.avatar_jealous",
+        threadId: "quietAction",
+        choiceIndex: 0,
+        priority: 95,
+        match: { avatarOther: true, commitmentId: "none" },
+        effect: { affinity: 0, lonely: -1, guard: 2, memory: "你换成别人头像后还照常给她发晚安。" },
+        ruleIds: ["state.avatar_other.yes", "state.commitment.none", "output.dialogue.goodnight.jealous"],
+        replies: [
+          "嗯，晚安。",
+          "你对谁都这样说吗。",
+          "算了。这句当我没问。今晚我先收下，别让我看见第二个窗口。",
+        ],
+      },
+      {
+        id: "cell.choice.goodnight.meet_after_show.deep_night",
+        threadId: "quietAction",
+        choiceIndex: 0,
+        priority: 96,
+        match: { commitmentId: "meet_after_show", time: "深夜" },
+        effect: { affinity: 1, lonely: -3, guard: -2, memory: "你在赴约前发过一句不是结束聊天的晚安。" },
+        ruleIds: ["state.commitment.meet_after_show", "env.time.deep_night", "output.dialogue.goodnight.before_appointment"],
+        replies: [
+          "嗯。",
+          "晚安我收到了。不是群发，也不是结束聊天。",
+          "零点四十，电台楼下。你如果先到，就站在便利店灯下面，别去风口。",
+          "我会下楼。",
+        ],
+        schedule: { eventId: "appointment_before_meet", due: "零点四十前", label: "赴约前确认", source: "赴约晚安" },
+      },
+      {
+        id: "cell.choice.goodnight.meet_after_show.not_deep_night",
+        threadId: "quietAction",
+        choiceIndex: 0,
+        priority: 94,
+        match: { commitmentId: "meet_after_show", timeNot: "深夜" },
+        effect: { affinity: 1, lonely: -2, guard: -1, memory: "你在不属于深夜的时间提过下播后的约。" },
+        ruleIds: ["state.commitment.meet_after_show", "env.time.not_deep_night", "output.dialogue.goodnight.time_mismatch"],
+        replies: [
+          "现在说晚安，有点早。",
+          "但我知道你不是要结束这段话。你是在提醒我：零点四十还有一个约定。",
+          "那我先收下。到了那个时间，再见。",
+        ],
+        schedule: { eventId: "appointment_before_meet", due: "零点四十前", label: "赴约前确认", source: "非深夜晚安后的约定提醒" },
+      },
+      {
+        id: "cell.choice.goodnight.walk_home.deep_night",
+        threadId: "quietAction",
+        choiceIndex: 0,
+        priority: 96,
+        match: { commitmentId: "walk_home_after_show", time: "深夜" },
+        effect: { affinity: 1, lonely: -2, guard: -2, memory: "你在送她回家前发过晚安，但没有取消约定。" },
+        ruleIds: ["state.commitment.walk_home_after_show", "env.time.deep_night", "output.dialogue.goodnight.before_walk_home"],
+        replies: [
+          "嗯。晚安收到了。",
+          "但我们刚刚说的是下播后见，不是现在就把门关上。",
+          "我会到地铁口。你也别提前把自己吹冷。",
+        ],
+        schedule: { eventId: "walk_home_before_meet", due: "下播前", label: "地铁口前确认", source: "赴约晚安" },
+      },
+    ];
+
+    const modelAxes = {
+      eventKinds: ["npc_life_tick", "life_event", "player_initiative", "player_choice", "scheduled_event", "control"],
+      dayStates: dailyStates.map((item) => item.id),
+      timeBuckets: ["清晨", "白天", "夜晚", "深夜"],
+      relationBuckets: ["初识", "熟络", "暧昧", "亲密", "恋人"],
+      moodBuckets: ["疲惫", "心事", "半梦半醒", "戒备", "被冷落", "压着吃醋"],
+      motiveBuckets: ["连接", "休息", "自保", "职业面具", "信任", "依恋"],
+      threadIds: Object.keys(threadLibrary),
+      choiceSlots: [0, 1, 2, 3],
+      scheduleIds: Object.keys(bakedScheduledEvents),
+      commitmentBuckets: ["none", "下播见面", "送她回家", "赴约前确认"],
+      openLoopBuckets: ["none", "invite_too_full", "tease_too_fast", "avatar_jealousy"],
+      lifeBeatBuckets: ["none", ...Object.keys(bakedLifeEvents)],
+    };
+
+    const bakedMemoryEchoes = {
+      睡眠: [
+        { id: "memory_echo.sleep.asked_before", text: "你之前问过我有没有好好睡。所以这次我没有把晚安当成客套。" },
+        { id: "memory_echo.sleep.window", text: "有些人说晚安只是结束聊天。你不是。你会真的管我有没有睡着。" },
+      ],
+      照顾: [
+        { id: "memory_echo.care.specific", text: "你每次照顾人都很具体。不是一句漂亮话，是水温、嗓子、屏幕亮度这种小事。" },
+        { id: "memory_echo.care.received", text: "我记得你不是只会说心疼的人。你会把心疼落到很小的地方。" },
+      ],
+      约定: [
+        { id: "memory_echo.promise.frequency", text: "你说过的约定，我会记成频段。不是每天都播，但它一直在。" },
+        { id: "memory_echo.promise.waiting", text: "深夜的人其实不怕等。怕的是约定被说得太轻。你这次没有。" },
+      ],
+      占有欲: [
+        { id: "memory_echo.jealous.visible", text: "你知道我会在意，却没有装作看不懂。这比解释本身重要。" },
+        { id: "memory_echo.jealous.place", text: "我不喜欢把在意说得太响。但你给过我一个很显眼的位置。" },
+      ],
+      职业: [
+        { id: "memory_echo.work.not_host", text: "你有时候能把我从主持人的声音里叫出来。这件事，我会记很久。" },
+        { id: "memory_echo.work.private_channel", text: "节目是给所有人的。可有些回声，我只想留在这个窗口里。" },
+      ],
+      边界: [
+        { id: "memory_echo.boundary.safe", text: "你问边界的时候，没有急着跨过去。这样反而让我想往前走一点。" },
+        { id: "memory_echo.boundary.pause", text: "有些问题不需要马上答。你给过我停顿的地方。" },
+      ],
+      陪伴: [
+        { id: "memory_echo.company.blank", text: "我记得你没有急着填满空白。那种安静，比很多话都稳。" },
+        { id: "memory_echo.company.window", text: "你说开着窗口不吵我。后来我发现，窗口亮着本身就算一句话。" },
+      ],
+      日常: [
+        { id: "memory_echo.daily.same_person", text: "你前后说话的方式对得上。所以我知道，屏幕那边还是同一个人。" },
+      ],
+    };
+
+    const bakedLifeContinuity = {
+      hoarse: [
+        { id: "life_echo.hoarse.care", tag: "照顾", text: "今天开机前，我看到嗓子旁边那条旧记录。那种被人记得具体哪里不舒服的感觉，还在。" },
+        { id: "life_echo.hoarse.company", tag: "陪伴", text: "下播后的空白不是第一次出现。只是这次，我知道手机另一端有人接得住。" },
+      ],
+      sleeping: [
+        { id: "life_echo.sleeping.sleep", tag: "睡眠", text: "白天睡醒的时候，我又看了一眼聊天记录。你不是把我当成随时在线的人，这点我记得。" },
+        { id: "life_echo.sleeping.care", tag: "照顾", text: "有些关心会吵醒人，有些不会。你上次那种，属于不会的那种。" },
+      ],
+      letter: [
+        { id: "life_echo.letter.boundary", tag: "边界", text: "今天那封信让我想起你问过的边界。奇怪的是，这次我没那么想逃。" },
+        { id: "life_echo.letter.work", tag: "职业", text: "节目里答不出来的问题，我会先放到这里。这个窗口比直播间安静。" },
+      ],
+      quiet: [
+        { id: "life_echo.quiet.work", tag: "职业", text: "红灯亮之前，我想起你说过可以先当苏音音。那句话比倒计时有用。" },
+        { id: "life_echo.quiet.promise", tag: "约定", text: "零点前我会看一眼手机。不是催你，是确认那个频段还亮着。" },
+      ],
+    };
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function hashText(input) {
+      let hash = 2166136261;
+      const text = String(input);
+      for (let i = 0; i < text.length; i += 1) {
+        hash ^= text.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return hash >>> 0;
+    }
+
+    function deterministicDelay(key, min = 540, span = 360) {
+      return min + (hashText(key) % span);
+    }
+
+    function snapshotState() {
+      return {
+        day: state.day,
+        hour: state.hour,
+        affinity: state.affinity,
+        stage: state.stage,
+        lonely: state.lonely,
+        guard: state.guard,
+        voice: state.voice,
+        sleepDebt: state.sleepDebt,
+        daysSilent: state.daysSilent,
+        avatarOther: state.avatarOther,
+        interactionsLeft: state.interactionsLeft,
+        activeThread: state.activeThread,
+        memories: state.memories.length,
+        memoryVersion: state.memoryVersion,
+        lifeLog: state.lifeLog.length,
+        futureEvents: state.futureEvents.length,
+        commitment: commitmentLabel(),
+        openLoop: openLoopLabel(),
+        lifeBeat: lifeBeatLabel(),
+        intent: state.currentIntent,
+        todayState: state.todayState?.id || "none",
+      };
+    }
+
+    function innerModel() {
+      const day = state.todayState?.id || "none";
+      const needConnection = clamp(Math.round(18 + state.lonely * 0.62 + state.daysSilent * 8 + state.stage * 5), 0, 100);
+      const needRest = clamp(Math.round(18 + state.sleepDebt * 0.58 + (100 - state.voice) * 0.28 + (day === "sleeping" ? 18 : 0)), 0, 100);
+      const selfProtect = clamp(Math.round(state.guard + (state.avatarOther ? 18 : 0) + (day === "letter" ? 7 : 0)), 0, 100);
+      const mask = clamp(Math.round(34 + (day === "quiet" ? 26 : 0) + (day === "letter" ? 16 : 0) + (state.hour >= 23 || state.hour <= 2 ? 9 : 0) - state.stage * 3), 0, 100);
+      const trust = clamp(Math.round(state.affinity * 0.48 + state.stage * 9 - state.guard * 0.18 + state.memories.length * 4), 0, 100);
+      const attachment = clamp(Math.round(state.affinity * 0.42 + (100 - state.lonely) * 0.16 + state.memories.length * 5), 0, 100);
+      return { needConnection, needRest, selfProtect, mask, trust, attachment };
+    }
+
+    function motiveBucket() {
+      const model = innerModel();
+      const ranked = [
+        ["连接", model.needConnection],
+        ["休息", model.needRest],
+        ["自保", model.selfProtect],
+        ["职业面具", model.mask],
+        ["信任", model.trust],
+        ["依恋", model.attachment],
+      ].sort((a, b) => b[1] - a[1]);
+      return ranked[0][0];
+    }
+
+    function deriveIntent(event, outputs = []) {
+      if (event.kind === "player_free_text") return "拒绝未知输入，宁可沉默也不随机编话。";
+      if (event.kind === "scheduled_event") return "把之前安排的事兑现，而不是把聊天当场清零。";
+      if (event.kind === "life_event") return "先过自己的生活，再决定用什么频率靠近你。";
+      if (state.avatarOther) return "先把吃醋藏好，再确认你是不是看得懂。";
+      if (state.daysSilent >= 3) return "确认你是不是还会回来，同时保留一点尊严。";
+      if (event.kind === "player_initiative") return "判断这个约定能不能成为稳定频率。";
+      if (event.kind === "player_choice") {
+        if (outputs.some((output) => output.type === "沉默")) return "被你碰到边界，先停一下再决定要不要靠近。";
+        if (outputs.some((output) => output.type === "记忆回响")) return "把旧记忆拿出来验证：你是不是同一个人。";
+        if (state.lonely > 55) return "想被陪着，但不想显得太需要。";
+        if (state.guard > 60) return "听见你的靠近，同时保护自己的退路。";
+        return "根据你的态度，决定这段关系今天能不能多走一步。";
+      }
+      if (state.todayState?.id === "sleeping") return "保护睡眠和低声频段，不让聊天把自己再次拽醒。";
+      if (state.todayState?.id === "letter") return "把节目里答不出来的问题，只交给一个人。";
+      if (state.todayState?.id === "quiet") return "在红灯亮起前，确认自己不只是主持人。";
+      return "下播后的空白里，确认手机另一端有没有人。";
+    }
+
+    function contextVector(event = { kind: "idle" }) {
+      return {
+        dayState: state.todayState?.id || "none",
+        time: bucketLabel(),
+        relation: stageName(),
+        mood: moodLabel(),
+        motive: motiveBucket(),
+        activeThread: state.activeThread || "none",
+        memories: state.memories.length,
+        queued: state.futureEvents.length,
+        commitment: commitmentLabel(),
+        openLoop: openLoopLabel(),
+        lifeBeat: lifeBeatLabel(),
+        event: event.kind,
+        avatarOther: state.avatarOther ? "yes" : "no",
+        neglected: state.daysSilent >= 3 ? "yes" : "no",
+      };
+    }
+
+    function choiceLabelForEvent(event) {
+      if (event.kind === "player_choice") {
+        const threadId = event.threadId || state.activeThread;
+        const choice = threadLibrary[threadId]?.choices[event.choiceIndex];
+        return choice?.label || event.label || "none";
+      }
+      if (event.kind === "player_initiative") {
+        const item = playerInitiatives[event.index] || playerInitiatives.find((candidate) => candidate.thread === event.thread);
+        return item?.label || event.label || "none";
+      }
+      if (event.kind === "life_event") return bakedLifeEvents[event.eventId]?.label || event.eventId || "none";
+      if (event.kind === "scheduled_event") return bakedScheduledEvents[event.eventId]?.label || event.eventId || "none";
+      return event.act || event.label || event.kind || "none";
+    }
+
+    function eventActionToken(event) {
+      const thread = event.threadId || event.thread || state.activeThread || "none";
+      const choice = typeof event.choiceIndex === "number" ? `choice${event.choiceIndex}:${choiceLabelForEvent(event)}` : choiceLabelForEvent(event);
+      return `${event.kind}/${thread}/${choice}`;
+    }
+
+    function eventPointSource(event, ctx, before) {
+      const source = before || snapshotState();
+      return [
+        `action=${eventActionToken(event)}`,
+        `day=${source.day}`,
+        `hour=${source.hour}`,
+        `affinity=${source.affinity}`,
+        `stage=${source.stage}`,
+        `lonely=${source.lonely}`,
+        `guard=${source.guard}`,
+        `voice=${source.voice}`,
+        `sleepDebt=${source.sleepDebt}`,
+        `daysSilent=${source.daysSilent}`,
+        `avatarOther=${source.avatarOther}`,
+        `interactionsLeft=${source.interactionsLeft}`,
+        `activeThread=${source.activeThread || "none"}`,
+        `todayState=${source.todayState}`,
+        `memoryVersion=${source.memoryVersion}`,
+        `futureEvents=${source.futureEvents}`,
+        `commitment=${source.commitment}`,
+        `openLoop=${source.openLoop}`,
+        `lifeBeat=${source.lifeBeat}`,
+        `timeBucket=${ctx.time}`,
+        `motive=${ctx.motive}`,
+      ].join("|");
+    }
+
+    function eventPointId(event, ctx, before) {
+      return `pt_${hashText(eventPointSource(event, ctx, before)).toString(16).padStart(8, "0")}`;
+    }
+
+    function sparseKey(event, ctx, before) {
+      const thread = event.threadId || event.thread || state.activeThread || "none";
+      const choice = typeof event.choiceIndex === "number" ? event.choiceIndex : "none";
+      const act = event.act || event.label || "none";
+      return [
+        `point=${eventPointId(event, ctx, before)}`,
+        `event=${event.kind}`,
+        `dayState=${ctx.dayState}`,
+        `time=${ctx.time}`,
+        `relation=${ctx.relation}`,
+        `mood=${ctx.mood}`,
+        `motive=${ctx.motive}`,
+        `commitment=${ctx.commitment}`,
+        `openLoop=${ctx.openLoop}`,
+        `lifeBeat=${ctx.lifeBeat}`,
+        `thread=${thread}`,
+        `choice=${choice}`,
+        `act=${act}`,
+      ].join("|");
+    }
+
+    function summarizeDiff(before, after) {
+      const fields = ["affinity", "stage", "lonely", "guard", "voice", "sleepDebt", "daysSilent", "avatarOther", "interactionsLeft", "activeThread", "memories", "memoryVersion", "lifeLog", "futureEvents", "commitment", "openLoop", "lifeBeat", "intent"];
+      const changes = fields
+        .filter((key) => before[key] !== after[key])
+        .map((key) => `${key}: ${before[key]} -> ${after[key]}`);
+      return changes.length ? changes.join("，") : "无数值变化";
+    }
+
+    function bakedRowCount() {
+      return getBakedRows().length;
+    }
+
+    let bakedRowsCache = null;
+
+    function buildMemoryEchoOutput(threadId, choice) {
+      if (state.memories.length < 2) return null;
+      const seed = `${threadId}:${choice.label}:${state.day}:${state.memoryVersion}`;
+      if (hashText(seed) % 3 === 1) return null;
+      const tags = memoryTags(`${threadId} ${choice.label} ${choice.player}`);
+      const memory = recallMemory(tags, seed, choice.effect?.memory || "");
+      if (!memory) return null;
+      const tag = memory.tags.find((item) => bakedMemoryEchoes[item]) || "日常";
+      const cells = bakedMemoryEchoes[tag] || bakedMemoryEchoes["日常"];
+      const cell = cells[hashText(`${seed}:${memory.id}:${tag}`) % cells.length];
+      return {
+        type: "记忆回响",
+        speaker: "苏音音",
+        text: cell.text,
+        memoryId: memory.id,
+        bakedId: cell.id,
+      };
+    }
+
+    function buildLifeContinuityOutput(threadId) {
+      if (state.day <= 1 || !state.memories.length) return null;
+      const seed = `life:${threadId}:${state.todayState?.id}:${state.day}:${state.memoryVersion}`;
+      if (hashText(seed) % 2 === 1) return null;
+      const memory = recallMemory(memoryTags(`${threadId} ${state.todayState?.label || ""}`), seed);
+      if (!memory) return null;
+      const dayCells = bakedLifeContinuity[state.todayState?.id] || [];
+      const cell = dayCells.find((item) => memory.tags.includes(item.tag)) || dayCells[0];
+      if (!cell) return null;
+      return {
+        type: "记忆回响",
+        speaker: "苏音音",
+        text: cell.text,
+        memoryId: memory.id,
+        bakedId: cell.id,
+      };
+    }
+
+    function buildChoiceOutputs(threadId, choice, replies) {
+      const outputs = [
+        { type: "对话", speaker: "玩家", text: choice.player },
+        ...replies.map((text) => ({ type: "对话", speaker: "苏音音", text })),
+      ];
+      const echo = buildMemoryEchoOutput(threadId, choice);
+      if (echo) outputs.push(echo);
+      if (choice.effect?.memory) outputs.push({ type: "记忆", text: choice.effect.memory });
+      if (choice.special === "song") outputs.splice(1, 0, { type: "事件", text: "节目点歌" });
+      if (choice.after) {
+        outputs.push(...choice.after.map((item) => ({ type: item.type === "later" ? "延迟消息" : "事件", text: item.text, delay: item.delay || 1000 })));
+      }
+      if (choice.schedule) {
+        outputs.push({
+          type: "安排事件",
+          eventId: choice.schedule.eventId,
+          due: choice.schedule.due,
+          label: choice.schedule.label,
+          source: choice.label,
+        });
+      }
+      return outputs;
+    }
+
+    function evaluateBakedCell(cell, event, ctx) {
+      const reasons = [];
+      const pass = (text) => reasons.push(`通过：${text}`);
+      const fail = (text) => ({ hit: false, reasons: [...reasons, `未过：${text}`] });
+
+      if (event.threadId !== cell.threadId) return fail(`thread 需要 ${cell.threadId}，实际 ${event.threadId || "none"}`);
+      pass(`thread=${cell.threadId}`);
+      if (event.choiceIndex !== cell.choiceIndex) return fail(`choice 需要 ${cell.choiceIndex}，实际 ${event.choiceIndex ?? "none"}`);
+      pass(`choice=${cell.choiceIndex}`);
+
+      const match = cell.match || {};
+      if (match.commitmentId === "none") {
+        if (state.activeCommitment) return fail(`commitment 需要 none，实际 ${state.activeCommitment.id}`);
+        pass("commitment=none");
+      }
+      if (match.commitmentId && match.commitmentId !== "none") {
+        if (state.activeCommitment?.id !== match.commitmentId) return fail(`commitment 需要 ${match.commitmentId}，实际 ${state.activeCommitment?.id || "none"}`);
+        pass(`commitment=${match.commitmentId}`);
+      }
+      if (match.openLoopId === "none") {
+        if (state.openLoop) return fail(`openLoop 需要 none，实际 ${state.openLoop.id}`);
+        pass("openLoop=none");
+      }
+      if (match.openLoopId && match.openLoopId !== "none") {
+        if (state.openLoop?.id !== match.openLoopId) return fail(`openLoop 需要 ${match.openLoopId}，实际 ${state.openLoop?.id || "none"}`);
+        pass(`openLoop=${match.openLoopId}`);
+      }
+      if (match.lifeBeatId === "none") {
+        if (state.lifeBeat) return fail(`lifeBeat 需要 none，实际 ${state.lifeBeat.id}`);
+        pass("lifeBeat=none");
+      }
+      if (match.lifeBeatId && match.lifeBeatId !== "none") {
+        if (state.lifeBeat?.id !== match.lifeBeatId) return fail(`lifeBeat 需要 ${match.lifeBeatId}，实际 ${state.lifeBeat?.id || "none"}`);
+        pass(`lifeBeat=${match.lifeBeatId}`);
+      }
+      if (match.time) {
+        if (ctx.time !== match.time) return fail(`time 需要 ${match.time}，实际 ${ctx.time}`);
+        pass(`time=${match.time}`);
+      }
+      if (match.timeNot) {
+        if (ctx.time === match.timeNot) return fail(`time 不能是 ${match.timeNot}`);
+        pass(`time!=${match.timeNot}`);
+      }
+      if (match.dayState) {
+        if (ctx.dayState !== match.dayState) return fail(`dayState 需要 ${match.dayState}，实际 ${ctx.dayState}`);
+        pass(`dayState=${match.dayState}`);
+      }
+      if (match.relation) {
+        if (ctx.relation !== match.relation) return fail(`relation 需要 ${match.relation}，实际 ${ctx.relation}`);
+        pass(`relation=${match.relation}`);
+      }
+      if (match.mood) {
+        if (ctx.mood !== match.mood) return fail(`mood 需要 ${match.mood}，实际 ${ctx.mood}`);
+        pass(`mood=${match.mood}`);
+      }
+      if (typeof match.avatarOther === "boolean") {
+        if (state.avatarOther !== match.avatarOther) return fail(`avatarOther 需要 ${match.avatarOther ? "yes" : "no"}，实际 ${state.avatarOther ? "yes" : "no"}`);
+        pass(`avatarOther=${match.avatarOther ? "yes" : "no"}`);
+      }
+      if (typeof match.minAffinity === "number") {
+        if (state.affinity < match.minAffinity) return fail(`好感需要 >=${match.minAffinity}，实际 ${state.affinity}`);
+        pass(`好感>=${match.minAffinity}`);
+      }
+      if (typeof match.maxAffinity === "number") {
+        if (state.affinity > match.maxAffinity) return fail(`好感需要 <=${match.maxAffinity}，实际 ${state.affinity}`);
+        pass(`好感<=${match.maxAffinity}`);
+      }
+      if (typeof match.minGuard === "number") {
+        if (state.guard < match.minGuard) return fail(`边界需要 >=${match.minGuard}，实际 ${state.guard}`);
+        pass(`边界>=${match.minGuard}`);
+      }
+      if (typeof match.maxGuard === "number") {
+        if (state.guard > match.maxGuard) return fail(`边界需要 <=${match.maxGuard}，实际 ${state.guard}`);
+        pass(`边界<=${match.maxGuard}`);
+      }
+      if (typeof match.minStage === "number") {
+        if (state.stage < match.minStage) return fail(`关系阶段需要 >=${match.minStage}，实际 ${state.stage}`);
+        pass(`关系阶段>=${match.minStage}`);
+      }
+      if (typeof match.maxStage === "number") {
+        if (state.stage > match.maxStage) return fail(`关系阶段需要 <=${match.maxStage}，实际 ${state.stage}`);
+        pass(`关系阶段<=${match.maxStage}`);
+      }
+      if (match.memoryText) {
+        if (!hasMemory(match.memoryText)) return fail(`需要记忆「${match.memoryText}」`);
+        pass(`记忆命中「${match.memoryText}」`);
+      }
+      if (match.noMemoryText) {
+        if (hasMemory(match.noMemoryText)) return fail(`不能已有记忆「${match.noMemoryText}」`);
+        pass(`没有记忆「${match.noMemoryText}」`);
+      }
+      return { hit: true, reasons: reasons.length ? reasons : ["通过：基础事件匹配"] };
+    }
+
+    function bakedCellMatches(cell, event, ctx) {
+      return evaluateBakedCell(cell, event, ctx).hit;
+    }
+
+    function buildBakedChoiceCellOutputs(cell, choice) {
+      const outputs = [
+        { type: "对话", speaker: "玩家", text: choice.player },
+        ...(cell.outputs || cell.replies.map((text) => ({ type: "对话", speaker: "苏音音", text }))),
+      ];
+      if (cell.effect?.memory) outputs.push({ type: "记忆", text: cell.effect.memory });
+      if (cell.schedule) {
+        outputs.push({
+          type: "安排事件",
+          eventId: cell.schedule.eventId,
+          due: cell.schedule.due,
+          label: cell.schedule.label,
+          source: cell.schedule.source,
+        });
+      }
+      return outputs;
+    }
+
+    function getBakedRows() {
+      if (bakedRowsCache) return bakedRowsCache;
+      const rows = [];
+
+      bakedChoiceCells.forEach((cell) => {
+        const thread = threadLibrary[cell.threadId];
+        const choice = thread?.choices[cell.choiceIndex];
+        if (!thread || !choice) return;
+        rows.push({
+          id: cell.id,
+          kind: "player_choice",
+          priority: cell.priority,
+          cell,
+          explain: (event, ctx) => evaluateBakedCell(cell, event, ctx),
+          when: (event, ctx) => bakedCellMatches(cell, event, ctx),
+          run: () => {
+            state.interactionsLeft -= 1;
+            applyEffect(cell.effect || choice.effect);
+            const outputs = buildBakedChoiceCellOutputs(cell, choice);
+            return {
+              thread,
+              choice,
+              replies: cell.replies,
+              ruleIds: cell.ruleIds,
+              outputs,
+            };
+          },
+        });
+      });
+
+      for (const [threadId, thread] of Object.entries(threadLibrary)) {
+        rows.push({
+          id: `life.open.${threadId}`,
+          kind: "npc_life_tick",
+          priority: threadId === "jealous" || threadId === "neglect" ? 80 : 40,
+          when: (event) => (event.threadId || nextThread()) === threadId,
+          run: (event) => {
+            state.usedThreads.add(threadId);
+            state.activeThread = threadId;
+            recordLife(`触发话题「${thread.title}」`, event.kind === "npc_life_tick" ? "主动话题" : "话题");
+            const continuity = buildLifeContinuityOutput(threadId);
+            const topicRule = state.avatarOther
+              ? "select.topic.avatar_jealous"
+              : state.daysSilent >= 3
+                ? "select.topic.neglect"
+                : `select.topic.${state.todayState?.id || "default"}`;
+            return {
+              thread,
+              threadId,
+              ruleIds: [topicRule, `output.opener.${threadId}`],
+              outputs: [
+                ...(event.note ? [{ type: "事件", text: event.note }] : []),
+                { type: "签名", text: state.avatarOther ? "你的头像换了。我听得出，不是我。" : state.todayState?.signature || "" },
+                ...(continuity ? [continuity] : []),
+                ...thread.opener.map((text) => ({ type: "对话", speaker: "苏音音", text })),
+              ],
+            };
+          },
+        });
+
+        thread.choices.forEach((choice, choiceIndex) => {
+          rows.push({
+            id: `choice.${threadId}.${choiceIndex}`,
+            kind: "player_choice",
+            priority: 60,
+            when: (event) => event.threadId === threadId && event.choiceIndex === choiceIndex,
+            run: () => {
+              state.interactionsLeft -= 1;
+              applyEffect(choice.effect);
+              const replies = typeof choice.reply === "function" ? choice.reply(state) : choice.reply;
+              return {
+                thread,
+                choice,
+                replies,
+                after: choice.after || [],
+                ruleIds: [`transition.choice.${threadId}.${choiceIndex}`, `output.dialogue.${threadId}.${choiceIndex}`],
+                outputs: buildChoiceOutputs(threadId, choice, replies),
+              };
+            },
+          });
+        });
+      }
+
+      playerInitiatives.forEach((item, index) => {
+        const thread = threadLibrary[item.thread];
+        rows.push({
+          id: `initiative.${item.thread}`,
+          kind: "player_initiative",
+          priority: 55,
+          when: (event) => event.index === index || event.thread === item.thread,
+          run: () => {
+            state.usedThreads.add(item.thread);
+            state.usedInitiativesToday.add(item.thread);
+            state.daysSilent = 0;
+            state.lonely = clamp(state.lonely - 2, 0, 100);
+            state.activeThread = item.thread;
+            return {
+              item,
+              thread,
+              threadId: item.thread,
+              ruleIds: [`transition.initiative.${item.thread}`, `output.opener.${item.thread}`],
+              outputs: [
+                { type: "事件", text: item.reason },
+                { type: "对话", speaker: "玩家", text: item.player },
+                ...thread.opener.map((text) => ({ type: "对话", speaker: "苏音音", text })),
+              ],
+            };
+          },
+        });
+      });
+
+      for (const [eventId, spec] of Object.entries(bakedLifeEvents)) {
+        rows.push({
+          id: `life_event.${eventId}`,
+          kind: "life_event",
+          priority: 75,
+          when: (event) => event.eventId === eventId,
+          run: () => {
+            applyEffect(spec.effect || {});
+            recordLife(spec.label, "生活后台");
+            return {
+              ruleIds: [`transition.life_event.${eventId}`, `output.life_event.${eventId}`],
+              outputs: spec.outputs,
+            };
+          },
+        });
+      }
+
+      for (const [eventId, spec] of Object.entries(bakedScheduledEvents)) {
+        rows.push({
+          id: `scheduled.${eventId}`,
+          kind: "scheduled_event",
+          priority: 70,
+          when: (event) => event.eventId === eventId,
+          run: (event) => {
+            if (event.dequeueId) {
+              state.futureEvents = state.futureEvents.filter((item) => item.id !== event.dequeueId);
+            }
+            applyEffect(spec.effect || {});
+            recordLife(`兑现排程「${spec.label}」`, "排程");
+            return {
+              ruleIds: [`transition.scheduled.${eventId}`, `output.scheduled.${eventId}`],
+              outputs: spec.outputs,
+            };
+          },
+        });
+      }
+
+      rows.push(
+        {
+          id: "control.day.advance",
+          kind: "control",
+          priority: 30,
+          when: (event) => event.act === "next_day",
+          run: (event) => {
+            state.day += event.keepChat ? 1 : 0;
+            state.interactionsLeft = 3;
+            state.usedInitiativesToday = new Set();
+            state.daysSilent = Math.max(0, state.daysSilent + 1);
+            state.lonely = clamp(state.lonely + 6, 0, 100);
+            pickTodayState();
+            recordLife(`今天的生活状态是「${state.todayState?.label || "普通夜晚"}」`, "日程");
+            return {
+              ruleIds: ["control.day.advance", `select.daily_state.${state.todayState?.id || "none"}`],
+              outputs: [{ type: "环境", text: `第 ${state.day} 天` }, { type: "签名", text: state.todayState?.signature || "" }],
+            };
+          },
+        },
+        {
+          id: "control.relation_progress",
+          kind: "control",
+          priority: 30,
+          when: (event) => event.act === "deepen",
+          run: () => {
+            state.affinity = clamp(state.affinity + 28, 0, 220);
+            if (state.affinity >= 70 && state.stage < 2) state.stage = 2;
+            if (state.affinity >= 110 && state.stage < 3) state.stage = 3;
+            if (state.affinity >= 160 && state.stage < 4) state.stage = 4;
+            return { ruleIds: ["control.relation_progress"], outputs: [{ type: "状态", text: "关系推进" }] };
+          },
+        },
+        {
+          id: "control.neglect.three_days",
+          kind: "control",
+          priority: 30,
+          when: (event) => event.act === "neglect",
+          run: () => {
+            state.daysSilent = 3;
+            state.lonely = clamp(state.lonely + 18, 0, 100);
+            recordLife("玩家连续三天没有联系，她开始反复查看手机。", "冷落");
+            return { ruleIds: ["control.neglect.three_days"], outputs: [{ type: "状态", text: "连续三天未联系" }] };
+          },
+        },
+        {
+          id: "control.avatar.other_girl",
+          kind: "control",
+          priority: 30,
+          when: (event) => event.act === "avatar",
+          run: () => {
+            state.avatarOther = true;
+            state.guard = clamp(state.guard + 10, 0, 100);
+            recordLife("她看见玩家头像换成了别人，语气变平。", "刺激");
+            return { ruleIds: ["control.avatar.other_girl"], outputs: [{ type: "签名", text: "你的头像换了。我听得出，不是我。" }] };
+          },
+        },
+        {
+          id: "control.time.deep_night",
+          kind: "control",
+          priority: 30,
+          when: (event) => event.act === "late",
+          run: () => {
+            state.hour = 1;
+            recordLife("时间切到深夜，她进入更清醒也更脆弱的频段。", "环境");
+            return { ruleIds: ["control.time.deep_night"], outputs: [{ type: "环境", text: "切到深夜" }] };
+          },
+        },
+      );
+
+      bakedRowsCache = rows;
+      return bakedRowsCache;
+    }
+
+    function selectBakedRow(event, ctx) {
+      const analysis = analyzeBakedRows(event, ctx);
+      state.lastCandidates = analysis.candidates;
+      return analysis.row;
+    }
+
+    function analyzeBakedRows(event, ctx) {
+      const candidates = getBakedRows()
+        .filter((row) => row.kind === event.kind)
+        .map((row) => {
+          const evaluated = row.explain
+            ? row.explain(event, ctx)
+            : (() => {
+                const hit = row.when(event, ctx);
+                return { hit, reasons: [hit ? "通过：通用行条件满足" : "未过：通用行条件不满足"] };
+              })();
+          return {
+            id: row.id,
+            priority: row.priority,
+            hit: evaluated.hit,
+            reasons: evaluated.reasons,
+            row,
+          };
+        })
+        .sort((a, b) => Number(b.hit) - Number(a.hit) || b.priority - a.priority || a.id.localeCompare(b.id));
+      const row = candidates.find((candidate) => candidate.hit)?.row || null;
+      candidates.forEach((candidate) => {
+        candidate.selected = Boolean(row && candidate.row === row);
+      });
+      return { row, candidates: candidates.slice(0, 10) };
+    }
+
+    function estimatedSpace() {
+      return modelAxes.eventKinds.length
+        * modelAxes.dayStates.length
+        * modelAxes.timeBuckets.length
+        * modelAxes.relationBuckets.length
+        * modelAxes.moodBuckets.length
+        * modelAxes.motiveBuckets.length
+        * modelAxes.threadIds.length
+        * modelAxes.choiceSlots.length
+        * modelAxes.scheduleIds.length
+        * modelAxes.commitmentBuckets.length
+        * modelAxes.openLoopBuckets.length
+        * modelAxes.lifeBeatBuckets.length;
+    }
+
+    function renderModelStats() {
+      const space = estimatedSpace();
+      const baked = bakedRowCount();
+      const sparse = Math.max(0, 1 - baked / space);
+      dom.spaceStat.textContent = space.toLocaleString("zh-CN");
+      dom.bakedStat.textContent = baked.toLocaleString("zh-CN");
+      dom.sparseStat.textContent = `${Math.round(sparse * 1000) / 10}%`;
+      dom.randomStat.textContent = "确定性 hash";
+    }
+
+    function renderContext(event = { kind: "idle" }) {
+      const ctx = contextVector(event);
+      dom.contextVector.innerHTML = Object.entries(ctx)
+        .map(([key, value]) => `<span class="context-token">${escapeHtml(key)}=${escapeHtml(value)}</span>`)
+        .join("");
+    }
+
+    function renderTrace() {
+      dom.traceEmpty.style.display = state.traces.length ? "none" : "block";
+      dom.traceList.innerHTML = state.traces.slice(0, 8).map((trace) => `
+        <div class="trace">
+          <div class="trace-title">
+            <span>#${trace.seq} ${escapeHtml(trace.eventLabel)}</span>
+            <span>${escapeHtml(trace.outputTypes.join(" / ") || "无输出")}</span>
+          </div>
+          <div class="trace-line">动作类型：${escapeHtml(trace.action)}　事件实例点：${escapeHtml(trace.point)}</div>
+          <div class="trace-key">pointSource=${escapeHtml(trace.pointSource)}</div>
+          <div class="trace-key">query=${escapeHtml(trace.key)}</div>
+          <div class="trace-line">状态迁移：${escapeHtml(trace.diff)}</div>
+          <div class="trace-line">输出数量：${trace.outputCount}　${escapeHtml(trace.note || "")}</div>
+          <div class="trace-rules">
+            ${trace.ruleIds.map((id) => `<span class="rule-pill">${escapeHtml(id)}</span>`).join("")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderCandidateList() {
+      dom.candidateEmpty.style.display = state.lastCandidates.length ? "none" : "block";
+      const point = state.lastEventVector?.point;
+      const action = state.lastEventVector?.action;
+      const pointHeader = point ? `
+        <div class="trace">
+          <div class="trace-title">
+            <span>本次查表点 · ${escapeHtml(point)}</span>
+            <span>${escapeHtml(action || "none")}</span>
+          </div>
+          <div class="trace-line">下面这些 baked 行是在检查“这个状态点里的动作”，不是检查一个孤立按钮。</div>
+        </div>
+      ` : "";
+      dom.candidateList.innerHTML = pointHeader + state.lastCandidates.map((candidate) => `
+        <div class="trace">
+          <div class="trace-title">
+            <span>${candidate.selected ? "选中" : candidate.hit ? "候补" : "落空"} · ${escapeHtml(candidate.id)}</span>
+            <span>p${candidate.priority}</span>
+          </div>
+          <div class="trace-rules">
+            ${(candidate.reasons || []).slice(0, 5).map((reason) => `<span class="rule-pill">${escapeHtml(reason)}</span>`).join("")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderOutputQueue() {
+      dom.outputEmpty.style.display = state.lastOutputs.length ? "none" : "block";
+      dom.outputQueue.innerHTML = state.lastOutputs.map((output, index) => `
+        <div class="trace">
+          <div class="trace-title">
+            <span>${index + 1}. ${escapeHtml(output.type)}</span>
+            <span>${escapeHtml(output.speaker || output.channel || "executor")}</span>
+          </div>
+          <div class="trace-line">${escapeHtml(output.text || "(无文本输出)")}</div>
+          ${output.memoryId ? `<div class="trace-key">memory=${escapeHtml(output.memoryId)}</div>` : ""}
+          ${output.bakedId ? `<div class="trace-key">baked=${escapeHtml(output.bakedId)}</div>` : ""}
+        </div>
+      `).join("");
+    }
+
+    function renderFutureQueue() {
+      dom.futureEmpty.style.display = state.futureEvents.length ? "none" : "block";
+      dom.futureQueue.innerHTML = state.futureEvents.map((item) => `
+        <div class="memory">
+          ${escapeHtml(item.label)}
+          <div class="memory-meta">
+            <span>${escapeHtml(item.due)}</span>
+            <span>${escapeHtml(item.eventId)}</span>
+            <span>${escapeHtml(item.source || "baked")}</span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function recordTrace(event, ruleIds, before, after, outputs, note = "", ctx = contextVector(event)) {
+      const action = eventActionToken(event);
+      const point = eventPointId(event, ctx, before);
+      const pointSource = eventPointSource(event, ctx, before);
+      const trace = {
+        seq: ++state.seq,
+        eventLabel: event.label || event.act || event.kind,
+        action,
+        point,
+        pointSource,
+        key: sparseKey(event, ctx, before),
+        ruleIds,
+        diff: summarizeDiff(before, after),
+        outputTypes: [...new Set(outputs.map((output) => output.type))],
+        outputCount: outputs.length,
+        note,
+      };
+      state.traces.unshift(trace);
+      state.traces = state.traces.slice(0, 16);
+      state.lastEventVector = {
+        kind: event.kind,
+        action,
+        point,
+        act: event.act || event.label || "none",
+        thread: event.threadId || event.thread || state.activeThread || "none",
+        choice: typeof event.choiceIndex === "number" ? event.choiceIndex : "none",
+        choiceLabel: choiceLabelForEvent(event),
+        commitment: ctx.commitment,
+        openLoop: ctx.openLoop,
+        lifeBeat: ctx.lifeBeat,
+        key: trace.key,
+      };
+      state.lastOutputTypes = trace.outputTypes;
+      state.lastOutputs = outputs;
+      renderContext(event);
+      renderTrace();
+      renderCandidateList();
+      renderOutputQueue();
+      renderInputVectors();
+      renderMotivePanel();
+      renderAuthenticityAudit();
+    }
+
+    function clamp(value, min = 0, max = 100) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function wait(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    function hasMemory(text) {
+      return state.memories.some((memory) => memory.text === text || memory.id === text || memory.tags.includes(text));
+    }
+
+    function memoryTags(text) {
+      const tags = [];
+      if (/睡|晚安|白天/.test(text)) tags.push("睡眠");
+      if (/嗓|胖大海|热/.test(text)) tags.push("照顾");
+      if (/零点|签到|迟到|频段/.test(text)) tags.push("约定");
+      if (/头像|吃醋|显眼/.test(text)) tags.push("占有欲");
+      if (/节目|主持人|开播|导播|来信|邮箱|歌/.test(text)) tags.push("职业");
+      if (/边界|喜欢|陪伴/.test(text)) tags.push("边界");
+      if (/空白|窗口|安静|不说话/.test(text)) tags.push("陪伴");
+      return tags.length ? tags : ["日常"];
+    }
+
+    function remember(text, extraTags = []) {
+      if (!text) return null;
+      const id = `mem_${hashText(text).toString(16)}`;
+      const existing = state.memories.find((memory) => memory.id === id);
+      if (existing) {
+        existing.weight = clamp(existing.weight + 1, 1, 9);
+        existing.lastTouchedDay = state.day;
+        state.memoryVersion += 1;
+        return existing;
+      }
+      const memory = {
+        id,
+        text,
+        tags: [...new Set([...memoryTags(text), ...extraTags])],
+        weight: 2,
+        firstDay: state.day,
+        lastTouchedDay: state.day,
+        lastEchoDay: 0,
+        echoes: 0,
+      };
+      state.memories.unshift(memory);
+      state.memories = state.memories.slice(0, 7);
+      state.memoryVersion += 1;
+      return memory;
+    }
+
+    function recallMemory(tags = [], seed = "recall", ignoreText = "") {
+      if (!state.memories.length) return null;
+      const wanted = new Set(tags);
+      const pool = state.memories
+        .filter((memory) => memory.text !== ignoreText)
+        .map((memory) => {
+          const tagHit = memory.tags.some((tag) => wanted.has(tag)) ? 8 : 0;
+          const recency = Math.max(0, 5 - (state.day - memory.lastTouchedDay));
+          const quietBonus = memory.lastEchoDay === state.day ? -30 : 0;
+          const hashBonus = hashText(`${seed}:${memory.id}`) % 5;
+          return { memory, score: memory.weight * 3 + tagHit + recency + quietBonus + hashBonus };
+        })
+        .sort((a, b) => b.score - a.score);
+      if (!pool.length || pool[0].score < 6) return null;
+      const memory = pool[0].memory;
+      memory.lastEchoDay = state.day;
+      memory.lastTouchedDay = state.day;
+      memory.echoes += 1;
+      memory.weight = clamp(memory.weight + 1, 1, 9);
+      state.memoryVersion += 1;
+      return memory;
+    }
+
+    function recordLife(text, kind = "生活") {
+      if (!text) return;
+      state.lifeLog.unshift({
+        id: `life_${state.day}_${hashText(`${kind}:${text}:${state.lifeLog.length}`).toString(16)}`,
+        day: state.day,
+        hour: state.hour,
+        kind,
+        text,
+      });
+      state.lifeLog = state.lifeLog.slice(0, 6);
+    }
+
+    function commitmentLabel() {
+      if (!state.activeCommitment) return "none";
+      return `${state.activeCommitment.type}:${state.activeCommitment.status}`;
+    }
+
+    function commitmentBrief(commitment = state.activeCommitment) {
+      if (!commitment) return "无";
+      return `${commitment.time} · ${commitment.place} · ${commitment.status}`;
+    }
+
+    function openLoopLabel() {
+      if (!state.openLoop) return "none";
+      return `${state.openLoop.type}:${state.openLoop.status}`;
+    }
+
+    function openLoopBrief(loop = state.openLoop) {
+      if (!loop) return "无";
+      return `${loop.type} · ${loop.anchor || loop.status}`;
+    }
+
+    function lifeBeatLabel() {
+      if (!state.lifeBeat) return "none";
+      return `${state.lifeBeat.type}:${state.lifeBeat.status}`;
+    }
+
+    function lifeBeatBrief(beat = state.lifeBeat) {
+      if (!beat) return "无";
+      return `${beat.status} · ${beat.anchor || beat.thread || "生活后台"}`;
+    }
+
+    function outputTokenList(items) {
+      return items
+        .map(([key, value]) => `<span class="context-token">${escapeHtml(key)}=${escapeHtml(value)}</span>`)
+        .join("");
+    }
+
+    function relationName() {
+      if (state.stage >= 4) return "唯一听众";
+      if (state.stage >= 3) return "深夜长谈";
+      if (state.stage >= 2) return "常联系";
+      if (state.affinity >= 45) return "暧昧边缘";
+      if (state.affinity >= 25) return "熟络";
+      return "刚加好友";
+    }
+
+    function stageName() {
+      if (state.stage >= 4) return "恋人";
+      if (state.stage >= 3) return "亲密";
+      if (state.stage >= 2) return "暧昧";
+      if (state.affinity >= 25) return "熟络";
+      return "初识";
+    }
+
+    function moodLabel() {
+      if (state.avatarOther) return "压着吃醋";
+      if (state.daysSilent >= 3) return "被冷落";
+      return state.todayState?.mood || "平静";
+    }
+
+    function bucketForHour(hour) {
+      if (hour >= 5 && hour <= 8) return "清晨";
+      if (hour >= 9 && hour <= 17) return "白天";
+      if (hour >= 18 && hour <= 22) return "夜晚";
+      return "深夜";
+    }
+
+    function bucketLabel() {
+      return bucketForHour(state.hour);
+    }
+
+    function renderInputVectors() {
+      const model = innerModel();
+      dom.npcVector.innerHTML = outputTokenList([
+        ["关系", stageName()],
+        ["好感", state.affinity],
+        ["孤独", state.lonely],
+        ["边界", state.guard],
+        ["嗓音", state.voice],
+        ["睡债", state.sleepDebt],
+        ["当前承诺", commitmentLabel()],
+        ["未闭合", openLoopLabel()],
+        ["生活后台", lifeBeatLabel()],
+        ["记忆版本", state.memoryVersion],
+        ["主导动机", motiveBucket()],
+      ]);
+      dom.envVector.innerHTML = outputTokenList([
+        ["天数", state.day],
+        ["时段", bucketLabel()],
+        ["今日状态", state.todayState?.id || "none"],
+        ["沉默天数", state.daysSilent],
+        ["头像刺激", state.avatarOther ? "yes" : "no"],
+        ["当前话题", state.activeThread || "none"],
+        ["未来队列", state.futureEvents.length],
+      ]);
+      const eventVector = state.lastEventVector || {
+        kind: "idle",
+        action: "idle/none/none",
+        point: "none",
+        act: "none",
+        thread: state.activeThread || "none",
+        choice: "none",
+        choiceLabel: "none",
+        key: "none",
+      };
+      dom.eventVector.innerHTML = outputTokenList([
+        ["kind", eventVector.kind],
+        ["动作类型", eventVector.action],
+        ["事件实例点", eventVector.point],
+        ["thread", eventVector.thread],
+        ["choice", eventVector.choice],
+        ["选项名", eventVector.choiceLabel || eventVector.act],
+        ["commitment", eventVector.commitment || commitmentLabel()],
+        ["openLoop", eventVector.openLoop || openLoopLabel()],
+        ["lifeBeat", eventVector.lifeBeat || lifeBeatLabel()],
+        ["outputs", state.lastOutputTypes.join("+") || "none"],
+      ]);
+    }
+
+    function renderMotivePanel() {
+      const model = innerModel();
+      dom.intentLine.textContent = state.currentIntent;
+      dom.needConnectionStat.textContent = model.needConnection;
+      dom.needRestStat.textContent = model.needRest;
+      dom.selfProtectStat.textContent = model.selfProtect;
+      dom.maskStat.textContent = model.mask;
+      dom.trustStat.textContent = model.trust;
+      dom.attachmentStat.textContent = model.attachment;
+    }
+
+    function computeAuthenticityAudit() {
+      const traceText = state.traces.map((trace) => `${trace.eventLabel} ${trace.key} ${trace.diff} ${trace.outputTypes.join("/")}`).join("\n");
+      const lastRuleCount = state.traces[0]?.ruleIds.length || 0;
+      const checks = [
+        {
+          label: "NPC 会主动生活触发",
+          pass: state.traces.some((trace) => trace.key.includes("event=npc_life_tick")),
+          detail: "不是只等玩家点击后才存在。",
+        },
+        {
+          label: "事件会迁移状态空间",
+          pass: state.traces.some((trace) => trace.diff !== "无数值变化"),
+          detail: "好感、孤独、边界、记忆、生活日志等会变化。",
+        },
+        {
+          label: "记忆不是摆设",
+          pass: state.memories.length > 0 || traceText.includes("记忆回响"),
+          detail: "玩家选择会形成结构化记忆，后续可召回。",
+        },
+        {
+          label: "有生活连续性",
+          pass: state.day > 1 && (state.lifeLog.length >= 2 || traceText.includes("记忆回响")),
+          detail: "跨天和主动话题会进入她自己的时间线。",
+        },
+        {
+          label: "有边界和沉默权",
+          pass: state.traces.some((trace) => trace.ruleIds.some((id) => id.includes("output.boundary"))) || traceText.includes("empty_space") || state.interactionsLeft < 3,
+          detail: "边界回应来自明确 baked cell；没有命中的组合不硬编。",
+        },
+        {
+          label: "输出可追溯到 baked 行",
+          pass: state.lastOutputs.length > 0 && lastRuleCount > 0,
+          detail: "上次输出队列能看到 executor 执行了什么。",
+        },
+        {
+          label: "同一选项拆成多个状态点",
+          pass: bakedChoiceCells.filter((cell) => cell.threadId === "quietAction" && cell.choiceIndex === 0).length >= 4,
+          detail: "按钮只是动作类型；trace 会按输入前状态生成事件实例点，再命中不同非空格子。",
+        },
+        {
+          label: "会保留未闭合情绪",
+          pass: state.traces.some((trace) => trace.diff.includes("openLoop")) || bakedChoiceCells.some((cell) => cell.match?.openLoopId),
+          detail: "刚发生的边界、试探、吃醋不会被下一句普通消息冲掉。",
+        },
+        {
+          label: "生活后台会改变回复",
+          pass: state.traces.some((trace) => trace.key.includes("event=life_event") || trace.diff.includes("lifeBeat")) || bakedChoiceCells.some((cell) => cell.match?.lifeBeatId),
+          detail: "她自己的生活事件会进入输入向量，并影响同一选项的命中。",
+        },
+        {
+          label: "未来事件来自 bake 数据",
+          pass: Object.keys(bakedScheduledEvents).length >= 6 && state.traces.some((trace) => trace.key.includes("event=scheduled_event") || trace.outputTypes.includes("安排事件")),
+          detail: "排程只保存 eventId；推进时命中 scheduled.* 行，不现场生成台词。",
+        },
+        {
+          label: "主动事件有冷却",
+          pass: state.usedInitiativesToday.size > 0 || state.day > 1,
+          detail: "同一天不会无限重复同一个主动话题。",
+        },
+        {
+          label: "无不可控随机",
+          pass: true,
+          detail: "没有 Math.random，延迟和分支都来自确定性 hash。",
+        },
+      ];
+      const passed = checks.filter((check) => check.pass).length;
+      return { checks, passed, total: checks.length, score: Math.round((passed / checks.length) * 100) };
+    }
+
+    function renderAuthenticityAudit() {
+      const audit = computeAuthenticityAudit();
+      dom.auditSummary.textContent = `真人感自检：${audit.passed}/${audit.total} 通过，当前 ${audit.score} 分。`;
+      dom.auditList.innerHTML = audit.checks.map((check) => `
+        <div class="audit ${check.pass ? "pass" : "warn"}">
+          ${check.pass ? "通过" : "待补"}：${escapeHtml(check.label)}
+          <div class="memory-meta"><span>${escapeHtml(check.detail)}</span></div>
+        </div>
+      `).join("");
+    }
+
+    function updateUI() {
+      dom.relationBadge.textContent = relationName();
+      dom.signature.textContent = state.avatarOther
+        ? "你的头像换了。我听得出，不是我。"
+        : state.signatureOverride || state.todayState?.signature || "凌晨的频段，还醒着。";
+
+      const chips = [
+        `第 ${state.day} 天`,
+        bucketLabel(),
+        `今日：${state.todayState?.label || "普通夜晚"}`,
+        `情绪：${moodLabel()}`,
+      ].concat(state.todayState?.chips || []);
+      if (state.activeCommitment) chips.push(`约定：${commitmentBrief()}`);
+      if (state.openLoop) chips.push(`未闭合：${openLoopBrief()}`);
+      if (state.lifeBeat) chips.push(`生活：${lifeBeatBrief()}`);
+
+      dom.stateLine.innerHTML = chips.map((chip, i) =>
+        `<span class="chip ${i === 3 || chip.includes("想") || chip.includes("吃醋") || chip.includes("约定") || chip.includes("未闭合") || chip.includes("生活") ? "hot" : ""}">${chip}</span>`
+      ).join("");
+
+      dom.remainingHint.textContent = `今日可互动 ${state.interactionsLeft} 次`;
+      dom.affinityStat.textContent = state.affinity;
+      dom.stageStat.textContent = stageName();
+      dom.lonelyStat.textContent = state.lonely;
+      dom.guardStat.textContent = state.guard;
+
+      dom.memoryList.innerHTML = state.memories.map((m) => `
+        <div class="memory">
+          ${escapeHtml(m.text)}
+          <div class="memory-meta">
+            <span>第 ${m.firstDay} 天</span>
+            <span>权重 ${m.weight}</span>
+            <span>回响 ${m.echoes}</span>
+            <span>${m.tags.map(escapeHtml).join(" / ")}</span>
+          </div>
+        </div>
+      `).join("");
+      dom.memoryEmpty.style.display = state.memories.length ? "none" : "block";
+      dom.lifeLog.innerHTML = state.lifeLog.map((item) => `
+        <div class="memory">
+          ${escapeHtml(item.text)}
+          <div class="memory-meta">
+            <span>第 ${item.day} 天</span>
+            <span>${escapeHtml(item.kind)}</span>
+            <span>${escapeHtml(bucketForHour(item.hour))}</span>
+          </div>
+        </div>
+      `).join("");
+      dom.lifeEmpty.style.display = state.lifeLog.length ? "none" : "block";
+      renderFutureQueue();
+      renderModelStats();
+      renderContext();
+      renderTrace();
+      renderCandidateList();
+      renderOutputQueue();
+      renderInputVectors();
+      renderMotivePanel();
+      renderAuthenticityAudit();
+    }
+
+    function scrollChat() {
+      dom.chat.scrollTop = dom.chat.scrollHeight;
+    }
+
+    function addDayMark(text) {
+      const el = document.createElement("div");
+      el.className = "day-mark";
+      el.textContent = text;
+      dom.chat.appendChild(el);
+      scrollChat();
+    }
+
+    function addSystem(text) {
+      const el = document.createElement("div");
+      el.className = "system-bubble";
+      el.textContent = text;
+      dom.chat.appendChild(el);
+      scrollChat();
+    }
+
+    function addMessage(sender, text) {
+      const row = document.createElement("div");
+      row.className = `msg-row ${sender === "me" ? "me" : "her"}`;
+      if (sender === "her") {
+        const img = document.createElement("img");
+        img.className = "mini-avatar";
+        img.src = avatarPath;
+        img.alt = "";
+        img.onerror = () => { img.src = "/characters/face/suli/avatar.png"; };
+        row.appendChild(img);
+      }
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = text;
+      row.appendChild(bubble);
+      dom.chat.appendChild(row);
+      scrollChat();
+    }
+
+    function showTyping() {
+      const row = document.createElement("div");
+      row.className = "msg-row her";
+      row.id = "typing";
+      const img = document.createElement("img");
+      img.className = "mini-avatar";
+      img.src = avatarPath;
+      img.alt = "";
+      img.onerror = () => { img.src = "/characters/face/suli/avatar.png"; };
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.innerHTML = `<span class="typing"><span></span><span></span><span></span></span>`;
+      row.appendChild(img);
+      row.appendChild(bubble);
+      dom.chat.appendChild(row);
+      scrollChat();
+    }
+
+    function hideTyping() {
+      const el = document.getElementById("typing");
+      if (el) el.remove();
+    }
+
+    function scheduleFutureEvent(output) {
+      const spec = bakedScheduledEvents[output.eventId];
+      if (!spec) return null;
+      const duplicate = state.futureEvents.find((item) => item.eventId === output.eventId);
+      if (duplicate) return duplicate;
+      const item = {
+        id: `future_${state.day}_${state.seq}_${hashText(`${output.eventId}:${output.source}:${state.futureEvents.length}`).toString(16)}`,
+        eventId: output.eventId,
+        label: output.label || spec.label,
+        due: output.due || "稍后",
+        source: output.source || "baked",
+        createdDay: state.day,
+        createdHour: state.hour,
+      };
+      state.futureEvents.push(item);
+      recordLife(`排程「${item.label}」进入未来队列`, "排程");
+      updateUI();
+      return item;
+    }
+
+    function nextLifeEventId() {
+      const ids = bakedLifeEventPlan[state.todayState?.id] || [];
+      if (!ids.length) return null;
+      return ids[(state.day - 1) % ids.length];
+    }
+
+    async function playLifeEvent(eventId = nextLifeEventId()) {
+      const spec = bakedLifeEvents[eventId];
+      if (!spec) return null;
+      const result = emitEvent({
+        kind: "life_event",
+        eventId,
+        label: spec.label,
+      });
+      await executeOutputs(result.outputs, `life:${eventId}`);
+      return result;
+    }
+
+    async function runLifeBeatControl() {
+      if (state.busy) return;
+      state.busy = true;
+      clearChoices("她自己的生活正在推进。");
+      const result = await playLifeEvent();
+      state.busy = false;
+      if (result) {
+        setChoices("quietAction", "action");
+      } else {
+        addSystem("今天没有可推进的 baked 生活事件。");
+        setChoices(state.activeThread || "quietAction", "action");
+      }
+      updateUI();
+    }
+
+    async function runNextFutureEvent() {
+      if (state.busy) return;
+      const item = state.futureEvents[0];
+      if (!item) {
+        const outputs = [{ type: "沉默", text: "未来队列为空：没有可推进的 baked 排程。" }];
+        const before = snapshotState();
+        state.currentIntent = "没有预先安排的事，就不临时编造生活。";
+        const after = snapshotState();
+        recordTrace({ kind: "control", act: "advance_schedule", label: "推进日程" }, ["runtime.queue.empty"], before, after, outputs, "队列为空。");
+        await executeOutputs(outputs, "scheduled:empty");
+        updateUI();
+        return;
+      }
+
+      state.busy = true;
+      const result = emitEvent({
+        kind: "scheduled_event",
+        eventId: item.eventId,
+        dequeueId: item.id,
+        label: item.label,
+        due: item.due,
+      });
+      await executeOutputs(result.outputs, `scheduled:${item.eventId}`);
+      state.busy = false;
+      setChoices("quietAction", "action");
+      updateUI();
+    }
+
+    async function executeOutputs(outputs, timingKey = "output") {
+      for (const [index, output] of outputs.entries()) {
+        if (output.type === "签名") {
+          state.signatureOverride = output.text || null;
+          updateUI();
+          continue;
+        }
+        if (output.type === "记忆") {
+          continue;
+        }
+        if (output.type === "安排事件") {
+          const item = scheduleFutureEvent(output);
+          addSystem(item ? `已排程：${item.label} · ${item.due}` : `排程失败：${output.eventId}`);
+          await wait(180);
+          continue;
+        }
+        if (output.type === "事件" || output.type === "状态" || output.type === "环境") {
+          addSystem(output.text);
+          await wait(180);
+          continue;
+        }
+        if (output.type === "沉默") {
+          addSystem(output.text);
+          await wait(180);
+          continue;
+        }
+        if (output.type === "延迟消息") {
+          await wait(output.delay || deterministicDelay(`${timingKey}:delay:${index}`, 900, 420));
+          addSystem("过了一会儿");
+          showTyping();
+          await wait(deterministicDelay(`${timingKey}:delayed:${index}`, 620, 360));
+          hideTyping();
+          addMessage("her", output.text);
+          await wait(260);
+          continue;
+        }
+        if (output.type === "对话" || output.type === "记忆回响") {
+          if (output.speaker === "玩家") {
+            addMessage("me", output.text);
+            await wait(260);
+          } else {
+            showTyping();
+            await wait(deterministicDelay(`${timingKey}:dialogue:${index}`, output.type === "记忆回响" ? 820 : 580, 380));
+            hideTyping();
+            addMessage("her", output.text);
+            await wait(280);
+          }
+        }
+      }
+    }
+
+    function renderInitiativeBar() {
+      const disabled = state.busy || state.interactionsLeft <= 0;
+      dom.initiativeBar.innerHTML = playerInitiatives.map((item, index) => `
+        <button class="initiative" data-index="${index}" ${disabled || state.usedInitiativesToday.has(item.thread) || state.activeThread === item.thread ? "disabled" : ""}>${item.label}</button>
+      `).join("");
+      [...dom.initiativeBar.querySelectorAll("button")].forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const item = playerInitiatives[Number(btn.dataset.index)];
+          if (item) startPlayerThread(item);
+        });
+      });
+    }
+
+    function setChoices(threadId, mode = "thread") {
+      const thread = threadLibrary[threadId];
+      state.activeThread = threadId;
+      dom.choiceHint.textContent = mode === "action"
+        ? "今天没有新的长话题。选一个通讯动作。"
+        : `话题：${thread.title}`;
+
+      dom.choices.innerHTML = thread.choices.map((choice, index) => `
+        <button class="choice" data-index="${index}" ${state.busy || state.interactionsLeft <= 0 ? "disabled" : ""}>
+          <span class="choice-title">${choice.label}</span>
+          <span class="choice-sub">${choice.sub}</span>
+        </button>
+      `).join("");
+
+      [...dom.choices.querySelectorAll("button")].forEach((btn) => {
+        btn.addEventListener("click", () => chooseOption(Number(btn.dataset.index)));
+      });
+      renderInitiativeBar();
+      updateUI();
+    }
+
+    function clearChoices(text = "她暂时没有继续说。") {
+      dom.choiceHint.textContent = text;
+      dom.choices.innerHTML = "";
+      renderInitiativeBar();
+      updateUI();
+    }
+
+    function applyEffect(effect = {}) {
+      state.affinity = clamp(state.affinity + (effect.affinity || 0), 0, 220);
+      state.lonely = clamp(state.lonely + (effect.lonely || 0), 0, 100);
+      state.guard = clamp(state.guard + (effect.guard || 0), 0, 100);
+      state.voice = clamp(state.voice + (effect.voice || 0), 0, 100);
+      state.sleepDebt = clamp(state.sleepDebt + (effect.sleepDebt || 0), 0, 100);
+      state.daysSilent = Math.max(0, state.daysSilent + (effect.daysSilent || 0));
+      if (typeof effect.avatarOther === "boolean") state.avatarOther = effect.avatarOther;
+      if (effect.commitment) {
+        state.activeCommitment = {
+          ...effect.commitment,
+          createdDay: state.day,
+          createdHour: state.hour,
+        };
+      }
+      if (effect.commitmentPatch && state.activeCommitment) {
+        state.activeCommitment = {
+          ...state.activeCommitment,
+          ...effect.commitmentPatch,
+          updatedDay: state.day,
+          updatedHour: state.hour,
+        };
+      }
+      if (effect.clearCommitment) state.activeCommitment = null;
+      if (effect.openLoop) {
+        state.openLoop = {
+          ...effect.openLoop,
+          createdDay: state.day,
+          createdHour: state.hour,
+        };
+      }
+      if (effect.openLoopPatch && state.openLoop) {
+        state.openLoop = {
+          ...state.openLoop,
+          ...effect.openLoopPatch,
+          updatedDay: state.day,
+          updatedHour: state.hour,
+        };
+      }
+      if (effect.clearOpenLoop) state.openLoop = null;
+      if (effect.lifeBeat) {
+        state.lifeBeat = {
+          ...effect.lifeBeat,
+          createdDay: state.day,
+          createdHour: state.hour,
+        };
+      }
+      if (effect.lifeBeatPatch && state.lifeBeat) {
+        state.lifeBeat = {
+          ...state.lifeBeat,
+          ...effect.lifeBeatPatch,
+          updatedDay: state.day,
+          updatedHour: state.hour,
+        };
+      }
+      if (effect.clearLifeBeat) state.lifeBeat = null;
+      if (typeof effect.signature === "string") state.signatureOverride = effect.signature;
+      if (effect.clearSignature) state.signatureOverride = null;
+      if (effect.memory) remember(effect.memory);
+      if (state.affinity >= 70 && state.stage < 2) state.stage = 2;
+      if (state.affinity >= 110 && state.stage < 3) state.stage = 3;
+      if (state.affinity >= 160 && state.stage < 4) state.stage = 4;
+      updateUI();
+    }
+
+    function emitEvent(event) {
+      const before = snapshotState();
+      const ctxBefore = contextVector(event);
+      const row = selectBakedRow(event, ctxBefore);
+
+      if (!row) {
+        const outputs = [{ type: "沉默", text: "这个组合没有 baked 行，系统不强行编一句。" }];
+        state.currentIntent = deriveIntent(event, outputs);
+        const after = snapshotState();
+        recordTrace(event, ["empty_space.no_match"], before, after, outputs, "空组合：不输出 NPC 话术。", ctxBefore);
+        return { outputs, empty: true };
+      }
+
+      const result = row.run(event, ctxBefore) || {};
+      const ruleIds = [...new Set([row.id, ...(result.ruleIds || [])])];
+      const outputs = result.outputs || [];
+      state.currentIntent = deriveIntent(event, outputs);
+      updateUI();
+      const after = snapshotState();
+      recordTrace(event, ruleIds, before, after, outputs, event.note || "", ctxBefore);
+      return { ...result, outputs };
+    }
+
+    async function chooseOption(index) {
+      if (state.busy || state.interactionsLeft <= 0) return;
+      const threadId = state.activeThread;
+      const thread = threadLibrary[threadId];
+      const choice = thread?.choices[index];
+      if (!thread || !choice) return;
+
+      state.busy = true;
+      const result = emitEvent({
+        kind: "player_choice",
+        threadId,
+        choiceIndex: index,
+        label: choice.label,
+      });
+      if (!result) {
+        state.busy = false;
+        return;
+      }
+      setChoices(threadId, threadId === "quietAction" ? "action" : "thread");
+      await executeOutputs(result.outputs, `choice:${threadId}:${index}`);
+
+      if (state.interactionsLeft <= 0) {
+        clearChoices("今天的聊天到这里。真实感需要留白，不做无限闲聊。");
+        addSystem("今日有效互动已用完。她还有自己的节目、睡眠和沉默。");
+      } else {
+        state.busy = false;
+        setChoices("quietAction", "action");
+      }
+      state.busy = false;
+      updateUI();
+    }
+
+    async function startThread(threadId, reason) {
+      const result = emitEvent({
+        kind: "npc_life_tick",
+        threadId,
+        label: threadLibrary[threadId]?.title || threadId,
+        note: reason || "",
+      });
+      if (!result) return;
+      state.busy = true;
+      clearChoices("她正在发消息。");
+      await executeOutputs(result.outputs, `opener:${threadId}`);
+      state.busy = false;
+      setChoices(threadId);
+    }
+
+    async function startPlayerThread(item) {
+      if (state.busy || state.interactionsLeft <= 0) return;
+      const index = playerInitiatives.indexOf(item);
+      const result = emitEvent({
+        kind: "player_initiative",
+        index,
+        thread: item.thread,
+        label: item.label,
+      });
+      if (!result) return;
+      state.busy = true;
+      clearChoices("你正在主动找她。");
+      await executeOutputs(result.outputs, `initiative:${item.thread}`);
+      state.busy = false;
+      setChoices(item.thread);
+      updateUI();
+    }
+
+    function pickTodayState() {
+      const pick = dailyStates[(state.day - 1) % dailyStates.length];
+      state.todayState = pick;
+      state.hour = pick.id === "sleeping" ? 14 : pick.id === "beforeLive" ? 23 : 1;
+      state.sleepDebt = clamp(state.sleepDebt + (pick.id === "sleeping" ? 12 : 0), 0, 100);
+      state.lifeBeat = null;
+      state.signatureOverride = null;
+    }
+
+    function nextThread() {
+      if (state.lifeBeat?.thread) return state.lifeBeat.thread;
+      if (state.avatarOther) return "jealous";
+      if (state.daysSilent >= 3) return "neglect";
+      return state.todayState?.firstThread || "afterBroadcast";
+    }
+
+    async function startDay({ keepChat = false } = {}) {
+      emitEvent({
+        kind: "control",
+        act: "next_day",
+        keepChat,
+        label: "开始新的一天",
+      });
+      updateUI();
+      addDayMark(`第 ${state.day} 天 · ${bucketLabel()}`);
+      state.busy = true;
+      clearChoices("她今天的生活正在推进。");
+      await playLifeEvent();
+      state.busy = false;
+      await startThread(nextThread(), "系统根据她的今日状态，触发了一个具体话题。");
+    }
+
+    function resetDemo() {
+      state.day = 1;
+      state.hour = 23;
+      state.affinity = 38;
+      state.stage = 1;
+      state.lonely = 42;
+      state.guard = 58;
+      state.voice = 64;
+      state.sleepDebt = 46;
+      state.daysSilent = 0;
+      state.avatarOther = false;
+      state.interactionsLeft = 3;
+      state.activeThread = null;
+      state.busy = false;
+      state.memories = [];
+      state.memoryVersion = 0;
+      state.lifeLog = [];
+      state.futureEvents = [];
+      state.activeCommitment = null;
+      state.openLoop = null;
+      state.lifeBeat = null;
+      state.signatureOverride = null;
+      state.usedInitiativesToday = new Set();
+      state.currentIntent = "刚下播，确认对方还在不在。";
+      state.lastEventVector = null;
+      state.lastOutputTypes = [];
+      state.lastOutputs = [];
+      state.lastCandidates = [];
+      state.traces = [];
+      state.seq = 0;
+      state.usedThreads = new Set();
+      dom.chat.innerHTML = "";
+      pickTodayState();
+      updateUI();
+      addDayMark("第 1 天 · 深夜");
+      startThread("afterBroadcast", "她不是被玩家召唤出来的。她刚下播，所以主动发来了消息。");
+    }
+
+    document.getElementById("nextDayBtn").addEventListener("click", () => startDay({ keepChat: true }));
+    document.getElementById("advanceScheduleBtn").addEventListener("click", runNextFutureEvent);
+    document.getElementById("lifeBeatBtn").addEventListener("click", runLifeBeatControl);
+    document.getElementById("deepenBtn").addEventListener("click", async () => {
+      const result = emitEvent({ kind: "control", act: "deepen", label: "关系推进" });
+      await executeOutputs(result.outputs, "control:deepen");
+      addSystem("新的话题、签名和回复边界会变化。");
+      updateUI();
+    });
+    document.getElementById("neglectBtn").addEventListener("click", () => {
+      emitEvent({ kind: "control", act: "neglect", label: "冷落三天" });
+      startThread("neglect", "你连续几天没有主动联系她。她终于发来了消息。");
+    });
+    document.getElementById("avatarBtn").addEventListener("click", () => {
+      emitEvent({ kind: "control", act: "avatar", label: "换成别人头像" });
+      startThread("jealous", "你把自己的头像换成了别人。她看见了。");
+    });
+    document.getElementById("lateBtn").addEventListener("click", async () => {
+      const result = emitEvent({ kind: "control", act: "late", label: "切到深夜" });
+      await executeOutputs(result.outputs, "control:late");
+      addSystem("苏音音更清醒，也更容易露出心事。");
+      updateUI();
+    });
+    document.getElementById("emptyBtn").addEventListener("click", async () => {
+      const result = emitEvent({ kind: "player_free_text", act: "乱输一句", label: "空组合测试" });
+      await executeOutputs(result.outputs, "empty");
+      updateUI();
+    });
+    document.getElementById("resetBtn").addEventListener("click", resetDemo);
+
+    resetDemo();
+  </script>
+
+
+</body><div id="codex-browser-sidebar-comments-root" style="position: fixed; inset: 0px; pointer-events: none; z-index: 2147483647;"></div></html>

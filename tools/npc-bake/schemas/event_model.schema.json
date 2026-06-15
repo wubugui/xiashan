@@ -1,0 +1,44 @@
+{
+  "type": "object",
+  "properties": {
+    "characterId": {
+      "type": "string"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "meaning": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "actor",
+          "channel",
+          "meaning"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": [
+    "characterId",
+    "events"
+  ],
+  "additionalProperties": false
+}
