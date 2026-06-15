@@ -100,8 +100,12 @@ export default function Home() {
   const normalTickets = usePlayerStore((s) => s.normalTickets);
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
   const addSpiritStones = usePlayerStore((s) => s.addSpiritStones);
-  const unreadCounts = usePlayerStore((s) => s.unreadCounts);
-  const totalUnread = unreadCounts.wechat + unreadCounts.sms + unreadCounts.call;
+  const phoneMessages = usePlayerStore((s) => s.phoneMessages);
+  // 红点直接由"已拥有角色里真正未读的消息"派生，避免未读计数器漂移导致「看完消息还有红点」
+  const totalUnread = (() => {
+    const owned = new Set(ownedCharacters.map((c) => c.characterId));
+    return phoneMessages.filter((m) => !m.read && !m.id.startsWith('player_') && owned.has(m.characterId)).length;
+  })();
   const tutorialStep = usePlayerStore((s) => s.tutorialStep);
   /** 引导未完成：首页锁定「月光开店」入口（江夏聚光灯），其余区域不可点 */
   const tutorialPending = tutorialStep !== -1;

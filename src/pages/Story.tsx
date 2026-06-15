@@ -340,7 +340,10 @@ export default function Story() {
     });
   }, [currentNode, spiritStones, reputation, ownedCharacters, affinityMap, relationshipStages, completedNodes, flags]);
 
-  const totalUnread = unreadCounts.wechat + unreadCounts.sms + unreadCounts.call;
+  const totalUnread = (() => {
+    const owned = new Set(ownedCharacters.map((c) => c.characterId));
+    return phoneMessages.filter((m) => !m.read && !m.id.startsWith('player_') && owned.has(m.characterId)).length;
+  })();
   const speakerLabel = currentNode?.speaker ? (getCharacterById(currentNode.speaker)?.name || currentNode.speaker) : undefined;
 
   return (
