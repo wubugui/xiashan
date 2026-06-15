@@ -2,39 +2,6 @@
   "_comment": "老婆的状态化内容：随关系/头像博弈变化的微信签名(sig*) + 头像博弈反应(react*) + 被冷落主动找你(reactNeglect)。signatureFor 读 sig*；avatarFallout 读 reactSweet/Reject/Flattered/Jealous；neglect 读 reactNeglect。每条贴各自人设。",
   "_note_suli": "苏音音已迁入 src/content/waifes/suli.json（单一数据源），此处不再保留。",
   "states": {
-    "shenzhaoning": {
-      "sigLover": "责任人一栏，从此填两个名字。",
-      "sigChosen": "权限已授予。你是最高优先级。",
-      "sigJealous": "检测到头像变更：非本人。流程需复核。",
-      "sigDistant": "工作时间：随时。私人时间：未开放。",
-      "sigClose": "某一项，正悄悄从待办挪进私人栏。",
-      "reactSweet": [
-        "头像变更确认：本人。权限通过。……我，批准了。",
-        "数据冲突解除。你是我唯一不想驳回的请求。"
-      ],
-      "reactReject": [
-        "未经审批，擅自使用本人肖像。请立即撤回。",
-        "我们的关系，还不在可授权范围内。撤下。"
-      ],
-      "reactFlattered": [
-        "流程上，这不合规。但……我没让你撤。"
-      ],
-      "reactJealous": [
-        "检测到你的头像为他人。……与我无关。（停顿）是吗。",
-        "权限不归我管，随你。（她回得很快，又很冷。）"
-      ],
-      "reactNeglect": [
-        "几天没你消息。……非工作事项，我居然会在意。",
-        "状态确认：你最近，是不是把我归档了。"
-      ],
-      "reactAmbient": [
-        "午休三分钟。……想起你，效率竟然变高了。",
-        "今天流程很顺。顺到，有空想你。"
-      ],
-      "reactPassedOver": [
-        "收到。关系状态已更新：朋友。……祝顺利。"
-      ]
-    },
     "murongxue": {
       "sigLover": "这一篇的作者，有两个名字。",
       "sigChosen": "被写进你的主页了。第一次，我是被记录的那个。",
