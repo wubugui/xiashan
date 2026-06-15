@@ -2,39 +2,6 @@
   "_comment": "老婆的状态化内容：随关系/头像博弈变化的微信签名(sig*) + 头像博弈反应(react*) + 被冷落主动找你(reactNeglect)。signatureFor 读 sig*；avatarFallout 读 reactSweet/Reject/Flattered/Jealous；neglect 读 reactNeglect。每条贴各自人设。",
   "_note_suli": "苏音音已迁入 src/content/waifes/suli.json（单一数据源），此处不再保留。",
   "states": {
-    "sangluo": {
-      "sigLover": "打烊牌翻了面，这盏灯只为你留。",
-      "sigChosen": "被你放进手机里，挺好。夜里不冷了。",
-      "sigJealous": "今晚的灯，好像不必再给你留了。",
-      "sigDistant": "深夜营业，欢迎光临。",
-      "sigClose": "有个人的那杯，我开始记在心上了。",
-      "reactSweet": [
-        "（慢悠悠）哦？把我放手机上了。……可以，我喜欢。",
-        "那我就当，你也想被我留一盏灯了。"
-      ],
-      "reactReject": [
-        "年轻人，悠着点。我们还没到这一步。",
-        "把我换下来吧。喝杯咖啡，冷静冷静。"
-      ],
-      "reactFlattered": [
-        "……虽然唐突。不过，今晚的咖啡，算我请。"
-      ],
-      "reactJealous": [
-        "你头像换人了？……行吧。今晚的灯，我收了。",
-        "嗯，挺好看的。（她没再多说，杯子搁得有点重。）"
-      ],
-      "reactNeglect": [
-        "灯还给你留着，人怎么不见了。",
-        "好几晚没等到你。今晚……来吗？"
-      ],
-      "reactAmbient": [
-        "新到的豆子，等你来尝。",
-        "今晚的月色不错，想起你了。"
-      ],
-      "reactPassedOver": [
-        "哦，定下来了。挺好。这杯，算我送的践行。"
-      ]
-    },
     "aman": {
       "sigLover": "这一次，换你来接住我。",
       "sigChosen": "被你选中啦，像只被轻轻抱住的小猫。",
