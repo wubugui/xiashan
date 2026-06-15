@@ -2,9 +2,10 @@
  * 心动场景播放器：演一个恋爱节点——对白 → 选择 → 她的反应 → 落幕。
  * 比委托剧场轻(无出牌挑战),纯 AVG;复用 DialogueBox 打字机。
  */
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DialogueBox from '@/components/DialogueBox';
+import { useCssVarFromHeight } from '@/hooks/useCssVarFromHeight';
 import { getCharacterById } from '@/data/characters';
 import { getLocationById } from '@/data/locations';
 import { assetCssBackground, assetUrl } from '@/lib/assets';
@@ -26,6 +27,9 @@ export default function RomanceScene({ characterId, beat, onComplete }: Props) {
   const [phase, setPhase] = useState<Phase>('lines');
   const [lineIndex, setLineIndex] = useState(0);
   const [chosen, setChosen] = useState<RomanceChoiceOption | null>(null);
+  /** 选择面板实测高度 → --romance-panel-h：立绘据此让位，与 --dlg-h 取大者，全程贴住底部 UI */
+  const choiceRef = useRef<HTMLDivElement>(null);
+  useCssVarFromHeight('--romance-panel-h', choiceRef);
 
   const lines: RomanceLine[] = phase === 'reaction' && chosen ? chosen.reaction : beat.scene.lines;
   const line = lines[lineIndex];
@@ -78,7 +82,10 @@ export default function RomanceScene({ characterId, beat, onComplete }: Props) {
 
       {/* 她的立绘 */}
       {character && (
-        <div className="pointer-events-none absolute inset-x-0 top-[12vh] bottom-[var(--dlg-h,30vh)] z-10 flex items-end justify-center">
+        <div
+          className="pointer-events-none absolute inset-x-0 top-[12vh] z-10 flex items-end justify-center"
+          style={{ bottom: 'calc(max(var(--dlg-h, 0px), var(--romance-panel-h, 0px)) - 14px)' }}
+        >
           <motion.img
             src={assetUrl(character.portraitUrl)}
             alt={character.name}
@@ -96,10 +103,11 @@ export default function RomanceScene({ characterId, beat, onComplete }: Props) {
       <AnimatePresence>
         {phase === 'choice' && beat.scene.choice && (
           <motion.div
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            transition={{ type: 'spring', damping: 26, stiffness: 280 }}
+            ref={choiceRef}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
             className="absolute bottom-0 left-0 right-0 z-40 rounded-t-2xl border-t border-white/10 bg-slate-900/95 backdrop-blur-xl p-4 pb-safe"
           >
             <p className="mb-3 text-sm font-bold text-white">{beat.scene.choice.prompt}</p>
@@ -121,7 +129,6 @@ export default function RomanceScene({ characterId, beat, onComplete }: Props) {
       {/* 对白框 */}
       {phase !== 'choice' && line && (
         <DialogueBox
-          key={`${phase}-${lineIndex}`}
           speaker={sheSpeaking ? character?.name : undefined}
           speakerColor={cn(sheSpeaking ? 'text-rose-300' : 'text-slate-300')}
           text={line.text}

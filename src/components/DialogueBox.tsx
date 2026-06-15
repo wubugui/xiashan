@@ -58,10 +58,10 @@ export default function DialogueBox({
     <AnimatePresence>
       <motion.div
         ref={boxRef}
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.22, ease: 'easeOut' }}
         className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-safe"
         onClick={handleClick}
       >

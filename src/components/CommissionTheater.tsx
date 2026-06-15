@@ -306,10 +306,10 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
         {inChallenge && node?.type === 'challenge' && (
           <motion.div
             ref={challengePanelRef}
-            initial={{ y: 120, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 120, opacity: 0 }}
-            transition={{ type: 'spring', damping: 26, stiffness: 280 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
             className="absolute bottom-0 left-0 right-0 z-40 max-h-[64%] overflow-y-auto rounded-t-2xl border-t border-white/10 bg-slate-900/95 backdrop-blur-xl p-4 pb-safe"
           >
             <div className="mb-3">
@@ -363,7 +363,6 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
       {/* 对白框 */}
       {!inChallenge && curLine && (
         <DialogueBox
-          key={`${nodeId}-${reaction ? 'r' : 'n'}-${lineIndex}`}
           speaker={speakerName}
           speakerColor={clientSpeaking ? 'text-rose-300' : 'text-slate-300'}
           text={curLine.text}
