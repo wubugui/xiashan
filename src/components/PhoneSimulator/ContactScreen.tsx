@@ -1,14 +1,16 @@
-import { ChevronLeft, MessageCircle, MessageSquare, Phone as PhoneIcon } from 'lucide-react';
+import { ChevronLeft, MessageCircle, MessageSquare, Phone as PhoneIcon, Heart } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
 import { commsTier } from '@/engine/phoneAccess';
 import { signatureFor } from '@/engine/signature';
+import { nextLockedScene, type DateScene } from '@/data/scenes';
 import { assetUrl } from '@/lib/assets';
 import { cn } from '@/lib/utils';
 import ChatDetail from './WeChat/ChatDetail';
 import SMSDetail from './SMS/SMSDetail';
+import DateReveal from '@/components/DateReveal';
 
 type Tab = 'wechat' | 'sms' | 'call';
 
@@ -51,6 +53,33 @@ export default function ContactScreen({ characterId, initialTab = 'wechat', onBa
   // 打开联系人即清掉她的全部未读（微信+短信），红点不再因没切到短信 tab 而残留
   const markContactRead = usePlayerStore((s) => s.markContactRead);
   useEffect(() => { markContactRead(characterId); }, [characterId, markContactRead]);
+
+  /* ── 约她出去：解锁约会场景收藏（关系够近 + 每日一次）── */
+  const unlockedScenes = usePlayerStore((s) => s.unlockedScenes);
+  const unlockScene = usePlayerStore((s) => s.unlockScene);
+  const tryDailyAction = usePlayerStore((s) => s.tryDailyAction);
+  const dailyActions = usePlayerStore((s) => s.dailyActions);
+  const gameDay = usePlayerStore((s) => s.gameDay);
+  const addAffinity = usePlayerStore((s) => s.addAffinity);
+  const markContact = usePlayerStore((s) => s.markContact);
+  const [dateReveal, setDateReveal] = useState<DateScene | null>(null);
+  const [dateToast, setDateToast] = useState<string | null>(null);
+
+  const nextScene = owned ? nextLockedScene(characterId, unlockedScenes) : null;
+  const datedToday = dailyActions[`date:${characterId}`] === String(gameDay);
+  /** 约会门槛：关系到「常联系」(tier≥2) 才肯赴约 */
+  const canDate = !!nextScene && tier >= 2;
+
+  const handleDate = () => {
+    if (!nextScene || !character) return;
+    if (tier < 2) { flashDate('再熟一点……她还不太好意思单独和你出去。'); return; }
+    if (!tryDailyAction(`date:${characterId}`)) { flashDate(`今天已经和${character.name}约过了，明天再约吧。`); return; }
+    unlockScene(nextScene.id);
+    addAffinity(characterId, 3);
+    markContact(characterId);
+    setDateReveal(nextScene);
+  };
+  const flashDate = (msg: string) => { setDateToast(msg); window.setTimeout(() => setDateToast(null), 2400); };
 
   // 兜底：角色查不到（如旧存档残留已删除角色）也不能黑屏——给个能返回的提示
   if (!character) {
@@ -111,6 +140,29 @@ export default function ContactScreen({ characterId, initialTab = 'wechat', onBa
         </span>
       </div>
 
+      {/* 约她出去：解锁约会场景收藏 */}
+      {owned && (
+        <div className="border-b border-white/10 px-3 py-2">
+          {!nextScene ? (
+            <p className="text-center text-[11px] text-rose-300/70">💞 你们的约会回忆已集齐——在「心动名册」里回味吧</p>
+          ) : (
+            <button
+              onClick={handleDate}
+              disabled={!canDate || datedToday}
+              className={cn(
+                'flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all active:scale-[0.99]',
+                canDate && !datedToday
+                  ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-[0_0_14px_rgba(244,63,94,0.3)]'
+                  : 'bg-white/8 text-white/40',
+              )}
+            >
+              <Heart size={15} className={canDate && !datedToday ? 'fill-white' : ''} />
+              {tier < 2 ? '关系再近一点，才能约她出去' : datedToday ? '今天已约过她 · 明天再来' : '约她出去 · 解锁一段约会回忆'}
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Tab 栏：三个渠道始终可点，不锁不灰 */}
       <div className="flex border-b border-white/10">
         {TABS.map(({ key, label, icon: Icon }) => (
@@ -135,6 +187,24 @@ export default function ContactScreen({ characterId, initialTab = 'wechat', onBa
         {tab === 'sms' && <SMSDetail characterId={characterId} onBack={onBack} hideHeader willReply={smsReplies} />}
         {tab === 'call' && <CallPanel />}
       </div>
+
+      {/* 约会解锁场景揭示 */}
+      <AnimatePresence>
+        {dateReveal && (
+          <DateReveal scene={dateReveal} characterName={character.name} onClose={() => setDateReveal(null)} />
+        )}
+      </AnimatePresence>
+      {/* 约会限频提示 */}
+      <AnimatePresence>
+        {dateToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="pointer-events-none fixed left-1/2 top-1/3 z-[120] w-[80%] max-w-xs -translate-x-1/2 rounded-xl bg-slate-800/95 px-4 py-2.5 text-center text-xs text-rose-100 shadow-xl"
+          >
+            {dateToast}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

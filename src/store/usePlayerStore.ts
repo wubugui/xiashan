@@ -76,6 +76,10 @@ interface PlayerState {
   equippedGift: string | null;
   /** 已动用过的信物 id（gift_xxx）：信物「动用」整局仅一次，用过即永久消耗 */
   usedGifts: string[];
+  /** 已解锁的约会场景收藏 id（scene_xxx）：主动约她按顺序解锁 */
+  unlockedScenes: string[];
+  /** 玩家为每个角色选定的主页背景（来自已解锁场景）：charId → 图片路径 */
+  characterBg: Record<string, string>;
   // 每日限频记录：key（如 interact:touch:linxia / stage:linxia）→ 当时的游戏天号
   // 注意：「每日」= 游戏内一天（打烊推进），不是真实日历日；打烊→新一天会清空本表。
   dailyActions: Record<string, string>;
@@ -149,6 +153,10 @@ interface PlayerState {
   setEquippedGift: (giftId: string | null) => void;
   /** 动用信物（整局一次，永久消耗） */
   markGiftUsed: (giftId: string) => void;
+  /** 解锁一个约会场景收藏 */
+  unlockScene: (sceneId: string) => void;
+  /** 设为某角色的主页背景（传 null 还原默认） */
+  setCharacterBg: (characterId: string, image: string | null) => void;
   /** 心动系统：推进一个恋爱节点（进度 +1） */
   advanceRomance: (characterId: string) => void;
   /** 确认心意（排他锁定对象） */
@@ -200,6 +208,8 @@ const initialState = {
   relationshipStages: {} as Record<string, number>,
   equippedGift: null as string | null,
   usedGifts: [] as string[],
+  unlockedScenes: [] as string[],
+  characterBg: {} as Record<string, string>,
   dailyActions: {} as Record<string, string>,
   gameDay: 1,
   dupeCount: {} as Record<string, number>,
@@ -310,6 +320,16 @@ export const usePlayerStore = create<PlayerState>()(
         usedGifts: s.usedGifts.includes(giftId) ? s.usedGifts : [...s.usedGifts, giftId],
       })),
 
+      unlockScene: (sceneId) => set(s => ({
+        unlockedScenes: s.unlockedScenes.includes(sceneId) ? s.unlockedScenes : [...s.unlockedScenes, sceneId],
+      })),
+
+      setCharacterBg: (characterId, image) => set(s => {
+        const next = { ...s.characterBg };
+        if (image) next[characterId] = image; else delete next[characterId];
+        return { characterBg: next };
+      }),
+
       advanceRelationshipStage: (characterId) => set(s => ({
         relationshipStages: {
           ...s.relationshipStages,
@@ -398,7 +418,7 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'xiashan-player-store',
-      version: 16,
+      version: 17,
       storage: createJSONStorage(() => safeStorage),
       // 旧版本存档可能缺字段、字段为 null 或类型不符（项目从 AVG 改版而来），
       // 合并时丢弃所有与默认值类型不符的项，避免启动即崩、全页空白。
@@ -423,6 +443,12 @@ export const usePlayerStore = create<PlayerState>()(
           personTickets?: number;
           commissionTickets?: number;
         };
+        if (version < 17) {
+          // 约会场景收藏 + 自定义主页背景：老存档默认空
+          const s17 = state as typeof state & { unlockedScenes?: string[]; characterBg?: Record<string, string> };
+          s17.unlockedScenes = s17.unlockedScenes ?? [];
+          s17.characterBg = s17.characterBg ?? {};
+        }
         if (version < 16) {
           // 游戏天计数 + 每日限频改按游戏天：老存档从第 1 天起、清掉按真实日期记的旧限频
           const s16 = state as typeof state & { gameDay?: number; dailyActions?: Record<string, string> };

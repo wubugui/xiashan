@@ -87,6 +87,7 @@ export default function CharacterDetail() {
   const equippedGift = usePlayerStore((s) => s.equippedGift);
   const setEquippedGift = usePlayerStore((s) => s.setEquippedGift);
   const usedGifts = usePlayerStore((s) => s.usedGifts);
+  const characterBg = usePlayerStore((s) => s.characterBg);
 
   const [activeTab, setActiveTab] = useState<TabType>('info');
   const [interactionResponse, setInteractionResponse] = useState<string | null>(null);
@@ -265,15 +266,18 @@ export default function CharacterDetail() {
     );
   }
 
-  // 顶部立绘展示区固定为角色主视觉，禁止被收藏替换（背景不能换）
-  const heroArtUrl = character.gachaBackgroundUrl || character.portraitUrl;
+  // 主页背景：玩家在心动名册里把某张约会场景「设为主页背景」后，主视觉 + 页面底图都换成它
+  const customBg = id ? characterBg[id] : undefined;
+  const heroArtUrl = customBg || character.gachaBackgroundUrl || character.portraitUrl;
   const pageBackdrop = backdropForCharacter(character.id);
+  const backdropImage = customBg || pageBackdrop.image;
+  const backdropMobile = customBg || pageBackdrop.mobileImage;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#050914] pb-nav">
       <PageBackdrop
-        image={pageBackdrop.image}
-        mobileImage={pageBackdrop.mobileImage}
+        image={backdropImage}
+        mobileImage={backdropMobile}
         position={pageBackdrop.position}
         overlayClassName="from-slate-950/60 via-slate-950/80 to-slate-950/95"
       />

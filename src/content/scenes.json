@@ -1,0 +1,44 @@
+{
+  "_comment": "约会场景收藏：每张 bg/gacha 图一个收藏品，主动约她解锁，解锁后可看大图/读故事/设为主页背景。silhouette 缺省时锁定态用模糊原图。按由浅入深排序，order 即解锁顺序。",
+  "scenes": {
+    "aman": [
+      { "id": "scene_aman_01", "image": "/bg/gacha/aman-01.jpg", "silhouette": "/bg/gacha-silhouette/aman-01.png", "title": "阳光里的理毛", "dateHook": "你去她的宠物护理店，看她给一只橘猫顺毛", "story": ["午后的护理店满是阳光，她抱着那只橘猫，一下一下地顺着毛，动作轻得像怕惊扰一场好梦。「它怕生，可今天特别乖。」她抬眼看你，笑意比窗外的光还软。", "你忽然明白，被她照顾的小家伙为什么都不再发抖——那双手里，藏着让人安心的耐心。"] },
+      { "id": "scene_aman_02", "image": "/bg/gacha/aman-02.jpg", "silhouette": "/bg/gacha-silhouette/aman-02.png", "title": "膝上的午睡", "dateHook": "橘猫在她膝上睡熟，你们有一搭没一搭地聊着", "story": ["猫在她膝上睡熟了，她不敢动，只用梳子极轻地理着，怕吵醒它。「嘘——」她朝你比了个噤声的手势，自己却先忍不住笑出声。", "阳光、猫、还有她压低的声音，这个下午慢得像被谁悄悄按了暂停。你想，要是时间能一直停在这里就好了。"] },
+      { "id": "scene_aman_03", "image": "/bg/gacha/aman-03.jpg", "silhouette": "/bg/gacha-silhouette/aman-03.png", "title": "雨后的小客人", "dateHook": "雨停后，你陪她去喂巷口那只胆小的流浪猫", "story": ["雨刚停，巷子里水洼映着天光。她蹲下身，把猫粮托在掌心，耐心地等那只三花猫一点点靠近。「别急，慢慢来——它信你，是要时间的。」", "她说这话的时候没看猫，看的是你。你忽然分不清，她在哄的到底是那只猫，还是某个同样需要时间才敢靠近的人。"] }
+    ],
+    "aruo": [
+      { "id": "scene_aruo_02", "image": "/bg/gacha/aruo-02.jpg", "silhouette": "/bg/gacha-silhouette/aruo-02.png", "title": "镜头这一端", "dateHook": "你溜进她的直播间，看十二万人为她刷屏", "story": ["「甜心们晚上好呀——」她对着环形灯眨眼，弹幕瞬间炸成一片心。可只有你看见，她在开播前深吸了一口气，又偷偷瞥了你一眼才点下「开始」。", "十二万人喜欢屏幕里的她。而此刻，她隔着镜头，把最亮的那个笑，留给了镜头这一端的你。"] },
+      { "id": "scene_aruo_03", "image": "/bg/gacha/aruo-03.jpg", "silhouette": "/bg/gacha-silhouette/aruo-03.png", "title": "Live 灯牌下", "dateHook": "下播前，她对着镜子补妆，红色 Live 灯还亮着", "story": ["镜子里两个她，一个对着观众甜笑，一个偷偷朝你做鬼脸。「再等我五分钟嘛，马上下播——」她一边整理碎发一边小声说，耳尖却红了。", "粉色的灯、毛绒的熊、还没关的 Live 灯牌……她把这个被弹幕填满的小房间，第一次安静地，分给了你一个人。"] },
+      { "id": "scene_aruo_05", "image": "/bg/gacha/arou-05.jpg", "title": "唯一的应援", "dateHook": "她登上了真正的舞台，台下灯海里有你", "story": ["聚光灯亮起的那一刻，她举起话筒，笑得像要把整片星海都唱进歌里。台下万人挥舞着荧光棒，可她的目光，一次次落回那个为她举着最旧那块灯牌的人身上。", "「这首歌，送给一直在的你。」她没有点名，但你知道，那个「你」，就站在灯海最中央。"] }
+    ],
+    "linxia": [
+      { "id": "scene_linxia_03", "image": "/bg/gacha/linxia-03.jpg", "silhouette": "/bg/gacha-silhouette/linxia-03.png", "title": "库房的清单", "dateHook": "你来便利屋后场，撞见她盘点到一半坐在地上", "story": ["纸箱堆成小山，她干脆席地而坐，膝上摊着盘点表，一笔一划记得认真。「新人嘛，总得比别人多干点。」她不好意思地笑，笔尖却没停。", "你蹲下来帮她递箱子，她愣了一下，随即眼睛弯成月牙——原来再枯燥的清单，有人一起数，也能数出点甜来。"] },
+      { "id": "scene_linxia_05", "image": "/bg/gacha/linxia-05.jpg", "silhouette": "/bg/gacha-silhouette/linxia-05.png", "title": "黄昏的打印机", "dateHook": "加班到黄昏，你陪她等最后一份文件打印出来", "story": ["夕阳把办公室染成蜜色，打印机吐着纸，白板上「今日工作」还剩最后一项没划掉。她踮着脚取文件，回头看见你还没走，明显怔了一下。", "「你怎么……还在等我啊。」她声音轻轻的，像怕惊散这层金光。可那一刻她眼里的光，比窗外的晚霞还要亮。"] },
+      { "id": "scene_linxia_06", "image": "/bg/gacha/linxia-06.jpg", "silhouette": "/bg/gacha-silhouette/linxia-06.png", "title": "工位的那杯热饮", "dateHook": "她把你的那杯热饮也一起带了，放在你工位上", "story": ["她抱着文件夹回头冲你笑，桌角是她顺手带的那杯热饮，还冒着热气。「第一份工资……请你的。便利店打折啦，别多想哦。」嘴上这么说，挑了好久却是真的。", "黄昏的光落在她睫毛上。你忽然觉得，所谓「想一直待下去的地方」，大概就是有这样一个人，记得也给你带一杯。"] }
+    ],
+    "murongxue": [
+      { "id": "scene_murongxue_01", "image": "/bg/gacha/murongxue-01.jpg", "silhouette": "/bg/gacha-silhouette/murongxue-01.png", "title": "旧报纸的下午", "dateHook": "你在图书馆找到她，她正逐行划着一份旧报", "story": ["图书馆的光斜斜地落在长桌上，她拿着荧光笔，一行行划过泛黄的旧报，神情专注得像在和时间对话。「真相往往藏在没人看的末页。」她头也不抬地说。", "你在她对面坐下，她瞥了你一眼，没赶你走——对一个习惯保持距离的人来说，这已经是默许你，留在她的安静里了。"] },
+      { "id": "scene_murongxue_02", "image": "/bg/gacha/murongxue-02.jpg", "silhouette": "/bg/gacha-silhouette/murongxue-02.png", "title": "你也算线索", "dateHook": "她从资料堆里抬头，破例对你笑了一下", "story": ["满桌的笔记和剪报里，她忽然抬起头，对上你的视线，笔尖顿了顿。「……怎么，盯着我看，也想被我写进调查里？」嘴角却先弯了。", "她把一本摊开的笔记轻轻推到你面前。那一页的批注密密麻麻，最后一行，是你的名字。"] },
+      { "id": "scene_murongxue_07", "image": "/bg/gacha/murongxue-07.jpg", "silhouette": "/bg/gacha-silhouette/murongxue-07.png", "title": "人潮里的她", "dateHook": "你陪她上街采访，人来人往，她忽然停下抬头", "story": ["午后的街头人潮汹涌，所有人都行色匆匆，唯独她停在原地，仰头望着楼宇间漏下的光，手里的采访本记到一半。世界在她身边飞快流过，她却像在听某种只有自己能听见的声音。", "「你看，」她回过神，眼里有光，「越喧闹的地方，越藏着没人讲出口的故事。」而你想说的是——此刻最想读懂的故事，是她。"] }
+    ],
+    "sangluo": [
+      { "id": "scene_sangluo_02", "image": "/bg/gacha/sangluo-02.jpg", "silhouette": "/bg/gacha-silhouette/sangluo-02.png", "title": "深夜那杯", "dateHook": "打烊前你推门进她的深夜咖啡吧，她递来一杯", "story": ["吊灯昏黄，窗外是整座城的夜。她在吧台后抬眼，没多问，只把一杯热咖啡推到你面前。「这个点还醒着的人，都有各自的理由。」她声音很轻，像怕碰碎这片安静。", "你低头喝那杯咖啡，苦后回甘。抬头时，正撞上她不易察觉的、极淡的一点笑意。"] },
+      { "id": "scene_sangluo_03", "image": "/bg/gacha/sangluo-03.jpg", "silhouette": "/bg/gacha-silhouette/sangluo-03.png", "title": "临窗听雨", "dateHook": "雨夜，你和她并排坐在窗边，谁都没说话", "story": ["雨打在玻璃上，街灯被晕成一团团暖色。她捧着杯子望向窗外，长发垂落，侧脸安静得像一幅旧画。你们谁都没开口，可这沉默一点都不冷。", "「我煮的咖啡，能治别人的失眠。」她忽然轻声说，「可治我失眠的……」后半句被她咽了回去，只留一个意味深长的停顿，和窗上的雨声。"] },
+      { "id": "scene_sangluo_04", "image": "/bg/gacha/sangluo-04.jpg", "silhouette": "/bg/gacha-silhouette/sangluo-04.png", "title": "打烊之后", "dateHook": "客人都走了，她为你留了灯，街上只剩你们", "story": ["最后一位客人离开，门上的牌子翻成了「已打烊」，她却没赶你走，反而又给你续了一杯，吧台上还插着一小束雏菊。窗外的街空荡荡的，只剩你们两个人的影子。", "「这个座位，从今天起不对外营业了。」她背对着你，声音很淡，却像把一把钥匙轻轻放进你手里——你不再是客人，是她为自己留下的那个人。"] }
+    ],
+    "shenzhaoning": [
+      { "id": "scene_shenzhaoning_01", "image": "/bg/gacha/shenzhaoning-01.jpg", "silhouette": "/bg/gacha-silhouette/shenzhaoning-01.png", "title": "巡楼的黄昏", "dateHook": "你跟着她巡楼，落地窗外是整座城的晚霞", "story": ["她抱着记录本走在高层的长廊里，高跟鞋踩出干脆的节奏，落地窗外晚霞铺满半座城。「跟这么紧做什么？」她侧头问，语气是惯常的公事公办，脚步却悄悄慢了半拍等你。", "走廊很长，可有人并肩，再长的流程也不觉得枯燥了。"] },
+      { "id": "scene_shenzhaoning_02", "image": "/bg/gacha/shenzhaoning-02.jpg", "silhouette": "/bg/gacha-silhouette/shenzhaoning-02.png", "title": "大堂的权限", "dateHook": "她在大堂的门禁屏前，破例给你开了通行权限", "story": ["大理石大堂亮得能照出人影，她在门禁屏上点了几下，屏幕跳出一行「临时权限已开通」。「理由我写得很规矩，」她头也不回，「别多想——只是，方便你进出而已。」", "可她耳尖那一点红，出卖了她。在她那套严丝合缝的流程里，你大概是唯一一个，被她亲手留出的例外。"] },
+      { "id": "scene_shenzhaoning_03", "image": "/bg/gacha/shenzhaoning-03.jpg", "silhouette": "/bg/gacha-silhouette/shenzhaoning-03.png", "title": "走廊尽头的笑", "dateHook": "巡完最后一层，她回头冲你笑，晚霞正好", "story": ["最后一层巡完，她抱着平板回过头，难得地、毫无防备地朝你笑了一下，身后是燃烧般的晚霞。那一瞬间，平时那个雷厉风行、滴水不漏的她，忽然柔软得不像话。", "「……看什么。」她别过脸，可没忍住，「今天的流程，提前结束。剩下的时间——给你。」"] }
+    ],
+    "suli": [
+      { "id": "scene_suli_01", "image": "/bg/gacha/suli-01.jpg", "silhouette": "/bg/gacha-silhouette/suli-01.png", "title": "零点的频段", "dateHook": "你溜进电台，隔着玻璃看她念完最后一段稿", "story": ["录音棚里只剩一盏台灯，她捧着稿子，对着话筒轻声念着，发间那朵蓝花在暗处微微发亮。隔着隔音玻璃，你听不真切，却看得见她念到某句时，唇角忽然弯了。", "「这个频率，今晚只连着一个人。」散场后她摘下耳机，望向你，「……就是你。」"] },
+      { "id": "scene_suli_04", "image": "/bg/gacha/suli-04.jpg", "silhouette": "/bg/gacha-silhouette/suli-04.png", "title": "散场的夜路", "dateHook": "节目结束，你陪她走过空无一人的深夜长街", "story": ["午夜的长街空荡荡的，霓虹在湿漉漉的地面上洇开。她走在前面，忽然举起手机贴到耳边，又像是没拨号——只是握着，像握着某句没说出口的话。", "「你还在听吗？」她背对着你，声音很轻，落进夜里，「别挂线……让我，就这样多走一会儿。」"] }
+    ],
+    "yunzhiyi": [
+      { "id": "scene_yunzhiyi_02", "image": "/bg/gacha/yunzhiyi-02.jpg", "silhouette": "/bg/gacha-silhouette/yunzhiyi-02.png", "title": "配送站的清晨", "dateHook": "你顺路去配送站，撞见她在飞快分拣包裹", "story": ["「配送站」的牌子下，她麻利地扫码、分拣，马尾一甩一甩，额角沁着汗也不停手。「来啦？等我两分钟，这批必须及时派！」她头也不抬，声音却亮得像一整个清晨。", "你帮她搭了把手，她愣了一下，随即咧嘴一笑：「哎你还挺行啊！」——被她这么一夸，你莫名也跟着精神了起来。"] },
+      { "id": "scene_yunzhiyi_03", "image": "/bg/gacha/yunzhiyi-03.jpg", "silhouette": "/bg/gacha-silhouette/yunzhiyi-03.png", "title": "分拣区的笑", "dateHook": "仓库里堆成山的包裹，她回头朝你比了个胜利的手势", "story": ["「正确分拣，及时派送」的横幅下，她抱着一摞快递回头，冲你比了个胜利的手势，笑得没心没肺。「今天又是全站第一！第一个想说给你听——你说气不气人。」", "堆成山的包裹、忙碌的仓库，在她的笑里都成了背景。你忽然发现，自己竟会为了听她这句「想说给你听」，绕这么远的路。"] },
+      { "id": "scene_yunzhiyi_05", "image": "/bg/gacha/yunzhiyi-05.jpg", "silhouette": "/bg/gacha-silhouette/yunzhiyi-05.png", "title": "送到你手上", "dateHook": "她一路小跑，把一个包裹亲手塞进你怀里", "story": ["阳光正好，她抱着包裹一路小跑过来，笑得灿烂，把那个箱子直接塞进你伸出的手里。「专程给你送的！顺路——才怪，绕了好大一圈呢！」说完自己先笑场。", "别人收到的是包裹，你收到的，是她特意绕远路、气喘吁吁也要亲手交到你手上的那份心意。"] }
+    ]
+  }
+}

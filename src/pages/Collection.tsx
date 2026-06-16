@@ -6,6 +6,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 import { characters, getCharacterById } from '@/data/characters';
 import { GACHA_CONFIG } from '@/data/gachaConfig';
 import CharacterCard from '@/components/CharacterCard';
+import SceneGallery from '@/components/SceneGallery';
 import { cn } from '@/lib/utils';
 import PageBackdrop from '@/components/PageBackdrop';
 import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
@@ -17,6 +18,7 @@ export default function Collection() {
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
   const affinityMap = usePlayerStore((s) => s.affinityMap);
   const [activeFilter, setActiveFilter] = useState<RarityFilter>('全部');
+  const [view, setView] = useState<'chars' | 'scenes'>('chars');
 
   const filters: RarityFilter[] = ['全部', 'SSR', 'SR', 'R', 'N'];
 
@@ -75,6 +77,23 @@ export default function Collection() {
             </button>
           </div>
 
+          {/* 角色图鉴 / 约会场景 切换 */}
+          <div className="flex gap-2 px-4 pb-2">
+            {([['chars', '角色图鉴'], ['scenes', '约会场景']] as const).map(([v, label]) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={cn(
+                  'flex-1 rounded-lg py-2 text-sm font-black transition-colors',
+                  view === v ? 'bg-rose-500/90 text-white' : 'bg-white/8 text-slate-300 hover:bg-white/15',
+                )}
+              >
+                {v === 'scenes' ? '💞 ' : ''}{label}
+              </button>
+            ))}
+          </div>
+
+          {view === 'chars' && (
           <div className="px-4 pb-3">
             <div className="mb-3 rounded-sm border border-white/10 bg-slate-900/70 px-3 py-2 text-center text-sm font-bold text-white shadow-inner">
               召唤概率：
@@ -100,8 +119,14 @@ export default function Collection() {
               ))}
             </div>
           </div>
+          )}
         </div>
 
+        {view === 'scenes' ? (
+          <div className="px-4 pt-4">
+            <SceneGallery />
+          </div>
+        ) : (
         <div className="px-4 pt-4">
           {filteredList.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-lg border border-white/10 bg-slate-950/55 py-20">
@@ -137,6 +162,7 @@ export default function Collection() {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );
