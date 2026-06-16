@@ -98,7 +98,7 @@ export default function CharacterDetail() {
   const [openGift, setOpenGift] = useState<Collectible | null>(null);
   // 加深关系解锁信物时的 SSR 级揭示 + 收下后她的送礼对白
   const [revealGift, setRevealGift] = useState<{ name: string; charId: string; data: GiftCardData; give?: GiftGive } | null>(null);
-  const [giftDialogue, setGiftDialogue] = useState<{ characterId: string; expression: string; lines: string[] } | null>(null);
+  const [giftDialogue, setGiftDialogue] = useState<{ characterId: string; expression: string; lines: string[]; bgImage: string } | null>(null);
   // 收藏里点开的操作面板（设为她头像/主视觉/我的头像）
   const [sheetItem, setSheetItem] = useState<Collectible | null>(null);
   // 「设为我的头像」高博弈二次确认
@@ -808,8 +808,9 @@ export default function CharacterDetail() {
           onClose={() => {
             const g = revealGift.give;
             const cid = revealGift.charId;
+            const img = revealGift.data.asset;
             setRevealGift(null);
-            if (g && g.lines.length) setGiftDialogue({ characterId: cid, expression: g.expression, lines: g.lines });
+            if (g && g.lines.length) setGiftDialogue({ characterId: cid, expression: g.expression, lines: g.lines, bgImage: img });
           }}
         />
       )}
@@ -818,6 +819,7 @@ export default function CharacterDetail() {
           characterId={giftDialogue.characterId}
           expression={giftDialogue.expression}
           lines={giftDialogue.lines}
+          bgImage={giftDialogue.bgImage}
           onClose={() => setGiftDialogue(null)}
         />
       )}

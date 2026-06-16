@@ -8,10 +8,12 @@ import { assetUrl } from '@/lib/assets';
  * 送礼对白 — 收下信物后，她说出送礼时的话（按性格×层次写）。
  * 她的表情立绘站在对白框上方，逐句推进；最后一句点完即收场。
  */
-export default function GiftDialogue({ characterId, expression, lines, onClose }: {
+export default function GiftDialogue({ characterId, expression, lines, bgImage, onClose }: {
   characterId: string;
   expression: string;
   lines: string[];
+  /** 信物原图：作为背景（模糊压暗），营造「她把这件东西递给你」的氛围 */
+  bgImage?: string;
   onClose: () => void;
 }) {
   const char = getCharacterById(characterId);
@@ -26,8 +28,21 @@ export default function GiftDialogue({ characterId, expression, lines, onClose }
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[300] overflow-hidden bg-gradient-to-b from-[#1a1430] via-[#241a3a] to-[#0f0a1e]"
+      className="fixed inset-0 z-[300] overflow-hidden bg-[#0f0a1e]"
     >
+      {/* 信物原图背景：模糊 + 压暗，作为这场送礼的场景 */}
+      {bgImage && (
+        <motion.img
+          initial={{ scale: 1.18, opacity: 0 }}
+          animate={{ scale: 1.1, opacity: 1 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          src={assetUrl(bgImage)}
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover blur-[3px]"
+        />
+      )}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/85" />
       {/* 柔光氛围 */}
       <div className="pointer-events-none absolute left-1/2 top-1/3 h-[55vh] w-[55vh] -translate-x-1/2 rounded-full bg-rose-400/15 blur-3xl" />
 
