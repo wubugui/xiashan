@@ -210,8 +210,8 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
   useEffect(() => {
     if (!companion) return;
     if (tryDailyAction(`minigame:${companion.id}`)) {
-      addAffinity(companion.id, 2);
-      setHintNotice(`和${companion.name}一起理货，好感 +2 💕`);
+      addAffinity(companion.id, 4);
+      setHintNotice(`和${companion.name}一起理货，好感 +4 💕`);
       window.setTimeout(() => setHintNotice(null), 2400);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

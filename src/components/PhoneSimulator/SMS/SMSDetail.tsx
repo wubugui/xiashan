@@ -86,9 +86,9 @@ export default function SMSDetail({ characterId, onBack, hideHeader = false, wil
     // 关系没到位：石沉大海——能发出去，但没回音、不涨好感
     if (!willReply) return;
 
-    // 每日首次短信问候 +2 好感（限频防刷）
+    // 每日首次短信问候 +4 好感（限频防刷）
     if (tryDailyAction(`sms_chat:${characterId}`)) {
-      addAffinity(characterId, 2);
+      addAffinity(characterId, 4);
     }
 
     // 她回应：按「意图×好感层」取，可能已读不回

@@ -85,9 +85,9 @@ export default function ChatDetail({ characterId, onBack, hideHeader = false }: 
     setNewMessageIds((prev) => new Set(prev).add(playerId));
     markContact(characterId); // 主动联系，刷新被冷落计时
 
-    // 每日首次主动聊天 +2 好感（看手机是「有用的事」，限频防刷）
+    // 每日首次主动聊天 +4 好感（看手机是「有用的事」，限频防刷）
     if (tryDailyAction(`wechat_chat:${characterId}`)) {
-      addAffinity(characterId, 2);
+      addAffinity(characterId, 4);
     }
 
     // 她回应：按「意图×好感层」取，可能已读不回

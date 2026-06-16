@@ -54,7 +54,7 @@ export default function BrowserPage({ url, onBack }: BrowserPageProps) {
         setReward({ kind: 'already' });
         return;
       }
-      player.addAffinity(charId, 1);
+      player.addAffinity(charId, 2);
       setReward({ kind: 'affinity', characterName: name });
     }
   }, [page]);
@@ -103,7 +103,7 @@ export default function BrowserPage({ url, onBack }: BrowserPageProps) {
             <p className="text-xs leading-relaxed text-amber-300/90">
               {reward.kind === 'intel_now' && `📌 你注意到了一些有用的细节——【${reward.commissionName}】的情况你心里更有数了。（信任 +2）`}
               {reward.kind === 'intel_saved' && `📌 你注意到了一些有用的细节。如果今天接下【${reward.commissionName}】，她会感到你有备而来。（接单时初始信任 +2）`}
-              {reward.kind === 'affinity' && `♥ 读完这篇报道，你觉得自己离${reward.characterName}又近了一点。（好感 +1）`}
+              {reward.kind === 'affinity' && `♥ 读完这篇报道，你觉得自己离${reward.characterName}又近了一点。（好感 +2）`}
               {reward.kind === 'already' && '（这篇你今天已经仔细读过了。）'}
             </p>
           </div>

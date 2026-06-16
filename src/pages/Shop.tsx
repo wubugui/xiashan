@@ -433,8 +433,11 @@ export default function Shop() {
       if (result.kind === 'person') {
         addCharacter(result.character.id);
         addGachaResult(result.character.id, result.character.rarity);
-        // 重复抽到：她的卡折算成长经验，重复卡不再只是缘分信物（设计文档 6.3）
-        if (!result.isNew) addExp(result.character.id, EXP_DUPE);
+        // 重复抽到：她的卡折算成长经验 + 好感（重复卡也是相处的凭据，攒着的卡能换好感）
+        if (!result.isNew) {
+          addExp(result.character.id, EXP_DUPE);
+          addAffinity(result.character.id, 5);
+        }
         // 入伙演出：抽到邂逅期已攒好感的角色，出货时承认此前积累（设计文档 6.3）
         if (result.isNew && (affinityMap[result.character.id] ?? 0) > 0) {
           addLog(`【${result.character.name}】握住你的手："那几次委托……我都记得。"她正式加入二十五时便利屋。`, 'good');
@@ -481,7 +484,7 @@ export default function Shop() {
         }
       }
     }
-  }, [drawBusy, gameOver, tutorialActive, tutStep, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, ssrPersonCount, setSsrPersonCount, rateUpUntil, coldUntil, setSupplyPityCounter, addCharacter, addGachaResult, addExp, addHandCard, addHintTokens, addSpiritStones, addLog]);
+  }, [drawBusy, gameOver, tutorialActive, tutStep, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, ssrPersonCount, setSsrPersonCount, rateUpUntil, coldUntil, setSupplyPityCounter, addCharacter, addGachaResult, addExp, addAffinity, addHandCard, addHintTokens, addSpiritStones, addLog]);
 
   const closeRevealItem = useCallback(() => {
     drawCooldownUntilRef.current = Date.now() + 700;
