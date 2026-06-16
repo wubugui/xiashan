@@ -60,12 +60,20 @@ export interface Collectible {
   /** 礼物氛围文案：寓意 / 私密度 */
   summary?: string;
   intimacy?: string;
+  /** 送礼时她说的话（仅 kind==='gift'） */
+  give?: GiftGive;
   /** 解锁后点开可回看的图文详情 */
   viewer?: CollectibleViewer;
   /** 合并进本头像的短篇（CG 与某表情同图时，不再单列重复图，直接挂到该头像上） */
   cgViewer?: CollectibleViewer;
   cgUnlock?: Condition[];
   cgName?: string;
+}
+
+/** 送礼时她说的话（按性格×层次，越来越私密；expression 取角色表情 key） */
+export interface GiftGive {
+  expression: string;
+  lines: string[];
 }
 
 interface GiftConfig {
@@ -76,6 +84,7 @@ interface GiftConfig {
   summary: string;
   intimacy: string;
   effect: GiftEffect;
+  give?: GiftGive;
 }
 
 const giftContent = content as { gifts: Record<string, GiftConfig[]> };
@@ -140,6 +149,7 @@ export function getCollectibles(character: Character): Collectible[] {
       effect: gift.effect,
       summary: gift.summary,
       intimacy: gift.intimacy,
+      give: gift.give,
     });
   }
 

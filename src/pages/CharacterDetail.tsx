@@ -17,6 +17,8 @@ import RomanceScene from '@/components/RomanceScene';
 import StoryViewer from '@/components/StoryViewer';
 import GiftCard, { type GiftCardData } from '@/components/GiftCard';
 import GiftReveal from '@/components/GiftReveal';
+import GiftDialogue from '@/components/GiftDialogue';
+import type { GiftGive } from '@/data/collectibles';
 import { cn } from '@/lib/utils';
 import { playSound } from '@/lib/sound';
 import { assetUrl } from '@/lib/assets';
@@ -94,8 +96,9 @@ export default function CharacterDetail() {
   const [openCg, setOpenCg] = useState<CollectibleViewer | null>(null);
   // 收藏里点开的礼物卡（SSR 大图 + 随身携带）
   const [openGift, setOpenGift] = useState<Collectible | null>(null);
-  // 加深关系解锁信物时的 SSR 级揭示
-  const [revealGift, setRevealGift] = useState<{ name: string; data: GiftCardData } | null>(null);
+  // 加深关系解锁信物时的 SSR 级揭示 + 收下后她的送礼对白
+  const [revealGift, setRevealGift] = useState<{ name: string; charId: string; data: GiftCardData; give?: GiftGive } | null>(null);
+  const [giftDialogue, setGiftDialogue] = useState<{ characterId: string; expression: string; lines: string[] } | null>(null);
   // 收藏里点开的操作面板（设为她头像/主视觉/我的头像）
   const [sheetItem, setSheetItem] = useState<Collectible | null>(null);
   // 「设为我的头像」高博弈二次确认
@@ -170,7 +173,7 @@ export default function CharacterDetail() {
     );
     if (gift && gift.effect && gift.tier && gift.tierName) {
       playSound('gacha-ssr');
-      setRevealGift({ name: char.name, data: { name: gift.name, asset: gift.asset, tier: gift.tier, tierName: gift.tierName, effect: gift.effect, summary: gift.summary, intimacy: gift.intimacy } });
+      setRevealGift({ name: char.name, charId: char.id, give: gift.give, data: { name: gift.name, asset: gift.asset, tier: gift.tier, tierName: gift.tierName, effect: gift.effect, summary: gift.summary, intimacy: gift.intimacy } });
     }
   };
 
@@ -797,9 +800,26 @@ export default function CharacterDetail() {
         </div>
       )}
 
-      {/* 加深关系解锁信物：SSR 级揭示 */}
+      {/* 加深关系解锁信物：SSR 级揭示 → 收下后她的送礼对白 */}
       {revealGift && (
-        <GiftReveal data={revealGift.data} characterName={revealGift.name} onClose={() => setRevealGift(null)} />
+        <GiftReveal
+          data={revealGift.data}
+          characterName={revealGift.name}
+          onClose={() => {
+            const g = revealGift.give;
+            const cid = revealGift.charId;
+            setRevealGift(null);
+            if (g && g.lines.length) setGiftDialogue({ characterId: cid, expression: g.expression, lines: g.lines });
+          }}
+        />
+      )}
+      {giftDialogue && (
+        <GiftDialogue
+          characterId={giftDialogue.characterId}
+          expression={giftDialogue.expression}
+          lines={giftDialogue.lines}
+          onClose={() => setGiftDialogue(null)}
+        />
       )}
 
       {/* 收藏操作面板 */}
