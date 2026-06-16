@@ -292,8 +292,11 @@ export default function Shop() {
     equippedGift, dailyActions, tryDailyAction,
   } = playerStore;
 
-  /* ── 随身信物（礼物卡）：装备吃被动 + 热点里动用一锤 ── */
-  const giftInfo = useMemo(() => getGiftCardById(equippedGift), [equippedGift]);
+  /* ── 随身信物（礼物卡）：装备吃被动 + 热点里动用一锤。autoLink 类（如江夏理货卡）不作用于委托 ── */
+  const giftInfo = useMemo(() => {
+    const g = getGiftCardById(equippedGift);
+    return g && g.effect.kind !== 'autoLink' ? g : undefined;
+  }, [equippedGift]);
   const giftActiveAvailable = dailyActions['gift_active'] !== new Date().toISOString().slice(0, 10);
 
   /* ── 本地 UI 状态 ── */

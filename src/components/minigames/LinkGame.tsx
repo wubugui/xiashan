@@ -4,6 +4,7 @@ import { ChevronLeft, RotateCcw, Timer, Lightbulb, UserPlus } from 'lucide-react
 import confetti from 'canvas-confetti';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
+import { getGiftCardById } from '@/data/collectibles';
 import type { ServiceTag } from '@/data/types';
 import { cn } from '@/lib/utils';
 import { playSound } from '@/lib/sound';
@@ -139,6 +140,8 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
   const setMinigameCompanion = usePlayerStore((s) => s.setMinigameCompanion);
   const addAffinity = usePlayerStore((s) => s.addAffinity);
   const tryDailyAction = usePlayerStore((s) => s.tryDailyAction);
+  const equippedGift = usePlayerStore((s) => s.equippedGift);
+  const dailyActions = usePlayerStore((s) => s.dailyActions);
 
   const [grid, setGrid] = useState<Tile[][]>(() => buildGrid());
   const [flashing, setFlashing] = useState<Set<string>>(new Set());
@@ -153,6 +156,12 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
   const [showPicker, setShowPicker] = useState(false);
   /** 陪玩台词气泡 */
   const [companionSay, setCompanionSay] = useState<string | null>(null);
+  /** 随身信物自动连消：结束时间戳 + 剩余秒数 */
+  const [autoEndAt, setAutoEndAt] = useState<number | null>(null);
+  const [autoRemain, setAutoRemain] = useState(0);
+  /** 自动连消进行时：陪玩搭档的「赚钱类」被动暂停，避免自动×搭档滚雪球刷月光 */
+  const autoActiveRef = useRef(false);
+  useEffect(() => { autoActiveRef.current = autoEndAt !== null; }, [autoEndAt]);
 
   const drag = useRef<{ r: number; c: number; x: number; y: number } | null>(null);
   const [dragVisual, setDragVisual] = useState<{ r: number; c: number; dx: number; dy: number } | null>(null);
@@ -205,7 +214,9 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
     if (findHint(g)) return;
     playSound('reshuffle');
     setReshuffled(true);
-    if (passive?.key === 'soothe') {
+    // 自动连消时搭档赚钱被动暂停
+    const p = autoActiveRef.current ? null : passive;
+    if (p?.key === 'soothe') {
       addSpiritStones(40);
       setScore((s) => s + 40);
       sayRandom();
@@ -225,15 +236,17 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
         return;
       }
       // 计分：宠物被动猫罐头双倍；表达被动连锁多 1 层；补给/万能被动 +15%
+      // 自动连消(随身信物)进行时暂停搭档赚钱被动，避免自动×搭档刷月光
+      const p = autoActiveRef.current ? null : passive;
       let base = 0;
       for (const key of matches) {
         const [r, c] = key.split(',').map(Number);
         const isCat = g[r][c].kind === 'catfood';
-        base += REWARD_PER_TILE * (isCat && passive?.key === 'cat' ? 2 : 1);
+        base += REWARD_PER_TILE * (isCat && p?.key === 'cat' ? 2 : 1);
       }
-      const chainBonus = passive?.key === 'chain' ? 1 : 0;
+      const chainBonus = p?.key === 'chain' ? 1 : 0;
       let earned = base * Math.max(1, depth + chainBonus);
-      if (passive?.key === 'supply') earned = Math.ceil(earned * 1.15);
+      if (p?.key === 'supply') earned = Math.ceil(earned * 1.15);
 
       addSpiritStones(earned);
       setScore((s) => s + earned);
@@ -288,6 +301,42 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
     },
     [busy, grid, cascade],
   );
+
+  /* ── 随身信物：江夏的「自动连消」礼物（autoLink）── */
+  const autoGift = useMemo(() => {
+    const g = getGiftCardById(equippedGift);
+    return g && g.effect.kind === 'autoLink' ? g : null;
+  }, [equippedGift]);
+  const autoAvailable = dailyActions['gift_active'] !== new Date().toISOString().slice(0, 10);
+
+  const startAuto = useCallback(() => {
+    if (!autoGift || autoEndAt !== null) return;
+    if (!tryDailyAction('gift_active')) return;
+    playSound('stage-up');
+    setAutoEndAt(Date.now() + (autoGift.effect.durationSec ?? 20) * 1000);
+  }, [autoGift, autoEndAt, tryDailyAction]);
+
+  // 倒计时 + 到点停止
+  useEffect(() => {
+    if (autoEndAt === null) { setAutoRemain(0); return; }
+    const tick = () => {
+      const rem = Math.max(0, Math.ceil((autoEndAt - Date.now()) / 1000));
+      setAutoRemain(rem);
+      if (rem <= 0) setAutoEndAt(null);
+    };
+    tick();
+    const iv = window.setInterval(tick, 300);
+    return () => window.clearInterval(iv);
+  }, [autoEndAt]);
+
+  // 自动驱动：空闲时找一步可消除的交换并执行，连成节奏由 cascade 接管（快而有过程）
+  useEffect(() => {
+    if (autoEndAt === null || busy || Date.now() >= autoEndAt) return;
+    const hint = findHint(grid);
+    if (!hint) { setGrid(buildGrid()); return; } // 死局 → 重洗
+    const t = window.setTimeout(() => attemptSwap(hint[0], hint[1], hint[2], hint[3]), 200);
+    return () => window.clearTimeout(t);
+  }, [autoEndAt, busy, grid, attemptSwap]);
 
   /** 提示：每日免费(情报/观察型陪玩+1)，之后消耗提示券 */
   const showHint = useCallback(() => {
@@ -370,9 +419,9 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
       </div>
 
       <div className="relative z-10">
-        {/* 顶栏 */}
-        <div className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/78 backdrop-blur-xl">
-          <div className="flex items-center gap-3 px-4 py-3">
+        {/* 顶栏（顶部安全区：避开刘海/状态栏，多平台自适应） */}
+        <div className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/78 backdrop-blur-xl pt-safe">
+          <div className="flex items-center gap-3 px-4 pb-3">
             <button
               onClick={onExit}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/80 hover:bg-white/20"
@@ -416,6 +465,33 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
             </button>
           )}
         </div>
+
+        {/* 随身信物：江夏「自动连消」 */}
+        {autoGift && (
+          <div className="mx-auto max-w-md px-4 pt-2">
+            {autoEndAt !== null ? (
+              <div className="flex items-center gap-2 rounded-xl border border-amber-400/50 bg-amber-500/15 px-3 py-2 shadow-[0_0_14px_rgba(251,191,36,0.25)]">
+                <img src={assetUrl(autoGift.asset)} alt={autoGift.name} className="h-8 w-8 shrink-0 rounded-lg object-cover ring-1 ring-amber-300/60" />
+                <p className="flex-1 text-xs font-bold text-amber-200">江夏正帮你飞快理货…</p>
+                <span className="rounded bg-amber-400 px-2 py-0.5 text-[11px] font-black text-amber-950 tabular-nums">{autoRemain}s</span>
+              </div>
+            ) : autoAvailable ? (
+              <button
+                onClick={startAuto}
+                className="flex w-full items-center gap-2.5 rounded-xl border-2 border-amber-300/70 bg-gradient-to-r from-amber-500/20 to-amber-400/5 p-2 text-left shadow-[0_0_14px_rgba(251,191,36,0.25)] transition-all active:scale-[0.99]"
+              >
+                <img src={assetUrl(autoGift.asset)} alt={autoGift.name} className="h-9 w-9 shrink-0 rounded-lg object-cover ring-1 ring-amber-300/60" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-black text-amber-200">动用随身信物 · {autoGift.name}</p>
+                  <p className="truncate text-[10px] text-amber-100/80">{autoGift.effect.active}</p>
+                </div>
+                <span className="shrink-0 rounded bg-amber-400 px-1.5 py-0.5 text-[9px] font-black text-amber-950">SSR</span>
+              </button>
+            ) : (
+              <p className="text-center text-[10px] text-amber-300/60">随身信物「{autoGift.name}」今日已动用</p>
+            )}
+          </div>
+        )}
 
         {/* 营业额 + 提示 + 重开 */}
         <div className="mx-auto flex max-w-md items-center justify-between px-4 pt-2 pb-1 text-xs text-slate-300">
@@ -538,7 +614,8 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
               initial={{ opacity: 0, y: 12, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.92 }}
-              className="pointer-events-none fixed above-nav left-1/2 z-50 flex w-[88%] max-w-sm -translate-x-1/2 items-start gap-2 rounded-2xl border border-pink-400/40 bg-slate-900/95 px-3 py-2.5 shadow-xl backdrop-blur"
+              style={{ bottom: 'calc(var(--nav-h, 0px) + env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
+              className="pointer-events-none fixed left-1/2 z-50 flex w-[88%] max-w-sm -translate-x-1/2 items-start gap-2 rounded-2xl border border-pink-400/40 bg-slate-900/95 px-3 py-2.5 shadow-xl backdrop-blur"
             >
               <img src={assetUrl(companion.avatarUrl)} alt={companion.name} className="h-9 w-9 shrink-0 rounded-full object-cover" />
               <div>
@@ -571,9 +648,11 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="pointer-events-none fixed left-1/2 top-[30%] z-50 w-[85%] max-w-xs -translate-x-1/2 rounded-2xl bg-slate-800/95 border border-amber-400/40 px-4 py-3 text-center shadow-xl"
+              className="pointer-events-none fixed inset-x-0 top-[30%] z-50 flex justify-center px-4"
             >
-              <p className="text-sm font-bold text-amber-200">{hintNotice}</p>
+              <div className="max-w-xs rounded-2xl bg-slate-800/95 border border-amber-400/40 px-4 py-3 text-center shadow-xl">
+                <p className="text-sm font-bold leading-relaxed text-amber-200 break-words">{hintNotice}</p>
+              </div>
             </motion.div>
           )}
           {reshuffled && (

@@ -109,8 +109,11 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
 
   const inChallenge = node?.type === 'challenge' && reaction === null;
 
-  /* ── 随身信物（礼物卡）：装备吃被动 + 可动用一锤 ── */
-  const giftInfo = useMemo(() => getGiftCardById(equippedGift), [equippedGift]);
+  /* ── 随身信物（礼物卡）：装备吃被动 + 可动用一锤。autoLink 类（如江夏理货卡）不作用于委托 ── */
+  const giftInfo = useMemo(() => {
+    const g = getGiftCardById(equippedGift);
+    return g && g.effect.kind !== 'autoLink' ? g : undefined;
+  }, [equippedGift]);
   const giftActiveAvailable = dailyActions['gift_active'] !== new Date().toISOString().slice(0, 10);
   /** 当前挑战类型是否吃信物被动 → 展示用 */
   const giftPassive = giftInfo && node?.type === 'challenge' && isMatch(giftInfo.effect.type, node.need)

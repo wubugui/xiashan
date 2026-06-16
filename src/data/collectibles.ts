@@ -13,15 +13,23 @@ export type CollectibleKind = 'gift' | 'expr' | 'portrait' | 'cg';
 
 export type CollectibleTier = 1 | 2 | 3;
 
-/** 礼物卡的实际作用：装备吃被动 + 委托里可动用一锤 */
+/** 礼物卡的实际作用 */
 export interface GiftEffect {
   /** 效果名（印在卡面上） */
   name: string;
   /** 生效的委托类型（= 该角色服务类型） */
   type: ServiceTag;
-  /** 装备时：匹配类型委托每次判定额外信任 */
+  /**
+   * 效果种类：
+   * - 'trust'（默认）：装备吃被动 + 委托/热点里动用一锤（必定完美 + 信任）
+   * - 'autoLink'：在「理货」小游戏里动用，自动连消若干秒（不作用于委托）
+   */
+  kind?: 'trust' | 'autoLink';
+  /** autoLink：自动连消持续秒数 */
+  durationSec?: number;
+  /** 装备时：匹配类型委托每次判定额外信任（trust 用） */
   passiveTrust: number;
-  /** 动用时：必定「完美」并额外加的信任 */
+  /** 动用时：必定「完美」并额外加的信任（trust 用） */
   activeBonus: number;
   passive: string;
   active: string;

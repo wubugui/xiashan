@@ -359,12 +359,14 @@
         "summary": "第一份工资的小心意，她嘴上说便利店打折，其实挑了很久。",
         "intimacy": "这是新人式的笨拙感谢，真诚但还很轻。",
         "effect": {
-          "name": "缓口气",
+          "name": "搭把手",
           "type": "补给",
-          "passiveTrust": 1,
-          "activeBonus": 2,
-          "passive": "补给类委托每次判定 +1 信任",
-          "active": "动用：本次必定「完美」，额外 +2 信任"
+          "kind": "autoLink",
+          "durationSec": 20,
+          "passiveTrust": 0,
+          "activeBonus": 0,
+          "passive": "装备后，可在「打烊后的理货时间」里动用",
+          "active": "动用：江夏替你自动连消 20 秒，飞快上架赚月光"
         }
       },
       {
@@ -375,12 +377,14 @@
         "summary": "她记得你嗓子不舒服，便签写得很小，偏偏贴在最显眼的地方。",
         "intimacy": "这不是群发关心，是她把你的习惯写进了自己的清单。",
         "effect": {
-          "name": "记得休息",
+          "name": "替你顶班",
           "type": "补给",
-          "passiveTrust": 2,
-          "activeBonus": 4,
-          "passive": "补给类委托每次判定 +2 信任",
-          "active": "动用：本次必定「完美」，额外 +4 信任"
+          "kind": "autoLink",
+          "durationSec": 50,
+          "passiveTrust": 0,
+          "activeBonus": 0,
+          "passive": "装备后，可在「打烊后的理货时间」里动用",
+          "active": "动用：江夏替你自动连消 50 秒，飞快上架赚月光"
         }
       },
       {
@@ -391,12 +395,14 @@
         "summary": "清单不再只有她自己的待办，另一栏写给你们。",
         "intimacy": "这是日常级承诺。她把未来拆成一项项，认真留给你。",
         "effect": {
-          "name": "双人清单",
+          "name": "闭眼理货",
           "type": "补给",
-          "passiveTrust": 3,
-          "activeBonus": 6,
-          "passive": "补给类委托每次判定 +3 信任",
-          "active": "动用：本次必定「完美」，额外 +6 信任"
+          "kind": "autoLink",
+          "durationSec": 180,
+          "passiveTrust": 0,
+          "activeBonus": 0,
+          "passive": "装备后，可在「打烊后的理货时间」里动用",
+          "active": "动用：江夏替你自动连消 3 分钟，飞快上架赚月光"
         }
       }
     ]

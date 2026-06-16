@@ -106,14 +106,30 @@ export default function GiftCard({ data, variant = 'grid', locked = false, hint,
 
         {full && (
           <div className="mt-2 space-y-1.5">
-            <div className="rounded-lg border border-sky-400/30 bg-sky-500/10 px-2 py-1.5">
-              <p className="text-[10px] font-bold text-sky-300">随身被动</p>
-              <p className="text-[11px] leading-snug text-slate-100">{data.effect.passive}</p>
-            </div>
-            <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-2 py-1.5">
-              <p className="text-[10px] font-bold text-amber-300">动用 · 每日一次</p>
-              <p className="text-[11px] leading-snug text-slate-100">{data.effect.active}</p>
-            </div>
+            {data.effect.kind === 'autoLink' ? (
+              <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-2 py-1.5">
+                <p className="flex items-center gap-1 text-[10px] font-bold text-amber-300">
+                  动用 · 每日一次
+                  {data.effect.durationSec && (
+                    <span className="rounded bg-amber-400/30 px-1 text-[9px] text-amber-200">
+                      {data.effect.durationSec >= 60 ? `${data.effect.durationSec / 60} 分钟` : `${data.effect.durationSec} 秒`}
+                    </span>
+                  )}
+                </p>
+                <p className="text-[11px] leading-snug text-slate-100">{data.effect.active}</p>
+              </div>
+            ) : (
+              <>
+                <div className="rounded-lg border border-sky-400/30 bg-sky-500/10 px-2 py-1.5">
+                  <p className="text-[10px] font-bold text-sky-300">随身被动</p>
+                  <p className="text-[11px] leading-snug text-slate-100">{data.effect.passive}</p>
+                </div>
+                <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-2 py-1.5">
+                  <p className="text-[10px] font-bold text-amber-300">动用 · 每日一次</p>
+                  <p className="text-[11px] leading-snug text-slate-100">{data.effect.active}</p>
+                </div>
+              </>
+            )}
             {data.summary && <p className="pt-0.5 text-[11px] leading-relaxed text-slate-300">{data.summary}</p>}
             {data.intimacy && <p className="text-[11px] leading-relaxed text-rose-200/80">{data.intimacy}</p>}
           </div>
