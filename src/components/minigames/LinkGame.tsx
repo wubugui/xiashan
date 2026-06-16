@@ -37,17 +37,40 @@ const TILE_STYLES: Record<string, { emoji: string; label: string; bg: string; bo
 };
 const KINDS = Object.keys(TILE_STYLES);
 
-/** 陪玩被动：按服务类型 */
-const PASSIVES: Record<string, { key: string; desc: string }> = {
-  补给: { key: 'supply',  desc: '营业额 +15%' },
-  安抚: { key: 'soothe',  desc: '洗牌时她安慰你：补偿 +40 月光' },
-  表达: { key: 'chain',   desc: '连锁加成 +1 层' },
-  情报: { key: 'hint',    desc: '每日免费提示 +1 次' },
-  流程: { key: 'cool',    desc: '提示冷却减半' },
-  技术: { key: 'cool',    desc: '提示冷却减半' },
-  宠物: { key: 'cat',     desc: '猫罐头🥫计分双倍' },
-  观察: { key: 'hint',    desc: '每日免费提示 +1 次' },
-  万能: { key: 'supply',  desc: '营业额 +15%' },
+/**
+ * 陪玩被动：按服务类型。全部围绕「理货连消刷月光」设计——尤其与江夏的自动连消叠加，
+ * 让玩家搭配不同搭档刷得更爽（营业额倍率 / 连锁 / 猫罐头 / 暴击 / 每消固定 / 自动时长 / 自动手速）。
+ */
+interface CompanionPassive {
+  desc: string;
+  /** 营业额倍率（>1 加成） */
+  revenueMult?: number;
+  /** 连锁层数 + */
+  chain?: number;
+  /** 猫罐头🥫计分倍率 */
+  catMult?: number;
+  /** 每次消除暴击（翻倍）概率 */
+  critChance?: number;
+  /** 每次消除额外固定月光 */
+  flatPerMatch?: number;
+  /** 江夏自动连消时长 +秒 */
+  durationBonus?: number;
+  /** 江夏自动连消出手更快 */
+  speedUp?: boolean;
+}
+const PASSIVES: Record<string, CompanionPassive> = {
+  补给: { desc: '营业额 +20%', revenueMult: 1.20 },
+  万能: { desc: '营业额 +25%（样样都行）', revenueMult: 1.25 },
+  观察: { desc: '营业额 +15%', revenueMult: 1.15 },
+  表达: { desc: '连锁加成 +1 层（连消更值钱）', chain: 1 },
+  宠物: { desc: '猫罐头🥫计分 ×3', catMult: 3 },
+  情报: { desc: '每次消除额外 +8 月光', flatPerMatch: 8 },
+  技术: { desc: '暴击：每次消除 25% 概率翻倍', critChance: 0.25 },
+  维修: { desc: '暴击：每次消除 25% 概率翻倍', critChance: 0.25 },
+  安抚: { desc: '江夏自动连消时长 +8 秒', durationBonus: 8 },
+  恢复: { desc: '江夏自动连消时长 +12 秒', durationBonus: 12 },
+  流程: { desc: '江夏自动连消出手更快', speedUp: true },
+  路线: { desc: '江夏自动连消出手更快', speedUp: true },
 };
 
 interface Tile { id: number; kind: string }
@@ -159,9 +182,6 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
   /** 随身信物自动连消：结束时间戳 + 剩余秒数 */
   const [autoEndAt, setAutoEndAt] = useState<number | null>(null);
   const [autoRemain, setAutoRemain] = useState(0);
-  /** 自动连消进行时：陪玩搭档的「赚钱类」被动暂停，避免自动×搭档滚雪球刷月光 */
-  const autoActiveRef = useRef(false);
-  useEffect(() => { autoActiveRef.current = autoEndAt !== null; }, [autoEndAt]);
 
   const drag = useRef<{ r: number; c: number; x: number; y: number } | null>(null);
   const [dragVisual, setDragVisual] = useState<{ r: number; c: number; dx: number; dy: number } | null>(null);
@@ -203,27 +223,20 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
   }, []);
 
   const mmss = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
-  const hintCooldown = passive?.key === 'cool' ? HINT_COOLDOWN / 2 : HINT_COOLDOWN;
+  const hintCooldown = HINT_COOLDOWN;
   const hintCooldownLeft = Math.max(0, Math.ceil((hintReadyAt - Date.now()) / 1000));
-  const maxFree = FREE_HINTS_PER_DAY + (passive?.key === 'hint' ? 1 : 0);
+  const maxFree = FREE_HINTS_PER_DAY;
   const today = new Date().toISOString().slice(0, 10);
   const freeLeft = Math.max(0, maxFree - (freeHints.date === today ? freeHints.used : 0));
 
-  /** 死局检测：无可消除一步时自动洗牌（安抚型陪玩有补偿） */
+  /** 死局检测：无可消除一步时自动洗牌 */
   const ensurePlayable = useCallback((g: Tile[][]) => {
     if (findHint(g)) return;
     playSound('reshuffle');
     setReshuffled(true);
-    // 自动连消时搭档赚钱被动暂停
-    const p = autoActiveRef.current ? null : passive;
-    if (p?.key === 'soothe') {
-      addSpiritStones(40);
-      setScore((s) => s + 40);
-      sayRandom();
-    }
     window.setTimeout(() => setReshuffled(false), 1600);
     setGrid(buildGrid());
-  }, [passive, addSpiritStones, sayRandom]);
+  }, []);
 
   /** 连锁消除 */
   const cascade = useCallback(
@@ -235,18 +248,18 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
         ensurePlayable(g);
         return;
       }
-      // 计分：宠物被动猫罐头双倍；表达被动连锁多 1 层；补给/万能被动 +15%
-      // 自动连消(随身信物)进行时暂停搭档赚钱被动，避免自动×搭档刷月光
-      const p = autoActiveRef.current ? null : passive;
+      // 计分：搭档被动叠加自动/手动连消——猫罐头倍率、连锁层数、营业额倍率、暴击、每消固定
+      const p = passive;
       let base = 0;
       for (const key of matches) {
         const [r, c] = key.split(',').map(Number);
         const isCat = g[r][c].kind === 'catfood';
-        base += REWARD_PER_TILE * (isCat && p?.key === 'cat' ? 2 : 1);
+        base += REWARD_PER_TILE * (isCat ? (p?.catMult ?? 1) : 1);
       }
-      const chainBonus = p?.key === 'chain' ? 1 : 0;
-      let earned = base * Math.max(1, depth + chainBonus);
-      if (p?.key === 'supply') earned = Math.ceil(earned * 1.15);
+      let earned = base * Math.max(1, depth + (p?.chain ?? 0));
+      if (p?.revenueMult) earned = Math.ceil(earned * p.revenueMult);
+      if (p?.critChance && Math.random() < p.critChance) earned *= 2;
+      earned += (p?.flatPerMatch ?? 0);
 
       addSpiritStones(earned);
       setScore((s) => s + earned);
@@ -313,8 +326,10 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
     if (!autoGift || autoEndAt !== null) return;
     if (!tryDailyAction('gift_active')) return;
     playSound('stage-up');
-    setAutoEndAt(Date.now() + (autoGift.effect.durationSec ?? 20) * 1000);
-  }, [autoGift, autoEndAt, tryDailyAction]);
+    // 安抚/恢复型搭档延长自动连消时长
+    const bonusMs = (passive?.durationBonus ?? 0) * 1000;
+    setAutoEndAt(Date.now() + (autoGift.effect.durationSec ?? 20) * 1000 + bonusMs);
+  }, [autoGift, autoEndAt, tryDailyAction, passive]);
 
   // 倒计时 + 到点停止
   useEffect(() => {
@@ -334,9 +349,11 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
     if (autoEndAt === null || busy || Date.now() >= autoEndAt) return;
     const hint = findHint(grid);
     if (!hint) { setGrid(buildGrid()); return; } // 死局 → 重洗
-    const t = window.setTimeout(() => attemptSwap(hint[0], hint[1], hint[2], hint[3]), 200);
+    // 流程/路线型搭档让出手更快
+    const delay = passive?.speedUp ? 110 : 200;
+    const t = window.setTimeout(() => attemptSwap(hint[0], hint[1], hint[2], hint[3]), delay);
     return () => window.clearTimeout(t);
-  }, [autoEndAt, busy, grid, attemptSwap]);
+  }, [autoEndAt, busy, grid, attemptSwap, passive]);
 
   /** 提示：每日免费(情报/观察型陪玩+1)，之后消耗提示券 */
   const showHint = useCallback(() => {
@@ -664,7 +681,6 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
               className="pointer-events-none fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-sky-500/90 px-6 py-3 text-center shadow-xl"
             >
               <p className="text-base font-black text-sky-950">🔀 货架没法整理了，重新摆一遍</p>
-              {passive?.key === 'soothe' && <p className="text-xs font-bold text-sky-900">她拍拍你："没关系。"补偿 +40🌙</p>}
             </motion.div>
           )}
         </AnimatePresence>
