@@ -2,7 +2,7 @@
  * 都市便利屋 · 分池抽卡 主界面
  * 移动端竖屏布局，复用 GachaAnimation。
  */
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -16,7 +16,7 @@ import { commissions } from '@/data/commissions';
 import { GACHA_CONFIG } from '@/data/gachaConfig';
 import { pullSupply, RATE_UP_DAYS } from '@/engine/gachaEngine';
 import {
-  isMatch, scoreCard, resolveSpot, hitsRequirement, applyCommissionRewards,
+  isMatch, scoreCard, resolveSpot, reduceCost, hitsRequirement, applyCommissionRewards, groupHand,
   fatigueFromDelta, coffeeRelief, FATIGUE_TIRED, FATIGUE_EXHAUSTED, FATIGUE_MAX, COFFEE_COST,
   EXP_HIT_MATCHED, EXP_HIT_PLAIN, EXP_DELIVERY, EXP_DUPE,
 } from '@/engine/shopEngine';
@@ -34,7 +34,8 @@ import ResetSaveButton from '@/components/ResetSaveButton';
 import SupplyReveal, { type RevealItem } from '@/components/SupplyReveal';
 import { useCssVarFromHeight } from '@/hooks/useCssVarFromHeight';
 import PageBackdrop from '@/components/PageBackdrop';
-import type { Commission, CommissionObjective, GameLocation, Spot } from '@/data/types';
+import type { Commission, CommissionObjective, GameLocation, Spot, ServiceTag } from '@/data/types';
+import { getGiftCardById } from '@/data/collectibles';
 import { backdropForLocation, SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 
 /** GachaAnimation 内部格式（与 engine 的 GachaResult 不同） */
@@ -132,7 +133,10 @@ function StatusBar({
   const pct = commissionNeed > 0 ? Math.min(100, (trust / commissionNeed) * 100) : 0;
   const fatigueState = fatigue >= FATIGUE_EXHAUSTED ? '透支' : fatigue >= FATIGUE_TIRED ? '疲惫' : '';
   return (
-    <div className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/90 backdrop-blur-xl px-3 py-2 text-xs">
+    <div
+      style={{ top: 'env(safe-area-inset-top, 0px)' }}
+      className="sticky z-30 border-b border-white/10 bg-slate-950/90 backdrop-blur-xl px-3 py-2 text-xs"
+    >
       {/* 资源行 */}
       <div className="flex gap-2 flex-wrap mb-1.5">
         {[
@@ -278,14 +282,19 @@ export default function Shop() {
   } = shopStore;
 
   const {
-    ownedCharacters, affinityMap, supplyPityCounter,
+    ownedCharacters, affinityMap, supplyPityCounter, ssrPersonCount, setSsrPersonCount,
     normalTickets, flags, rateUpUntil, coldUntil,
     spendNormalTickets, setSupplyPityCounter,
     addNormalTickets, addAffinity, setCharacterRateUp,
     addGachaResult, addCharacter, addExp,
     addSpiritStones, addReputation, addHintTokens,
     tutorialStep, setTutorialStep,
+    equippedGift, dailyActions, tryDailyAction,
   } = playerStore;
+
+  /* ── 随身信物（礼物卡）：装备吃被动 + 热点里动用一锤 ── */
+  const giftInfo = useMemo(() => getGiftCardById(equippedGift), [equippedGift]);
+  const giftActiveAvailable = dailyActions['gift_active'] !== new Date().toISOString().slice(0, 10);
 
   /* ── 本地 UI 状态 ── */
   const [activeTab, setActiveTab] = useState<ActiveTab>('map');
@@ -303,8 +312,6 @@ export default function Shop() {
   /** 补给池非人物出货的开箱演出（人物走全屏 GachaAnimation） */
   const [revealItem, setRevealItem] = useState<RevealItem | null>(null);
   const drawCooldownUntilRef = useRef(0);
-  /** 地图 NPC 闲聊气泡 */
-  const [npcTalk, setNpcTalk] = useState<{ name: string; emoji: string; line: string } | null>(null);
   /** 底部操作条实测高度 → --bar-h（浮层/内容留白据此自动适配） */
   const actionBarRef = useRef<HTMLDivElement>(null);
   useCssVarFromHeight('--bar-h', actionBarRef);
@@ -417,8 +424,9 @@ export default function Shop() {
       if (!spendNormalTickets(1)) return toast('普通券不足。');
       drawCooldownUntilRef.current = Date.now() + 700;
       const ownedIds = ownedCharacters.map(o => o.characterId);
-      const { result, newPity } = pullSupply(ownedIds, affinityMap, supplyPityCounter, { rateUpUntil, coldUntil });
+      const { result, newPity, newSsrCount } = pullSupply(ownedIds, affinityMap, supplyPityCounter, ssrPersonCount, { rateUpUntil, coldUntil });
       setSupplyPityCounter(newPity);
+      setSsrPersonCount(newSsrCount);
       if (result.kind === 'person') {
         addCharacter(result.character.id);
         addGachaResult(result.character.id, result.character.rarity);
@@ -470,7 +478,7 @@ export default function Shop() {
         }
       }
     }
-  }, [drawBusy, gameOver, tutorialActive, tutStep, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, rateUpUntil, coldUntil, setSupplyPityCounter, addCharacter, addGachaResult, addExp, addHandCard, addHintTokens, addSpiritStones, addLog]);
+  }, [drawBusy, gameOver, tutorialActive, tutStep, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, ssrPersonCount, setSsrPersonCount, rateUpUntil, coldUntil, setSupplyPityCounter, addCharacter, addGachaResult, addExp, addHandCard, addHintTokens, addSpiritStones, addLog]);
 
   const closeRevealItem = useCallback(() => {
     drawCooldownUntilRef.current = Date.now() + 700;
@@ -499,22 +507,50 @@ export default function Shop() {
   }, [loc, done]);
 
   /* ────── 事件结算 ────── */
-  const handleResolve = useCallback((card: (HandCard & { kind: 'skill' | 'tool' | 'info' }) | PersonCard | null) => {
+  const handleResolve = useCallback((card: (HandCard & { kind: 'skill' | 'tool' | 'info' }) | PersonCard | { kind: 'gift'; serviceType: ServiceTag; activeBonus: number; name: string } | null) => {
     if (!currentEvent || !loc) return;
     const { spot, spotIndex, locId } = currentEvent;
 
-    const { text, cls, delta, combo } = resolveSpot(spot, card, lastCardType);
+    const isGift = !!card && card.kind === 'gift';
+    // 动用信物每日一次：占用名额失败则忽略
+    if (isGift && !tryDailyAction('gift_active')) return;
+
+    // 统一的卡类型（信物用其主类型参与一切命中/连携判定）
+    const cardType: ServiceTag | null = card
+      ? (card.kind === 'person' || card.kind === 'gift' ? card.serviceType : (card as HandCard).type)
+      : null;
+
+    let text: string;
+    let cls: 'good' | 'bad';
+    let delta: ReturnType<typeof resolveSpot>['delta'];
+    let combo = false;
+    if (isGift) {
+      const g = card as { kind: 'gift'; serviceType: ServiceTag; activeBonus: number; name: string };
+      // 动用 = 必定「完美」：基础降本 + 完美信任(3) + 动用额外
+      delta = reduceCost({ ...spot.base });
+      delta.trust = (delta.trust ?? 0) + 3 + g.activeBonus;
+      text = `动用随身信物【${g.name}】，${spot.name}处理得干净利落。`;
+      cls = 'good';
+    } else {
+      // 此分支 card 必非信物；类型收窄交给 resolveSpot 的入参类型
+      ({ text, cls, delta, combo } = resolveSpot(spot, card as Parameters<typeof resolveSpot>[1], lastCardType));
+    }
+
+    // 随身信物被动：装备的信物类型匹配热点时，每次处理额外信任（动用时一并叠加）
+    const giftPassive = giftInfo && isMatch(giftInfo.effect.type, spot.need) ? giftInfo.effect.passiveTrust : 0;
+    if (giftPassive > 0) delta.trust = (delta.trust ?? 0) + giftPassive;
 
     // 音效反馈
-    if (!card) playSound('card-miss');
+    if (isGift) playSound('gacha-ssr');
+    else if (!card) playSound('card-miss');
     else if (combo) playSound('combo');
     else {
       const cType = card.kind === 'person' ? card.serviceType : (card as HandCard).type;
       playSound(spot.need.includes(cType) ? 'card-hit' : 'card-miss');
     }
 
-    // 消耗一次性手牌
-    if (card && card.kind !== 'person') {
+    // 消耗一次性手牌（人物卡 / 信物不消耗）
+    if (card && card.kind !== 'person' && card.kind !== 'gift') {
       consumeHandCard((card as HandCard).uid);
       addLog(`消耗${kindName(card.kind)}【${card.name}】。`, 'play');
     }
@@ -538,16 +574,14 @@ export default function Shop() {
     markSpotDone(locId, spotIndex);
     setHandledThisLocation(true);
     addLog(text, cls);
-    if (combo) {
-      const cardType = card!.kind === 'person' ? card!.serviceType : (card as HandCard).type;
+    if (combo && cardType) {
       addLog(`🔗 连携！连续两次打出【${cardType}】，信任额外 +1。`, 'good');
     }
-    setLastCardType(card ? (card.kind === 'person' ? card.serviceType : (card as HandCard).type) : null);
+    setLastCardType(cardType);
 
-    // 子目标 / 顺手单命中判定：在匹配热点上打出要求 type 的卡
+    // 子目标 / 顺手单命中判定：在匹配热点上打出要求 type 的卡（信物动用以其类型一锤命中）
     let objectiveHit = false;
-    if (card) {
-      const cardType = card.kind === 'person' ? card.serviceType : (card as HandCard).type;
+    if (cardType) {
       if (commission?.objectives) {
         for (const obj of commission.objectives) {
           if (objectivesDone.includes(obj.id)) continue;
@@ -589,7 +623,8 @@ export default function Shop() {
     }
   }, [currentEvent, loc, commission, objectivesDone, sideJobs, fatigue, rep, lastCardType,
     consumeHandCard, applyDelta, markSpotDone, completeObjective, completeSideJob, noteCommissionFocus,
-    addNormalTickets, addSpiritStones, addExp, addLog, refreshRoutes, setGameOver, setLastCardType]);
+    addNormalTickets, addSpiritStones, addExp, addLog, refreshRoutes, setGameOver, setLastCardType,
+    giftInfo, tryDailyAction]);
 
   /* ────── 冒险解法（危险热点）：不出牌，付出更多资源换高信任 ────── */
   const handleRisk = useCallback(() => {
@@ -773,9 +808,19 @@ export default function Shop() {
         overlayClassName="from-slate-950/50 via-slate-950/70 to-slate-950/90"
       />
 
+      {/* 顶部安全区盖板：填充刘海/状态栏下拉区，避免内容透出与误触（iOS 刘海 / Android 状态栏通用） */}
+      <div
+        aria-hidden
+        style={{ height: 'env(safe-area-inset-top, 0px)' }}
+        className="pointer-events-none fixed inset-x-0 top-0 z-30 bg-slate-950/95 backdrop-blur-xl"
+      />
+
       <div className="relative z-10">
-        {/* 顶栏 */}
-        <div className="flex items-center gap-2 px-3 py-2 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
+        {/* 顶栏（顶部留出安全区，按钮不再侵入状态栏/下拉区） */}
+        <div
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.5rem)' }}
+          className="flex items-center gap-2 px-3 pb-2 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl"
+        >
           <button
             onClick={() => navigate('/')}
             className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20"
@@ -972,34 +1017,6 @@ export default function Shop() {
                       <span className="text-[10px] text-white/50">{loc.tags.join(' · ')}</span>
                     </div>
 
-                    {/* 场景装饰（纯演出） */}
-                    {loc.scenery?.map((d, i) => (
-                      <span
-                        key={`deco-${i}`}
-                        className="absolute -translate-x-1/2 -translate-y-1/2 opacity-50 pointer-events-none select-none"
-                        style={{ left: `${d.x}%`, top: `${d.y}%`, fontSize: d.size ?? 22 }}
-                      >
-                        {d.emoji}
-                      </span>
-                    ))}
-
-                    {/* 路人 NPC：点击闲聊（不影响规则） */}
-                    {loc.npcs?.map((npc, i) => (
-                      <button
-                        key={`npc-${i}`}
-                        onClick={() => setNpcTalk({
-                          name: npc.name,
-                          emoji: npc.emoji,
-                          line: npc.lines[Math.floor(Math.random() * npc.lines.length)],
-                        })}
-                        className="absolute z-10 -translate-x-1/2 -translate-y-1/2 text-xl opacity-80 transition-transform hover:scale-125 active:scale-95"
-                        style={{ left: `${npc.x}%`, top: `${npc.y}%` }}
-                        title={npc.name}
-                      >
-                        {npc.emoji}
-                      </button>
-                    ))}
-
                     {/* 热点标记：图标 + 名称牌 */}
                     {loc.spots.map((spot, i) => {
                       const isDone = done[loc.id]?.[i] ?? false;
@@ -1036,22 +1053,6 @@ export default function Shop() {
                       );
                     })}
 
-                    {/* NPC 闲聊气泡 */}
-                    <AnimatePresence>
-                      {npcTalk && (
-                        <motion.div
-                          key={npcTalk.name + npcTalk.line}
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          onClick={() => setNpcTalk(null)}
-                          className="absolute inset-x-3 bottom-3 z-30 rounded-xl border border-white/20 bg-black/80 px-3 py-2.5 backdrop-blur"
-                        >
-                          <p className="text-[10px] font-bold text-amber-300">{npcTalk.emoji} {npcTalk.name}</p>
-                          <p className="mt-0.5 text-xs leading-relaxed text-slate-200">{npcTalk.line}</p>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
                   </div>
                 </div>
               )}
@@ -1283,9 +1284,9 @@ export default function Shop() {
                   <p className="text-xs text-slate-500">从技能/便利/情报频道抽卡</p>
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
-                    {hand.map(c => (
+                    {groupHand(hand).map(({ rep: c, count }) => (
                       <div
-                        key={c.uid}
+                        key={c.id}
                         className={cn(
                           'rounded-xl border p-3',
                           c.kind === 'skill' ? 'border-amber-500/30 bg-amber-500/10' :
@@ -1294,7 +1295,9 @@ export default function Shop() {
                         )}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-bold text-white">{c.name}</span>
+                          <span className="text-xs font-bold text-white">
+                            {c.name}{count > 1 && <span className="ml-1 text-cyan-300">×{count}</span>}
+                          </span>
                           <span className={cn('text-[10px] font-bold', rarityColor(c.rarity))}>{c.rarity}</span>
                         </div>
                         <div className="flex gap-1 mb-1">
@@ -1336,53 +1339,59 @@ export default function Shop() {
       </div>
 
       {/* ── 底部操作区 ── */}
-      <div ref={actionBarRef} style={{ bottom: 'var(--nav-h, 0px)' }} className="fixed left-0 right-0 z-50 border-t border-white/10 bg-slate-950/95 backdrop-blur-xl px-3 py-2 flex flex-wrap gap-2">
+      <div
+        ref={actionBarRef}
+        style={{ bottom: 'var(--nav-h, 0px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.5rem)' }}
+        className="fixed left-0 right-0 z-50 border-t border-white/10 bg-slate-950/95 backdrop-blur-xl px-3 pt-2 space-y-2"
+      >
+        {/* 主操作：完成当前地点——身处地点时全宽醒目，避免与次级按钮挤压 */}
         {loc && (
-          <>
-            {!handledThisLocation && (
-              <button
-                onClick={() => { leaveLocation(); setHandledThisLocation(false); }}
-                disabled={gameOver}
-                className="rounded-xl bg-slate-800 border border-white/10 px-3 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 disabled:opacity-40"
-              >
-                ↩ 换地点
-              </button>
-            )}
-            <button
-              data-tut="btn-finish-location"
-              onClick={handleFinishLocation}
-              disabled={gameOver}
-              className="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-2.5 text-sm font-black text-amber-950 disabled:opacity-40"
-            >
-              ✅ 完成当前地点
-            </button>
-          </>
-        )}
-        {(() => {
-          const today = new Date().toISOString().slice(0, 10);
-          const nextRelief = coffeeRelief(coffees.date === today ? coffees.n : 0);
-          return (
-            <button
-              onClick={() => {
-                if (money < COFFEE_COST) return toast(`资金不足，咖啡 ${COFFEE_COST} 块一杯。`);
-                const relief = buyCoffee();
-                if (relief > 0) toast(`☕ 咕嘟咕嘟……疲劳 -${relief}（资金 -${COFFEE_COST}）`);
-              }}
-              disabled={gameOver || money < COFFEE_COST || nextRelief === 0}
-              className="rounded-xl bg-slate-800 border border-white/10 px-3 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700 disabled:opacity-40"
-            >
-              {nextRelief > 0 ? `☕ 买咖啡（疲劳 -${nextRelief}）` : '☕ 今天喝不下了'}
-            </button>
-          );
-        })()}
-        {!gameOver && (
           <button
-            onClick={handleEndDay}
-            className={cn('rounded-xl bg-indigo-700 px-3 py-2.5 text-xs font-bold text-white hover:bg-indigo-600', !loc && 'flex-1')}
+            data-tut="btn-finish-location"
+            onClick={handleFinishLocation}
+            disabled={gameOver}
+            className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-3 text-sm font-black text-amber-950 disabled:opacity-40 active:scale-[0.99] transition-all"
           >
-            🌙 打烊休息
+            ✅ 完成当前地点
           </button>
         )}
+        {/* 次级操作：等宽一行，不换行不走样 */}
+        <div className="flex items-stretch gap-2">
+          {loc && !handledThisLocation && (
+            <button
+              onClick={() => { leaveLocation(); setHandledThisLocation(false); }}
+              disabled={gameOver}
+              className="flex-1 flex items-center justify-center rounded-xl bg-slate-800 border border-white/10 py-2.5 text-xs font-bold text-slate-300 leading-tight text-center hover:bg-slate-700 disabled:opacity-40 active:scale-95 transition-all"
+            >
+              ↩ 换地点
+            </button>
+          )}
+          {(() => {
+            const today = new Date().toISOString().slice(0, 10);
+            const nextRelief = coffeeRelief(coffees.date === today ? coffees.n : 0);
+            return (
+              <button
+                onClick={() => {
+                  if (money < COFFEE_COST) return toast(`资金不足，咖啡 ${COFFEE_COST} 块一杯。`);
+                  const relief = buyCoffee();
+                  if (relief > 0) toast(`☕ 咕嘟咕嘟……疲劳 -${relief}（资金 -${COFFEE_COST}）`);
+                }}
+                disabled={gameOver || money < COFFEE_COST || nextRelief === 0}
+                className="flex-1 flex items-center justify-center rounded-xl bg-slate-800 border border-white/10 py-2.5 text-xs font-bold text-slate-300 leading-tight text-center hover:bg-slate-700 disabled:opacity-40 active:scale-95 transition-all"
+              >
+                {nextRelief > 0 ? `☕ 买咖啡 -${nextRelief}` : '☕ 喝不下了'}
+              </button>
+            );
+          })()}
+          {!gameOver && (
+            <button
+              onClick={handleEndDay}
+              className="flex-1 flex items-center justify-center rounded-xl bg-indigo-700 py-2.5 text-xs font-bold text-white leading-tight text-center hover:bg-indigo-600 active:scale-95 transition-all"
+            >
+              🌙 打烊休息
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── 事件弹窗 ── */}
@@ -1392,7 +1401,11 @@ export default function Shop() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 backdrop-blur-sm px-3 pb-3"
+            style={{
+              paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)',
+              paddingBottom: 'calc(var(--bar-h, 0px) + var(--nav-h, 0px) + 0.75rem)',
+            }}
+            className="fixed inset-0 z-40 flex items-end justify-center bg-black/70 backdrop-blur-sm px-3"
             onClick={() => setCurrentEvent(null)}
           >
             <motion.div
@@ -1401,7 +1414,7 @@ export default function Shop() {
               exit={{ y: 60, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               onClick={e => e.stopPropagation()}
-              className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl bg-slate-900 border border-white/10 p-4 shadow-2xl"
+              className="w-full max-w-lg max-h-full min-h-0 overflow-y-auto rounded-2xl bg-slate-900 border border-white/10 p-4 shadow-2xl"
             >
               {/* 热点信息 */}
               <div className="mb-3">
@@ -1423,7 +1436,25 @@ export default function Shop() {
                   ))}
                 </div>
                 <p className="text-[10px] text-slate-500">打出与推荐类型匹配的卡（黄色高亮）可获得额外信任</p>
+                {giftInfo && isMatch(giftInfo.effect.type, currentEvent.spot.need) && (
+                  <p className="mt-1 text-[10px] font-medium text-amber-300/85">🎁 随身信物生效中 · 本类型每次处理 +{giftInfo.effect.passiveTrust} 信任</p>
+                )}
               </div>
+
+              {/* 随身信物：动用一锤（每日一次，引导步骤不打扰） */}
+              {giftInfo && giftActiveAvailable && !tutorialActive && (
+                <button
+                  onClick={() => handleResolve({ kind: 'gift', serviceType: giftInfo.effect.type, activeBonus: giftInfo.effect.activeBonus, name: giftInfo.name })}
+                  className="mb-3 flex w-full items-center gap-2.5 rounded-xl border-2 border-amber-300/70 bg-gradient-to-r from-amber-500/20 to-amber-400/5 p-2 text-left shadow-[0_0_14px_rgba(251,191,36,0.25)] transition-all active:scale-[0.99]"
+                >
+                  <img src={assetUrl(giftInfo.asset)} alt={giftInfo.name} className="h-11 w-11 shrink-0 rounded-lg object-cover ring-1 ring-amber-300/60" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-black text-amber-200">动用随身信物 · {giftInfo.name}</p>
+                    <p className="text-[10px] text-amber-100/80">必定「完美」，额外信任 +{giftInfo.effect.activeBonus} · 每日一次</p>
+                  </div>
+                  <span className="shrink-0 rounded bg-amber-400 px-1.5 py-0.5 text-[9px] font-black text-amber-950">SSR</span>
+                </button>
+              )}
 
               {/* 普通处理 */}
               <div className="mb-3">
@@ -1472,23 +1503,28 @@ export default function Shop() {
                 { title: '技能卡：怎么解决', cards: hand.filter(c => c.kind === 'skill'), isPerson: false },
                 { title: '便利卡：快速改局', cards: hand.filter(c => c.kind === 'tool'), isPerson: false },
                 { title: '情报卡：提前知道', cards: hand.filter(c => c.kind === 'info'), isPerson: false },
-              ].map(({ title, cards, isPerson }) => (
+              ].map(({ title, cards, isPerson }) => {
+                // 人物卡逐个（count=1，不合并）；消耗卡按 id 合并显示 ×N，点击仍只消耗一张
+                const groups: { rep: PersonCard | HandCard; count: number }[] = isPerson
+                  ? (cards as PersonCard[]).map(c => ({ rep: c as PersonCard | HandCard, count: 1 }))
+                  : groupHand(cards as HandCard[]);
+                return (
                 <div key={title} className="mb-3">
                   <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider mb-1.5">{title}</p>
                   {cards.length === 0 ? (
                     <p className="text-[10px] text-slate-500 pl-1">暂无该类卡。</p>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
-                      {[...cards].sort((a, b) => {
-                        const aType = isPerson ? (a as PersonCard).serviceType : (a as HandCard).type;
-                        const bType = isPerson ? (b as PersonCard).serviceType : (b as HandCard).type;
+                      {groups.sort((ga, gb) => {
+                        const aType = isPerson ? (ga.rep as PersonCard).serviceType : (ga.rep as HandCard).type;
+                        const bType = isPerson ? (gb.rep as PersonCard).serviceType : (gb.rep as HandCard).type;
                         return scoreCard(bType, currentEvent.spot.need) - scoreCard(aType, currentEvent.spot.need);
-                      }).map(card => {
+                      }).map(({ rep: card, count }) => {
                         const cardType = isPerson ? (card as PersonCard).serviceType : (card as HandCard).type;
                         const matched = isMatch(cardType, currentEvent.spot.need);
                         return (
                           <button
-                            key={isPerson ? (card as PersonCard).id : (card as HandCard).uid}
+                            key={isPerson ? (card as PersonCard).id : (card as HandCard).id}
                             data-tut={isPerson ? undefined : `card-${(card as HandCard).id}`}
                             onClick={() => {
                               if (isPerson) handleResolve(card as PersonCard);
@@ -1504,6 +1540,7 @@ export default function Shop() {
                             <div className="flex items-center justify-between gap-1 mb-1">
                               <span className="text-xs font-bold text-white truncate">
                                 {matched ? '✨ ' : ''}{isPerson ? (card as PersonCard).name : (card as HandCard).name}
+                                {!isPerson && count > 1 && <span className="ml-1 text-cyan-300">×{count}</span>}
                               </span>
                               {!isPerson && (
                                 <span className={cn('text-[10px] font-bold shrink-0', rarityColor((card as HandCard).rarity))}>
@@ -1530,7 +1567,8 @@ export default function Shop() {
                     </div>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </motion.div>
           </motion.div>
         )}
