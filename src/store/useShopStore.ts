@@ -145,13 +145,15 @@ function weightedShuffle(ids: string[]): string[] {
 
 /** 掷今日委托板：未完成的委托优先按稀有度加权补满 3 张，余位用已完成的回访单填充。
  *  冷淡期角色（被放弃过委托）的单不上板——她暂时不想见你。 */
-function rollBoard(forced: string[] = []): string[] {
+function rollBoard(forced: string[] = [], excludeId?: string): string[] {
   const player = usePlayerStore.getState();
   const isDone = (id: string) => player.flags.includes(`commission_${id}_done`);
   const today = new Date().toISOString().slice(0, 10);
   const isCold = (c: { target: string }) => (player.coldUntil[c.target] ?? '') >= today;
   const board: string[] = [...forced.filter(f => !isDone(f))];
   const excluded = new Set(forced);
+  // 进行中的委托不再上板（否则看着像「没刷新」，还会重复接）
+  if (excludeId) excluded.add(excludeId);
   const pool = commissions.filter(c => !excluded.has(c.id) && !isCold(c));
   const fresh = pool.filter(c => !isDone(c.id)).map(c => c.id);
   const revisit = pool.filter(c => isDone(c.id)).map(c => c.id);
@@ -203,7 +205,7 @@ export const useShopStore = create<ShopState>()(
           ? tutorialRoutes(s0.objectivesDone)
           : rollRoutes(allLocations, 3, pendingLocTags(s0.commission, s0.objectivesDone));
         // 引导期委托板只挂「面试」一单，顺手单只挂教学单（流程确定性）
-        const board = tutorial ? (s0.commission ? [] : ['interview']) : rollBoard();
+        const board = tutorial ? (s0.commission ? [] : ['interview']) : rollBoard([], s0.commission?.id);
         const sideJobs = tutorial
           ? (s0.sideJobs.length ? s0.sideJobs : [{ id: TUTORIAL_SIDE_JOB, done: false }])
           : rollSideJobs();
@@ -294,6 +296,11 @@ export const useShopStore = create<ShopState>()(
         } else {
           set(prev => ({ rep: Math.max(0, prev.rep - 1) }));
           get().addLog('放了客人鸽子，口碑 -1。', 'bad');
+        }
+        // 放弃后重掷委托板：被放弃的人(已进冷淡)不再上板，换一批新委托
+        if (!isTutorialActive()) {
+          set({ board: rollBoard() });
+          get().addLog('委托板已重新刷新——换一批人来找你。', '');
         }
       },
 
