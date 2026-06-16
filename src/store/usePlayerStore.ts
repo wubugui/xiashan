@@ -54,6 +54,8 @@ interface PlayerState {
   normalTickets: number;
   /** 统一补给池保底计数（抽到人物时清零） */
   supplyPityCounter: number;
+  /** SSR 软保底计数：连续未出 SSR 的「人物出货」次数（出 SSR 清零） */
+  ssrPersonCount: number;
   /** 消消乐提示券（补给池可抽，免费次数用完后消耗） */
   hintTokens: number;
   /** 消消乐当日免费提示使用记录 */
@@ -70,6 +72,8 @@ interface PlayerState {
   // 好感独立于持有：未抽到也能积累，抽到后才解锁养成内容（设计文档 6.3）
   affinityMap: Record<string, number>;
   relationshipStages: Record<string, number>;
+  /** 随身信物：当前装备的礼物卡 id（gift_xxx），吃被动 + 委托里可动用，全局仅一枚 */
+  equippedGift: string | null;
   // 每日限频记录：key（如 interact:touch:linxia / stage:linxia）→ 'YYYY-MM-DD'
   dailyActions: Record<string, string>;
   /** 累计获得的同角色卡数（首张=1）：关系阶段的「钥匙」门槛 */
@@ -116,6 +120,7 @@ interface PlayerState {
   addNormalTickets: (n: number) => void;
   spendNormalTickets: (n: number) => boolean;
   setSupplyPityCounter: (n: number) => void;
+  setSsrPersonCount: (n: number) => void;
   addHintTokens: (n: number) => void;
   /** 消耗一次消消乐提示：优先每日免费(默认3次,陪玩被动可+1)，再扣提示券；都没有返回 'none' */
   consumeMinigameHint: (maxFree?: number) => 'free' | 'token' | 'none';
@@ -135,6 +140,8 @@ interface PlayerState {
   /** 放弃她的委托：冷淡若干自然日 */
   setCharacterCold: (characterId: string, days: number) => void;
   advanceRelationshipStage: (characterId: string) => void;
+  /** 装备/卸下随身信物（传 null 卸下） */
+  setEquippedGift: (giftId: string | null) => void;
   /** 心动系统：推进一个恋爱节点（进度 +1） */
   advanceRomance: (characterId: string) => void;
   /** 确认心意（排他锁定对象） */
@@ -169,6 +176,7 @@ const initialState = {
   reputation: 0,
   normalTickets: 7,
   supplyPityCounter: 0,
+  ssrPersonCount: 0,
   hintTokens: 0,
   freeHints: { date: '', used: 0 },
   minigameCompanion: null as string | null,
@@ -179,6 +187,7 @@ const initialState = {
   ownedCharacters: [] as OwnedCharacter[],
   affinityMap: {} as Record<string, number>,
   relationshipStages: {} as Record<string, number>,
+  equippedGift: null as string | null,
   dailyActions: {} as Record<string, string>,
   dupeCount: {} as Record<string, number>,
   bondShards: 0,
@@ -212,6 +221,7 @@ export const usePlayerStore = create<PlayerState>()(
       addReputation: (amount) => set(s => ({ reputation: s.reputation + amount })),
       addNormalTickets: (n) => set(s => ({ normalTickets: s.normalTickets + n })),
       setSupplyPityCounter: (n) => set({ supplyPityCounter: n }),
+      setSsrPersonCount: (n) => set({ ssrPersonCount: n }),
       addHintTokens: (n) => set(s => ({ hintTokens: s.hintTokens + n })),
       setMinigameCompanion: (id) => set({ minigameCompanion: id }),
       consumeMinigameHint: (maxFree = 3) => {
@@ -281,6 +291,8 @@ export const usePlayerStore = create<PlayerState>()(
         delete rateUpUntil[characterId];
         return { coldUntil: { ...s.coldUntil, [characterId]: dateAfterDays(days) }, rateUpUntil };
       }),
+      setEquippedGift: (giftId) => set({ equippedGift: giftId }),
+
       advanceRelationshipStage: (characterId) => set(s => ({
         relationshipStages: {
           ...s.relationshipStages,
@@ -351,7 +363,7 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'xiashan-player-store',
-      version: 12,
+      version: 14,
       storage: createJSONStorage(() => safeStorage),
       // 旧版本存档可能缺字段、字段为 null 或类型不符（项目从 AVG 改版而来），
       // 合并时丢弃所有与默认值类型不符的项，避免启动即崩、全页空白。
@@ -376,6 +388,16 @@ export const usePlayerStore = create<PlayerState>()(
           personTickets?: number;
           commissionTickets?: number;
         };
+        if (version < 14) {
+          // 随身信物（礼物卡）新增字段：老存档默认未装备
+          const s14 = state as typeof state & { equippedGift?: string | null };
+          s14.equippedGift = s14.equippedGift ?? null;
+        }
+        if (version < 13) {
+          // SSR 软保底计数新增字段：老存档从 0 起算
+          const s13 = state as typeof state & { ssrPersonCount?: number };
+          s13.ssrPersonCount = s13.ssrPersonCount ?? 0;
+        }
         if (version < 12) {
           // 签名已读追踪新增字段：老存档补空（首次都视作"有新变化"，正好引导玩家去看）
           const s12 = state as typeof state & { signatureSeen?: Record<string, string> };

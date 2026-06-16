@@ -9,12 +9,13 @@ import { dupesNeededForStage } from '@/engine/bondEngine';
 import { expForLevel } from '@/engine/shopEngine';
 import { getRomanceArc, type RomanceBeat, type RomanceChoiceOption } from '@/data/romanceArcs';
 import { beatStatus } from '@/engine/romanceEngine';
-import { getCollectibles, type Collectible } from '@/data/collectibles';
+import { getCollectibles, type Collectible, type CollectibleViewer } from '@/data/collectibles';
 import { resolveAvatarFallout } from '@/engine/avatarFallout';
 import { passedOverReactions } from '@/engine/passedOver';
 import { evaluateAll } from '@/engine/conditionEngine';
 import RomanceScene from '@/components/RomanceScene';
 import StoryViewer from '@/components/StoryViewer';
+import GiftCard from '@/components/GiftCard';
 import { cn } from '@/lib/utils';
 import { playSound } from '@/lib/sound';
 import { assetUrl } from '@/lib/assets';
@@ -46,6 +47,13 @@ const rarityLabel = {
 
 const UPGRADE_COST = 100;
 
+function collectibleKindLabel(kind: Collectible['kind']): string {
+  if (kind === 'gift') return '专属礼物';
+  if (kind === 'expr') return '表情';
+  if (kind === 'portrait') return '立绘';
+  return '剧情短篇';
+}
+
 export default function CharacterDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -68,20 +76,22 @@ export default function CharacterDetail() {
   const xinyiTarget = usePlayerStore((s) => s.xinyiTarget);
   const advanceRomance = usePlayerStore((s) => s.advanceRomance);
   const addMomo = usePlayerStore((s) => s.addMomo);
-  const displayPortrait = usePlayerStore((s) => s.displayPortrait);
-  const setDisplayPortrait = usePlayerStore((s) => s.setDisplayPortrait);
   const displayAvatar = usePlayerStore((s) => s.displayAvatar);
   const setDisplayAvatar = usePlayerStore((s) => s.setDisplayAvatar);
   const setPlayerAvatar = usePlayerStore((s) => s.setPlayerAvatar);
   const setFlag = usePlayerStore((s) => s.setFlag);
   const addPhoneMessage = usePlayerStore((s) => s.addPhoneMessage);
+  const equippedGift = usePlayerStore((s) => s.equippedGift);
+  const setEquippedGift = usePlayerStore((s) => s.setEquippedGift);
 
   const [activeTab, setActiveTab] = useState<TabType>('info');
   const [interactionResponse, setInteractionResponse] = useState<string | null>(null);
   // 正在演的节点；replay=true 时是「重温」已解锁的故事，不重复结算奖励
   const [playingBeat, setPlayingBeat] = useState<{ beat: RomanceBeat; replay: boolean } | null>(null);
-  // 收藏里正在回看的 CG 短篇
-  const [openCg, setOpenCg] = useState<{ title: string; image?: string; paragraphs: string[] } | null>(null);
+  // 收藏里正在查看的礼物详情 / CG 短篇
+  const [openCg, setOpenCg] = useState<CollectibleViewer | null>(null);
+  // 收藏里点开的礼物卡（SSR 大图 + 随身携带）
+  const [openGift, setOpenGift] = useState<Collectible | null>(null);
   // 收藏里点开的操作面板（设为她头像/主视觉/我的头像）
   const [sheetItem, setSheetItem] = useState<Collectible | null>(null);
   // 「设为我的头像」高博弈二次确认
@@ -230,9 +240,8 @@ export default function CharacterDetail() {
     );
   }
 
-  const defaultHeroArt = character.gachaBackgroundUrl || character.portraitUrl;
-  // 设为展示：玩家选过就用她选的那张，否则用默认主视觉
-  const heroArtUrl = (id && displayPortrait[id]) || defaultHeroArt;
+  // 顶部立绘展示区固定为角色主视觉，禁止被收藏替换（背景不能换）
+  const heroArtUrl = character.gachaBackgroundUrl || character.portraitUrl;
   const pageBackdrop = backdropForCharacter(character.id);
 
   return (
@@ -400,29 +409,44 @@ export default function CharacterDetail() {
           </motion.div>
         )}
 
-        {/* 收藏标签：她的表情/立绘，靠刷主流程解锁。锁着=剪影+指引 */}
+        {/* 收藏标签：专属礼物 / 表情 / 立绘 / 短篇，靠刷主流程解锁。锁着=剪影+指引 */}
         {activeTab === 'collect' && (() => {
           const items = character ? getCollectibles(character) : [];
           const unlockedCount = items.filter((it) => evaluateAll(it.unlock, condState)).length;
           return (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-              <p className="text-xs text-slate-400">收藏 {unlockedCount}/{items.length} · 刷得越多，集得越全</p>
-              <p className="text-[11px] text-slate-500">点已解锁的图：可设为她的头像、专属主视觉，或设成你自己的头像；带 📖 的短篇点开回看。</p>
+              <p className="text-xs text-slate-400">收藏 {unlockedCount}/{items.length} · 前三件专属礼物按关系层级解锁</p>
+              <p className="text-[11px] leading-relaxed text-slate-500">礼物顺序：日常关照 → 只给你的偏心 → 贴身私物。礼物和短篇可点开查看；表情/立绘可用于头像。</p>
               <div className="grid grid-cols-3 gap-2">
                 {items.map((it) => {
                   const unlocked = evaluateAll(it.unlock, condState);
+                  const isGift = it.kind === 'gift';
                   const isCg = it.kind === 'cg';
                   const isExpr = it.kind === 'expr';
-                  // 当前是否正被采用：表情看头像槽，立绘看主视觉槽
-                  const active = unlocked && (isExpr
-                    ? (id ? displayAvatar[id] === it.asset : false)
-                    : (!isCg && heroArtUrl === it.asset));
-                  const actionLabel = isCg ? '回看' : isExpr ? '设为头像' : '设为展示';
-                  const activeLabel = isExpr ? '头像中' : '展示中';
+                  const hasViewer = !!it.viewer;
+
+                  // 礼物 → SSR 道具卡：点开看大图 + 随身携带
+                  if (isGift && it.effect && it.tier && it.tierName) {
+                    return (
+                      <GiftCard
+                        key={it.id}
+                        data={{ name: it.name, asset: it.asset, tier: it.tier, tierName: it.tierName, effect: it.effect, summary: it.summary, intimacy: it.intimacy }}
+                        variant="grid"
+                        locked={!unlocked}
+                        hint={it.hint}
+                        equipped={equippedGift === it.id}
+                        onClick={unlocked ? () => { playSound('btn-confirm'); setOpenGift(it); } : undefined}
+                      />
+                    );
+                  }
+                  // 顶部主视觉已锁定，立绘不再有「展示中」状态；仅表情用于手机头像槽
+                  const active = unlocked && isExpr && !!id && displayAvatar[id] === it.asset;
+                  const actionLabel = hasViewer ? (isGift ? '查看礼物' : '回看') : isExpr ? '设为头像' : '设为我的头像';
+                  const activeLabel = '头像中';
                   const onClick = () => {
                     if (!unlocked) return;
                     playSound('btn-confirm');
-                    if (isCg && it.cg) setOpenCg(it.cg);
+                    if (hasViewer) setOpenCg(it.viewer ?? null);
                     else setSheetItem(it);
                   };
                   return (
@@ -442,8 +466,13 @@ export default function CharacterDetail() {
                         {unlocked ? (
                           <>
                             <img src={assetUrl(it.asset)} alt={it.name} className="h-full w-full object-cover object-top" loading="lazy" />
+                            {isGift && it.tier && (
+                              <span className="absolute left-1 top-1 rounded bg-amber-400/90 px-1.5 py-0.5 text-[9px] font-bold text-amber-950">
+                                {it.tier}层
+                              </span>
+                            )}
                             {isCg && (
-                              <span className="absolute right-1 top-1 rounded bg-rose-500/85 px-1 py-0.5 text-[9px] font-bold text-white">📖</span>
+                              <span className="absolute right-1 top-1 rounded bg-rose-500/85 px-1.5 py-0.5 text-[9px] font-bold text-white">短篇</span>
                             )}
                             {active ? (
                               <span className="absolute left-1 top-1 rounded bg-amber-400/90 px-1.5 py-0.5 text-[9px] font-bold text-amber-950">{activeLabel}</span>
@@ -457,15 +486,20 @@ export default function CharacterDetail() {
                           <>
                             <img src={assetUrl(it.asset)} alt="" aria-hidden className="h-full w-full object-cover object-top opacity-15 blur-md grayscale" />
                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-1 text-center">
-                              <span className="text-lg">{isCg ? '📖' : '🔒'}</span>
+                              <span className="text-lg">{hasViewer ? '📖' : '🔒'}</span>
                               <span className="text-[10px] leading-tight text-amber-300/80">{it.hint}</span>
                             </div>
                           </>
                         )}
                       </div>
-                      <p className={cn('px-1.5 py-1 text-center text-[11px]', active ? 'text-amber-300' : unlocked ? 'text-slate-200' : 'text-slate-600')}>
-                        {unlocked ? it.name : '???'}
-                      </p>
+                      <div className="px-1.5 py-1 text-center">
+                        {unlocked && isGift && it.tierName && (
+                          <p className="text-[9px] leading-tight text-amber-300/80">{it.tierName}</p>
+                        )}
+                        <p className={cn('text-[11px] leading-tight', active ? 'text-amber-300' : unlocked ? 'text-slate-200' : 'text-slate-600')}>
+                          {unlocked ? it.name : '???'}
+                        </p>
+                      </div>
                     </button>
                   );
                 })}
@@ -703,6 +737,39 @@ export default function CharacterDetail() {
         <StoryViewer title={openCg.title} image={openCg.image} paragraphs={openCg.paragraphs} onClose={() => setOpenCg(null)} />
       )}
 
+      {/* 礼物卡大图 + 随身携带 */}
+      {openGift && openGift.effect && openGift.tier && openGift.tierName && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 px-6 backdrop-blur-sm" onClick={() => setOpenGift(null)}>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 12 }} animate={{ scale: 1, opacity: 1, y: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-[300px]"
+          >
+            <GiftCard
+              data={{ name: openGift.name, asset: openGift.asset, tier: openGift.tier, tierName: openGift.tierName, effect: openGift.effect, summary: openGift.summary, intimacy: openGift.intimacy }}
+              variant="full"
+              equipped={equippedGift === openGift.id}
+            />
+            {equippedGift === openGift.id ? (
+              <button
+                onClick={() => { playSound('btn-confirm'); setEquippedGift(null); setCollectToast('已卸下随身信物'); setTimeout(() => setCollectToast(null), 2000); }}
+                className="mt-3 w-full rounded-xl border border-white/15 bg-slate-800 py-2.5 text-sm font-bold text-slate-300 active:scale-[0.99]"
+              >
+                卸下随身
+              </button>
+            ) : (
+              <button
+                onClick={() => { playSound('stage-up'); setEquippedGift(openGift.id); setCollectToast(`「${openGift.name}」已随身携带`); setTimeout(() => setCollectToast(null), 2000); }}
+                className="mt-3 w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-2.5 text-sm font-black text-amber-950 shadow-[0_0_16px_rgba(251,191,36,0.3)] active:scale-[0.99]"
+              >
+                随身携带（替换当前信物）
+              </button>
+            )}
+            <button onClick={() => setOpenGift(null)} className="mt-2 w-full py-2 text-xs text-slate-400">关闭</button>
+          </motion.div>
+        </div>
+      )}
+
       {/* 收藏操作面板 */}
       {sheetItem && id && (
         <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/60" onClick={() => setSheetItem(null)}>
@@ -715,25 +782,22 @@ export default function CharacterDetail() {
               <img src={assetUrl(sheetItem.asset)} alt="" className="h-12 w-12 rounded-lg object-cover object-top" />
               <div>
                 <p className="text-sm font-bold text-white">{sheetItem.name}</p>
-                <p className="text-[11px] text-slate-400">{character.name} · {sheetItem.kind === 'expr' ? '表情' : '立绘'}</p>
+                <p className="text-[11px] text-slate-400">{character.name} · {collectibleKindLabel(sheetItem.kind)}</p>
               </div>
             </div>
             <div className="space-y-2">
-              {sheetItem.kind === 'expr' ? (
+              {sheetItem.kind === 'expr' && (
                 <button
                   onClick={() => { playSound('btn-confirm'); setDisplayAvatar(id, sheetItem.asset); flash(`已设为 ${character.name} 的手机头像`); setSheetItem(null); }}
                   className="w-full rounded-xl bg-slate-800 py-3 text-sm font-bold text-amber-200 active:scale-[0.99]"
                 >设为 {character.name} 的手机头像</button>
-              ) : (
-                <button
-                  onClick={() => { playSound('btn-confirm'); setDisplayPortrait(id, sheetItem.asset); flash(`已设为 ${character.name} 的专属主视觉`); setSheetItem(null); }}
-                  className="w-full rounded-xl bg-slate-800 py-3 text-sm font-bold text-amber-200 active:scale-[0.99]"
-                >设为 {character.name} 的专属主视觉</button>
               )}
-              <button
-                onClick={() => { playSound('btn-confirm'); const it = sheetItem; setSheetItem(null); setConfirmMine(it); }}
-                className="w-full rounded-xl border border-rose-400/40 bg-rose-500/10 py-3 text-sm font-bold text-rose-200 active:scale-[0.99]"
-              >设为我自己的头像 ⚠</button>
+              {(sheetItem.kind === 'expr' || sheetItem.kind === 'portrait') && (
+                <button
+                  onClick={() => { playSound('btn-confirm'); const it = sheetItem; setSheetItem(null); setConfirmMine(it); }}
+                  className="w-full rounded-xl border border-rose-400/40 bg-rose-500/10 py-3 text-sm font-bold text-rose-200 active:scale-[0.99]"
+                >设为我自己的头像 ⚠</button>
+              )}
               <button onClick={() => setSheetItem(null)} className="w-full py-2.5 text-sm text-slate-400">取消</button>
             </div>
           </motion.div>

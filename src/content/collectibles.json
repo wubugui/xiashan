@@ -1,0 +1,404 @@
+{
+  "gifts": {
+    "suli": [
+      {
+        "id": "midnight_blueflower_lace_charm",
+        "name": "零点蓝花蕾丝匣",
+        "asset": "/collectibles/suli/suli_midnight_blueflower_lace_charm.png",
+        "tier": 1,
+        "summary": "她把同款蓝花、白蕾丝和黑缎带收进小匣子里，说这只是一个零点护符。",
+        "intimacy": "这还不是告白，只是她第一次把自己的审美交到你手里。",
+        "effect": {
+          "name": "零点护符",
+          "type": "安抚",
+          "passiveTrust": 1,
+          "activeBonus": 2,
+          "passive": "安抚类委托每次判定 +1 信任",
+          "active": "动用：本次必定「完美」，额外 +2 信任"
+        }
+      },
+      {
+        "id": "thirteenth_blue_ribbon_letter",
+        "name": "第十三封蓝缎信",
+        "asset": "/collectibles/suli/suli_thirteenth_blue_ribbon_letter.png",
+        "tier": 2,
+        "summary": "那封她没能在节目里读完的来信，被蓝缎带和蕾丝仔细封好。",
+        "intimacy": "她开始偏心了。别人听见的是节目，你拿到的是节目停下后的真话。",
+        "effect": {
+          "name": "未播的停顿",
+          "type": "安抚",
+          "passiveTrust": 2,
+          "activeBonus": 4,
+          "passive": "安抚类委托每次判定 +2 信任",
+          "active": "动用：本次必定「完美」，额外 +4 信任"
+        }
+      },
+      {
+        "id": "onecopy_voice_locket",
+        "name": "唯一留声坠",
+        "asset": "/collectibles/suli/suli_onecopy_voice_locket.png",
+        "tier": 3,
+        "summary": "月形坠里只存一条语音，没有备份，也不会公开。",
+        "intimacy": "这是贴身级信物。她把不重录、不剪辑的一句话，只交给你。",
+        "effect": {
+          "name": "唯一留声",
+          "type": "安抚",
+          "passiveTrust": 3,
+          "activeBonus": 6,
+          "passive": "安抚类委托每次判定 +3 信任",
+          "active": "动用：本次必定「完美」，额外 +6 信任"
+        }
+      }
+    ],
+    "aruo": [
+      {
+        "id": "star_candy_hairclips",
+        "name": "星糖双马尾夹",
+        "asset": "/collectibles/aruo/aruo_star_candy_hairclips.png",
+        "tier": 1,
+        "summary": "她把备用发夹分你一枚，说救场之前先把自己打扮得像会赢。",
+        "intimacy": "这是明亮的开门礼。它还属于舞台，但已经带着她的私人口味。",
+        "effect": {
+          "name": "破冰开场",
+          "type": "表达",
+          "passiveTrust": 1,
+          "activeBonus": 2,
+          "passive": "表达类委托每次判定 +1 信任",
+          "active": "动用：本次必定「完美」，额外 +2 信任"
+        }
+      },
+      {
+        "id": "unposted_highlight_scrapbook",
+        "name": "未公开高光册",
+        "asset": "/collectibles/aruo/aruo_unposted_highlight_scrapbook.png",
+        "tier": 2,
+        "summary": "她把没发出去的高光、废案和星星贴纸夹成一本小册，只给你看。",
+        "intimacy": "她让你看见镜头外的自己。弹幕没有权限，你有。",
+        "effect": {
+          "name": "镜头之外",
+          "type": "表达",
+          "passiveTrust": 2,
+          "activeBonus": 4,
+          "passive": "表达类委托每次判定 +2 信任",
+          "active": "动用：本次必定「完美」，额外 +4 信任"
+        }
+      },
+      {
+        "id": "one_audience_keycharm",
+        "name": "唯一观众钥匙",
+        "asset": "/collectibles/aruo/aruo_one_audience_keycharm.png",
+        "tier": 3,
+        "summary": "这枚钥匙不对应任何公开房间，只对应那个粉丝数永远是 1 的私密频道。",
+        "intimacy": "这是她把下播后的安静交给你。很近，也很重。",
+        "effect": {
+          "name": "唯一观众",
+          "type": "表达",
+          "passiveTrust": 3,
+          "activeBonus": 6,
+          "passive": "表达类委托每次判定 +3 信任",
+          "active": "动用：本次必定「完美」，额外 +6 信任"
+        }
+      }
+    ],
+    "sangluo": [
+      {
+        "id": "blackfeather_lamp_brooch",
+        "name": "黑羽留灯胸针",
+        "asset": "/collectibles/sangluo/sangluo_blackfeather_lamp_brooch.png",
+        "tier": 1,
+        "summary": "黑羽胸针上挂着一盏小灯，她说夜里迷路时看见它，就先别慌。",
+        "intimacy": "这是她的第一盏灯，给夜归人，也给你。",
+        "effect": {
+          "name": "随身留灯",
+          "type": "安抚",
+          "passiveTrust": 1,
+          "activeBonus": 2,
+          "passive": "安抚类委托每次判定 +1 信任",
+          "active": "动用：本次必定「完美」，额外 +2 信任"
+        }
+      },
+      {
+        "id": "moonphase_sleep_sachet",
+        "name": "月相安眠香囊",
+        "asset": "/collectibles/sangluo/sangluo_moonphase_sleep_sachet.png",
+        "tier": 2,
+        "summary": "方格布、黑蕾丝和月相珠缝在一起，里面装着她只给熟客配的安眠香。",
+        "intimacy": "她不再只给你咖啡，也开始给你她自己的安静办法。",
+        "effect": {
+          "name": "压低杂音",
+          "type": "安抚",
+          "passiveTrust": 2,
+          "activeBonus": 4,
+          "passive": "安抚类委托每次判定 +2 信任",
+          "active": "动用：本次必定「完美」，额外 +4 信任"
+        }
+      },
+      {
+        "id": "afterclosing_seat_key",
+        "name": "打烊留座钥匙",
+        "asset": "/collectibles/sangluo/sangluo_afterclosing_seat_key.png",
+        "tier": 3,
+        "summary": "打烊后的角落座位，从此不再对外营业。钥匙在你这里。",
+        "intimacy": "这是家门级的信任。你不是客人，是她给自己留下的人。",
+        "effect": {
+          "name": "打烊留座",
+          "type": "安抚",
+          "passiveTrust": 3,
+          "activeBonus": 6,
+          "passive": "安抚类委托每次判定 +3 信任",
+          "active": "动用：本次必定「完美」，额外 +6 信任"
+        }
+      }
+    ],
+    "aman": [
+      {
+        "id": "lace_handwarmer_pouch",
+        "name": "白蕾丝暖手包",
+        "asset": "/collectibles/aman/aman_lace_handwarmer_pouch.png",
+        "tier": 1,
+        "summary": "白蕾丝、黑蝴蝶结和小鞋扣缝在一起，里面藏着她替你准备的暖包。",
+        "intimacy": "这是她最自然的关照：先把你的手暖起来，再慢慢说。",
+        "effect": {
+          "name": "先暖再说",
+          "type": "安抚",
+          "passiveTrust": 1,
+          "activeBonus": 2,
+          "passive": "安抚类委托每次判定 +1 信任",
+          "active": "动用：本次必定「完美」，额外 +2 信任"
+        }
+      },
+      {
+        "id": "slow_bloom_seed_box",
+        "name": "慢慢来花种匣",
+        "asset": "/collectibles/aman/aman_slow_bloom_seed_box.png",
+        "tier": 2,
+        "summary": "她把几粒花种和一张空白约定卡收进木匣，说有些东西急不得。",
+        "intimacy": "这不是送花，是把一段会长大的时间交给你。",
+        "effect": {
+          "name": "慢慢来",
+          "type": "安抚",
+          "passiveTrust": 2,
+          "activeBonus": 4,
+          "passive": "安抚类委托每次判定 +2 信任",
+          "active": "动用：本次必定「完美」，额外 +4 信任"
+        }
+      },
+      {
+        "id": "shared_cat_bell_collar",
+        "name": "两个人的猫铃",
+        "asset": "/collectibles/aman/aman_shared_cat_bell_collar.png",
+        "tier": 3,
+        "summary": "白蕾丝项圈上多了两个小环，像是给两位家长留的位置。",
+        "intimacy": "这是共同生活的信物。她把被接住的自己，也交到你怀里。",
+        "effect": {
+          "name": "不再害怕",
+          "type": "安抚",
+          "passiveTrust": 3,
+          "activeBonus": 6,
+          "passive": "安抚类委托每次判定 +3 信任",
+          "active": "动用：本次必定「完美」，额外 +6 信任"
+        }
+      }
+    ],
+    "shenzhaoning": [
+      {
+        "id": "temp_access",
+        "name": "临时门禁卡",
+        "asset": "/collectibles/shenzhaoning/shenzhaoning_temp_access.png",
+        "tier": 1,
+        "summary": "她给你开了一张临时权限，理由写得很规矩，动作却比流程快半拍。",
+        "intimacy": "这是一次破例，但还可以解释成工作需要。",
+        "effect": {
+          "name": "先拿入口",
+          "type": "流程",
+          "passiveTrust": 1,
+          "activeBonus": 2,
+          "passive": "流程类委托每次判定 +1 信任",
+          "active": "动用：本次必定「完美」，额外 +2 信任"
+        }
+      },
+      {
+        "id": "decision_coin",
+        "name": "决策硬币",
+        "asset": "/collectibles/shenzhaoning/shenzhaoning_decision_coin.png",
+        "tier": 2,
+        "summary": "她不喜欢把重要决定交给运气，却把这枚硬币留给你。",
+        "intimacy": "她开始承认，你是她流程之外的变量。",
+        "effect": {
+          "name": "压缩选项",
+          "type": "流程",
+          "passiveTrust": 2,
+          "activeBonus": 4,
+          "passive": "流程类委托每次判定 +2 信任",
+          "active": "动用：本次必定「完美」，额外 +4 信任"
+        }
+      },
+      {
+        "id": "flowchart",
+        "name": "两个人的流程图",
+        "asset": "/collectibles/shenzhaoning/shenzhaoning_flowchart.png",
+        "tier": 3,
+        "summary": "流程图里多出一条没有审批编号的线，只通向你们两个。",
+        "intimacy": "这是她最不像自己的礼物，也因此最私密。",
+        "effect": {
+          "name": "跳过审批",
+          "type": "流程",
+          "passiveTrust": 3,
+          "activeBonus": 6,
+          "passive": "流程类委托每次判定 +3 信任",
+          "active": "动用：本次必定「完美」，额外 +6 信任"
+        }
+      }
+    ],
+    "murongxue": [
+      {
+        "id": "comment_page",
+        "name": "末页批注",
+        "asset": "/collectibles/murongxue/murongxue_comment_page.png",
+        "tier": 1,
+        "summary": "她在笔记本最后一页留了批注，克制到像一句新闻脚注。",
+        "intimacy": "她还在保持距离，但已经允许你读到她写在末尾的话。",
+        "effect": {
+          "name": "多看末页",
+          "type": "情报",
+          "passiveTrust": 1,
+          "activeBonus": 2,
+          "passive": "情报类委托每次判定 +1 信任",
+          "active": "动用：本次必定「完美」，额外 +2 信任"
+        }
+      },
+      {
+        "id": "partner_badge",
+        "name": "搭档徽章",
+        "asset": "/collectibles/murongxue/murongxue_partner_badge.png",
+        "tier": 2,
+        "summary": "这枚徽章不是采访证，也不是学生证，是她给你留的搭档位置。",
+        "intimacy": "她不再只记录你，而是把你写进调查过程。",
+        "effect": {
+          "name": "连起线索",
+          "type": "情报",
+          "passiveTrust": 2,
+          "activeBonus": 4,
+          "passive": "情报类委托每次判定 +2 信任",
+          "active": "动用：本次必定「完美」，额外 +4 信任"
+        }
+      },
+      {
+        "id": "exclusive_ack",
+        "name": "专属致谢页",
+        "asset": "/collectibles/murongxue/murongxue_exclusive_ack.png",
+        "tier": 3,
+        "summary": "最终稿的致谢页被她单独装好，没有公开署名，却只指向你。",
+        "intimacy": "这是她最克制的告白，越正式，越藏不住。",
+        "effect": {
+          "name": "独家署名",
+          "type": "情报",
+          "passiveTrust": 3,
+          "activeBonus": 6,
+          "passive": "情报类委托每次判定 +3 信任",
+          "active": "动用：本次必定「完美」，额外 +6 信任"
+        }
+      }
+    ],
+    "yunzhiyi": [
+      {
+        "id": "energy_bar",
+        "name": "留给你的能量棒",
+        "asset": "/collectibles/yunzhiyi/yunzhiyi_energy_bar.png",
+        "tier": 1,
+        "summary": "她在配送箱里给你塞了一根能量棒，说顺路，不许多想。",
+        "intimacy": "这还像兄弟式照顾，但她记得你会饿。",
+        "effect": {
+          "name": "续上力气",
+          "type": "补给",
+          "passiveTrust": 1,
+          "activeBonus": 2,
+          "passive": "补给类委托每次判定 +1 信任",
+          "active": "动用：本次必定「完美」，额外 +2 信任"
+        }
+      },
+      {
+        "id": "night_route_map",
+        "name": "夜班路线图",
+        "asset": "/collectibles/yunzhiyi/yunzhiyi_night_route_map.png",
+        "tier": 2,
+        "summary": "她把夜里最安全的路、能避风的角落和便利屋的位置都画给你。",
+        "intimacy": "她把自己的城市经验交给你，不是客套，是怕你出事。",
+        "effect": {
+          "name": "安全路线",
+          "type": "补给",
+          "passiveTrust": 2,
+          "activeBonus": 4,
+          "passive": "补给类委托每次判定 +2 信任",
+          "active": "动用：本次必定「完美」，额外 +4 信任"
+        }
+      },
+      {
+        "id": "finish_bib",
+        "name": "冲线号码布",
+        "asset": "/collectibles/yunzhiyi/yunzhiyi_finish_bib.png",
+        "tier": 3,
+        "summary": "那块号码布见过她冲过整座城，也见过她特意放慢脚步等你。",
+        "intimacy": "这是并肩级信物。她不再只往前冲，而是确认你也在身边。",
+        "effect": {
+          "name": "并肩冲线",
+          "type": "补给",
+          "passiveTrust": 3,
+          "activeBonus": 6,
+          "passive": "补给类委托每次判定 +3 信任",
+          "active": "动用：本次必定「完美」，额外 +6 信任"
+        }
+      }
+    ],
+    "linxia": [
+      {
+        "id": "payday_tea",
+        "name": "入职窗边下午茶",
+        "asset": "/collectibles/linxia/linxia_payday_tea.png",
+        "tier": 1,
+        "summary": "第一份工资的小心意，她嘴上说便利店打折，其实挑了很久。",
+        "intimacy": "这是新人式的笨拙感谢，真诚但还很轻。",
+        "effect": {
+          "name": "缓口气",
+          "type": "补给",
+          "passiveTrust": 1,
+          "activeBonus": 2,
+          "passive": "补给类委托每次判定 +1 信任",
+          "active": "动用：本次必定「完美」，额外 +2 信任"
+        }
+      },
+      {
+        "id": "pangdahai_note",
+        "name": "胖大海便签",
+        "asset": "/collectibles/linxia/linxia_pangdahai_note.png",
+        "tier": 2,
+        "summary": "她记得你嗓子不舒服，便签写得很小，偏偏贴在最显眼的地方。",
+        "intimacy": "这不是群发关心，是她把你的习惯写进了自己的清单。",
+        "effect": {
+          "name": "记得休息",
+          "type": "补给",
+          "passiveTrust": 2,
+          "activeBonus": 4,
+          "passive": "补给类委托每次判定 +2 信任",
+          "active": "动用：本次必定「完美」，额外 +4 信任"
+        }
+      },
+      {
+        "id": "two_person_list",
+        "name": "两个人的清单",
+        "asset": "/collectibles/linxia/linxia_two_person_list.png",
+        "tier": 3,
+        "summary": "清单不再只有她自己的待办，另一栏写给你们。",
+        "intimacy": "这是日常级承诺。她把未来拆成一项项，认真留给你。",
+        "effect": {
+          "name": "双人清单",
+          "type": "补给",
+          "passiveTrust": 3,
+          "activeBonus": 6,
+          "passive": "补给类委托每次判定 +3 信任",
+          "active": "动用：本次必定「完美」，额外 +6 信任"
+        }
+      }
+    ]
+  }
+}

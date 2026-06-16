@@ -11,7 +11,8 @@ import DialogueBox from '@/components/DialogueBox';
 import { useCssVarFromHeight } from '@/hooks/useCssVarFromHeight';
 import { getCharacterById } from '@/data/characters';
 import { getLocationById } from '@/data/locations';
-import { isMatch, scoreCard } from '@/engine/shopEngine';
+import { getGiftCardById } from '@/data/collectibles';
+import { isMatch, scoreCard, groupHand } from '@/engine/shopEngine';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { useShopStore } from '@/store/useShopStore';
 import { playSound } from '@/lib/sound';
@@ -62,6 +63,9 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
 
   /* ── stores ── */
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
+  const equippedGift = usePlayerStore((s) => s.equippedGift);
+  const dailyActions = usePlayerStore((s) => s.dailyActions);
+  const tryDailyAction = usePlayerStore((s) => s.tryDailyAction);
   const hand = useShopStore((s) => s.hand);
   const applyDelta = useShopStore((s) => s.applyDelta);
   const consumeHandCard = useShopStore((s) => s.consumeHandCard);
@@ -104,6 +108,13 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
   }, [reaction, node]);
 
   const inChallenge = node?.type === 'challenge' && reaction === null;
+
+  /* ── 随身信物（礼物卡）：装备吃被动 + 可动用一锤 ── */
+  const giftInfo = useMemo(() => getGiftCardById(equippedGift), [equippedGift]);
+  const giftActiveAvailable = dailyActions['gift_active'] !== new Date().toISOString().slice(0, 10);
+  /** 当前挑战类型是否吃信物被动 → 展示用 */
+  const giftPassive = giftInfo && node?.type === 'challenge' && isMatch(giftInfo.effect.type, node.need)
+    ? giftInfo.effect.passiveTrust : 0;
 
   /* ── 背景（取当前节点 location） ── */
   const bg = useMemo(() => {
@@ -168,45 +179,57 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
 
   /* ── 出牌判定 ── */
   const playChoice = useCallback(
-    (card: { kind: 'person'; serviceType: ServiceTag } | HandCard | null) => {
+    (card: { kind: 'person'; serviceType: ServiceTag } | HandCard | { kind: 'gift'; serviceType: ServiceTag; activeBonus: number } | null) => {
       if (!node || node.type !== 'challenge') return;
       if (resolving.current) return;
+
+      const isGiftPlay = !!card && card.kind === 'gift';
+      // 动用信物每日一次：占用名额失败则忽略本次点击
+      if (isGiftPlay && !tryDailyAction('gift_active')) return;
       resolving.current = true;
 
       let tier: Tier;
+      let activeBonus = 0;
       if (!card) tier = 'poor';
+      else if (card.kind === 'gift') { tier = 'perfect'; activeBonus = card.activeBonus; }
       else {
         const cardType = card.kind === 'person' ? card.serviceType : card.type;
         tier = isMatch(cardType, node.need) ? 'perfect' : 'ok';
       }
-      playSound(tier === 'perfect' ? 'card-hit' : tier === 'ok' ? 'btn-confirm' : 'card-miss');
+      playSound(isGiftPlay ? 'gacha-ssr' : tier === 'perfect' ? 'card-hit' : tier === 'ok' ? 'btn-confirm' : 'card-miss');
       const outcome = node.outcomes[tier];
 
-      if (card && card.kind !== 'person') consumeHandCard(card.uid);
+      // 仅道具卡(手牌)消耗；人物卡 / 随身信物不消耗
+      if (card && card.kind !== 'person' && card.kind !== 'gift') consumeHandCard(card.uid);
 
-      const newTrust = trust + outcome.trust;
+      // 随身信物被动：装备的礼物类型匹配本委托时，每次判定额外信任
+      const passive = giftInfo && isMatch(giftInfo.effect.type, node.need) ? giftInfo.effect.passiveTrust : 0;
+      const gain = outcome.trust + activeBonus + passive;
+
+      const newTrust = trust + gain;
       trustRef.current = newTrust;
       setTrust(newTrust);
-      if (outcome.trust > 0) applyDelta({ trust: outcome.trust });
+      if (gain > 0) applyDelta({ trust: gain });
       if (outcome.repPenalty) applyDelta({ rep: -outcome.repPenalty });
       setMood(outcome.mood);
       setChallengesDone((d) => d + 1);
 
-      if (outcome.trust > 0) {
-        setFloatTrust(outcome.trust);
+      if (gain > 0) {
+        setFloatTrust(gain);
         setTimeout(() => setFloatTrust(null), 1100);
       }
 
       const label = tier === 'perfect' ? '完美' : tier === 'ok' ? '还行' : '勉强';
+      const note = isGiftPlay ? '（动用信物）' : passive ? `（信物 +${passive}）` : '';
       addLog(
-        `【${commission.name}】${node.prompt.slice(0, 12)}… 判定：${label}，信任 +${outcome.trust}`,
+        `【${commission.name}】${node.prompt.slice(0, 12)}… 判定：${label}，信任 +${gain}${note}`,
         tier === 'perfect' ? 'good' : tier === 'poor' ? 'bad' : 'play',
       );
 
       setReaction({ lines: outcome.lines, next: outcome.next });
       setLineIndex(0);
     },
-    [node, trust, applyDelta, consumeHandCard, addLog, commission.name],
+    [node, trust, applyDelta, consumeHandCard, addLog, commission.name, giftInfo, tryDailyAction],
   );
 
   /* ── 当前说话人 ── */
@@ -328,7 +351,25 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
                 ))}
               </div>
               <p className="text-sm font-bold text-white">{node.prompt}</p>
+              {giftPassive > 0 && (
+                <p className="mt-1 text-[10px] font-medium text-amber-300/85">🎁 随身信物生效中 · 本类型每次判定 +{giftPassive} 信任</p>
+              )}
             </div>
+
+            {/* 随身信物：动用一锤（每日一次，引导步骤不打扰） */}
+            {giftInfo && giftActiveAvailable && !tutorialLock && (
+              <button
+                onClick={() => playChoice({ kind: 'gift', serviceType: giftInfo.effect.type, activeBonus: giftInfo.effect.activeBonus })}
+                className="mb-2 flex w-full items-center gap-2.5 rounded-xl border-2 border-amber-300/70 bg-gradient-to-r from-amber-500/20 to-amber-400/5 p-2 text-left shadow-[0_0_14px_rgba(251,191,36,0.25)] transition-all active:scale-[0.99]"
+              >
+                <img src={assetUrl(giftInfo.asset)} alt={giftInfo.name} className="h-11 w-11 shrink-0 rounded-lg object-cover ring-1 ring-amber-300/60" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-black text-amber-200">动用随身信物 · {giftInfo.name}</p>
+                  <p className="text-[10px] text-amber-100/80">必定「完美」，额外信任 +{giftInfo.effect.activeBonus} · 每日一次</p>
+                </div>
+                <span className="shrink-0 rounded bg-amber-400 px-1.5 py-0.5 text-[9px] font-black text-amber-950">SSR</span>
+              </button>
+            )}
 
             {(() => {
               const matchedExists =
@@ -391,8 +432,9 @@ function CardTray({
   const sortedPersons = [...personCards].sort(
     (a, b) => scoreCard(b.serviceType, need) - scoreCard(a.serviceType, need),
   );
-  const sortedHand = [...hand].sort((a, b) => scoreCard(b.type, need) - scoreCard(a.type, need));
-  const hasAny = sortedPersons.length + sortedHand.length > 0;
+  // 道具卡按 id 合并显示 ×N，点击仍只消耗一张（onPlay 传代表卡，内部按 uid 移除一张）
+  const handGroups = groupHand(hand).sort((a, b) => scoreCard(b.rep.type, need) - scoreCard(a.rep.type, need));
+  const hasAny = sortedPersons.length + handGroups.length > 0;
 
   if (!hasAny) {
     return (
@@ -433,15 +475,15 @@ function CardTray({
           </div>
         </div>
       )}
-      {sortedHand.length > 0 && (
+      {handGroups.length > 0 && (
         <div>
           <p className="text-[10px] text-amber-300 font-bold mb-1.5">道具卡 · 用后消耗</p>
           <div className="grid grid-cols-2 gap-2">
-            {sortedHand.map((c) => {
+            {handGroups.map(({ rep: c, count }) => {
               const matched = isMatch(c.type, need);
               return (
                 <button
-                  key={c.uid}
+                  key={c.id}
                   onClick={() => onPlay(c)}
                   disabled={lockToMatched && !matched}
                   className={cn(
@@ -450,7 +492,9 @@ function CardTray({
                     lockToMatched && !matched && 'opacity-40',
                   )}
                 >
-                  <p className="text-xs font-bold text-white truncate">{matched ? '✨' : ''}{c.name}</p>
+                  <p className="text-xs font-bold text-white truncate">
+                    {matched ? '✨' : ''}{c.name}{count > 1 && <span className="ml-1 text-amber-300">×{count}</span>}
+                  </p>
                   <p className="text-[10px] text-slate-400">{c.type}</p>
                 </button>
               );

@@ -3,11 +3,35 @@
  * 表情立绘从角色现有资源 + 标准解锁阶梯生成;CG 短篇来自 videos.json(按 id 前缀归属)。
  * 解锁条件复用 conditionEngine。
  */
-import type { Character } from '@/data/types';
+import type { Character, ServiceTag } from '@/data/types';
 import type { Condition } from '@/engine/types';
 import { videos } from '@/data/videos';
+import { characters } from '@/data/characters';
+import content from '@/content/collectibles.json';
 
-export type CollectibleKind = 'expr' | 'portrait' | 'cg';
+export type CollectibleKind = 'gift' | 'expr' | 'portrait' | 'cg';
+
+export type CollectibleTier = 1 | 2 | 3;
+
+/** 礼物卡的实际作用：装备吃被动 + 委托里可动用一锤 */
+export interface GiftEffect {
+  /** 效果名（印在卡面上） */
+  name: string;
+  /** 生效的委托类型（= 该角色服务类型） */
+  type: ServiceTag;
+  /** 装备时：匹配类型委托每次判定额外信任 */
+  passiveTrust: number;
+  /** 动用时：必定「完美」并额外加的信任 */
+  activeBonus: number;
+  passive: string;
+  active: string;
+}
+
+export interface CollectibleViewer {
+  title: string;
+  image?: string;
+  paragraphs: string[];
+}
 
 export interface Collectible {
   id: string;
@@ -19,8 +43,48 @@ export interface Collectible {
   unlock: Condition[];
   /** 锁着时的指引:怎么刷到 */
   hint: string;
-  /** 仅 cg:解锁后点开可回看的图文短篇 */
-  cg?: { title: string; image?: string; paragraphs: string[] };
+  /** 礼物层级:越高越私密 */
+  tier?: CollectibleTier;
+  /** 层级名 */
+  tierName?: string;
+  /** 礼物卡的实际作用（仅 kind==='gift'） */
+  effect?: GiftEffect;
+  /** 礼物氛围文案：寓意 / 私密度 */
+  summary?: string;
+  intimacy?: string;
+  /** 解锁后点开可回看的图文详情 */
+  viewer?: CollectibleViewer;
+}
+
+interface GiftConfig {
+  id: string;
+  name: string;
+  asset: string;
+  tier: CollectibleTier;
+  summary: string;
+  intimacy: string;
+  effect: GiftEffect;
+}
+
+const giftContent = content as { gifts: Record<string, GiftConfig[]> };
+
+const GIFT_TIER_UNLOCK_STAGE: Record<CollectibleTier, number> = {
+  1: 1,
+  2: 3,
+  3: 5,
+};
+
+const GIFT_TIER_NAME: Record<CollectibleTier, string> = {
+  1: '日常关照',
+  2: '只给你的偏心',
+  3: '贴身私物',
+};
+
+function giftHint(tier: CollectibleTier): string {
+  const stage = GIFT_TIER_UNLOCK_STAGE[tier];
+  if (tier === 1) return `关系到第 ${stage} 阶，她才会送出第一件礼物`;
+  if (tier === 2) return `关系到第 ${stage} 阶，才会收到只给你的偏心`;
+  return `关系到第 ${stage} 阶，才会交出贴身私物`;
 }
 
 /** 表情解锁阶梯(按好感档位) */
@@ -46,6 +110,26 @@ function cgHint(conds?: Condition[]): string {
 export function getCollectibles(character: Character): Collectible[] {
   const id = character.id;
   const out: Collectible[] = [];
+
+  // 专属礼物:按关系亲密度递进。一层=日常关照,二层=只给你的偏心,三层=贴身私物。
+  // 渲染成 SSR 道具卡（GiftCard），效果可装备吃被动 + 委托里动用，不再走静态查看器。
+  for (const gift of giftContent.gifts[id] ?? []) {
+    const minStage = GIFT_TIER_UNLOCK_STAGE[gift.tier];
+    const tierName = GIFT_TIER_NAME[gift.tier];
+    out.push({
+      id: `gift_${gift.id}`,
+      kind: 'gift',
+      name: gift.name,
+      asset: gift.asset,
+      unlock: [{ type: 'relationship_stage', characterId: id, minStage }],
+      hint: giftHint(gift.tier),
+      tier: gift.tier,
+      tierName,
+      effect: gift.effect,
+      summary: gift.summary,
+      intimacy: gift.intimacy,
+    });
+  }
 
   // 表情:按好感阶梯
   for (const e of EXPR_LADDER) {
@@ -83,9 +167,58 @@ export function getCollectibles(character: Character): Collectible[] {
       asset: v.story.image ?? character.portraitUrl ?? '',
       unlock: v.unlockConditions ?? [],
       hint: cgHint(v.unlockConditions),
-      cg: { title: v.title, image: v.story.image, paragraphs: v.story.paragraphs },
+      viewer: { title: v.title, image: v.story.image, paragraphs: v.story.paragraphs },
     });
   }
 
   return out;
+}
+
+/* ────── 礼物卡全局检索（委托剧场据随身信物 id 反查效果/归属）────── */
+
+export interface GiftCardInfo {
+  /** 收藏物 id（gift_xxx），即随身信物存档键 */
+  id: string;
+  characterId: string;
+  characterName: string;
+  name: string;
+  asset: string;
+  tier: CollectibleTier;
+  tierName: string;
+  summary: string;
+  intimacy: string;
+  effect: GiftEffect;
+  /** 解锁条件（关系阶段） */
+  unlock: Condition[];
+}
+
+let GIFT_INDEX: Map<string, GiftCardInfo> | null = null;
+
+function buildGiftIndex(): Map<string, GiftCardInfo> {
+  const m = new Map<string, GiftCardInfo>();
+  for (const [cid, gifts] of Object.entries(giftContent.gifts)) {
+    const ch = characters.find((c) => c.id === cid);
+    for (const g of gifts) {
+      m.set(`gift_${g.id}`, {
+        id: `gift_${g.id}`,
+        characterId: cid,
+        characterName: ch?.name ?? cid,
+        name: g.name,
+        asset: g.asset,
+        tier: g.tier,
+        tierName: GIFT_TIER_NAME[g.tier],
+        summary: g.summary,
+        intimacy: g.intimacy,
+        effect: g.effect,
+        unlock: [{ type: 'relationship_stage', characterId: cid, minStage: GIFT_TIER_UNLOCK_STAGE[g.tier] }],
+      });
+    }
+  }
+  return m;
+}
+
+export function getGiftCardById(collectibleId: string | null | undefined): GiftCardInfo | undefined {
+  if (!collectibleId) return undefined;
+  GIFT_INDEX ??= buildGiftIndex();
+  return GIFT_INDEX.get(collectibleId);
 }
