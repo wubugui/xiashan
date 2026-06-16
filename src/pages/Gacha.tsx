@@ -21,14 +21,17 @@ export default function Gacha() {
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
   const affinityMap = usePlayerStore((s) => s.affinityMap);
   const supplyPityCounter = usePlayerStore((s) => s.supplyPityCounter);
+  const ssrPersonCount = usePlayerStore((s) => s.ssrPersonCount);
   const gachaHistory = usePlayerStore((s) => s.gachaHistory);
   const rateUpUntil = usePlayerStore((s) => s.rateUpUntil);
   const coldUntil = usePlayerStore((s) => s.coldUntil);
   const addCharacter = usePlayerStore((s) => s.addCharacter);
   const addExp = usePlayerStore((s) => s.addExp);
+  const addAffinity = usePlayerStore((s) => s.addAffinity);
   const addSpiritStones = usePlayerStore((s) => s.addSpiritStones);
   const addGachaResult = usePlayerStore((s) => s.addGachaResult);
   const setSupplyPityCounter = usePlayerStore((s) => s.setSupplyPityCounter);
+  const setSsrPersonCount = usePlayerStore((s) => s.setSsrPersonCount);
   const addHandCard = useShopStore((s) => s.addHandCard);
   const addHintTokens = usePlayerStore((s) => s.addHintTokens);
 
@@ -59,17 +62,22 @@ export default function Gacha() {
       // 与店内「便利屋补给」同一卡池、同一保底计数
       let ownedIds = ownedCharacters.map((c) => c.characterId);
       let pity = supplyPityCounter;
+      let ssr = ssrPersonCount;
       const persons: { characterId: string; name: string; rarity: 'N' | 'R' | 'SR' | 'SSR'; title: string; isNew: boolean }[] = [];
       const entries: { icon: string; name: string; sub: string; tier: 'normal' | 'rare'; desc: string }[] = [];
 
       for (let i = 0; i < (isTen ? 10 : 1); i++) {
-        const { result, newPity } = pullSupply(ownedIds, affinityMap, pity, { rateUpUntil, coldUntil });
+        const { result, newPity, newSsrCount } = pullSupply(ownedIds, affinityMap, pity, ssr, { rateUpUntil, coldUntil });
         pity = newPity;
+        ssr = newSsrCount;
         if (result.kind === 'person') {
           addCharacter(result.character.id);
           addGachaResult(result.character.id, result.character.rarity);
-          // 重复抽到：她的卡折算成长经验（养成接进抽卡循环）
-          if (!result.isNew) addExp(result.character.id, EXP_DUPE);
+          // 重复抽到：经验 + 好感（重复卡也是相处的凭据，攒着的卡能换好感）
+          if (!result.isNew) {
+            addExp(result.character.id, EXP_DUPE);
+            addAffinity(result.character.id, 5);
+          }
           ownedIds = [...ownedIds, result.character.id];
           persons.push({
             characterId: result.character.id,
@@ -102,6 +110,7 @@ export default function Gacha() {
         }
       }
       setSupplyPityCounter(pity);
+      setSsrPersonCount(ssr);
 
       const pityRemain = GACHA_CONFIG.supplyPool.characterPity - pity;
       if (persons.length > 0) {
@@ -121,7 +130,7 @@ export default function Gacha() {
         }
       }
     },
-    [pullBusy, spiritStones, ownedCharacters, affinityMap, supplyPityCounter, rateUpUntil, coldUntil, addCharacter, addExp, addSpiritStones, addGachaResult, setSupplyPityCounter, addHandCard, addHintTokens],
+    [pullBusy, spiritStones, ownedCharacters, affinityMap, supplyPityCounter, ssrPersonCount, setSsrPersonCount, rateUpUntil, coldUntil, addCharacter, addExp, addAffinity, addSpiritStones, addGachaResult, setSupplyPityCounter, addHandCard, addHintTokens],
   );
 
   // 心动 UP：好感已达标但尚未入伙的角色（同稀有度内权重提升）
