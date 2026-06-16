@@ -28,11 +28,13 @@ interface Props {
   hint?: string;
   /** 随身装备中 */
   equipped?: boolean;
+  /** 「动用」已永久消耗 */
+  used?: boolean;
   className?: string;
   onClick?: () => void;
 }
 
-export default function GiftCard({ data, variant = 'grid', locked = false, hint, equipped = false, className, onClick }: Props) {
+export default function GiftCard({ data, variant = 'grid', locked = false, hint, equipped = false, used = false, className, onClick }: Props) {
   const full = variant === 'full';
 
   if (locked) {
@@ -96,6 +98,10 @@ export default function GiftCard({ data, variant = 'grid', locked = false, hint,
       {equipped && (
         <span className="absolute right-0 top-7 rounded-l-md bg-rose-500/90 px-2 py-0.5 text-[9px] font-black text-white shadow">随身中</span>
       )}
+      {/* 已动用印记 */}
+      {used && (
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 rounded-md border-2 border-white/60 px-3 py-1 text-sm font-black text-white/80 shadow">已动用</span>
+      )}
 
       {/* 卡面文字 */}
       <div className={cn('absolute inset-x-0 bottom-0 p-2', full && 'p-3')}>
@@ -109,7 +115,7 @@ export default function GiftCard({ data, variant = 'grid', locked = false, hint,
             {data.effect.kind === 'autoLink' ? (
               <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-2 py-1.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold text-amber-300">
-                  动用 · 每日一次
+                  动用 · 仅此一次
                   {data.effect.durationSec && (
                     <span className="rounded bg-amber-400/30 px-1 text-[9px] text-amber-200">
                       {data.effect.durationSec >= 60 ? `${data.effect.durationSec / 60} 分钟` : `${data.effect.durationSec} 秒`}
@@ -125,7 +131,7 @@ export default function GiftCard({ data, variant = 'grid', locked = false, hint,
                   <p className="text-[11px] leading-snug text-slate-100">{data.effect.passive}</p>
                 </div>
                 <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-2 py-1.5">
-                  <p className="text-[10px] font-bold text-amber-300">动用 · 每日一次</p>
+                  <p className="text-[10px] font-bold text-amber-300">动用 · 仅此一次</p>
                   <p className="text-[11px] leading-snug text-slate-100">{data.effect.active}</p>
                 </div>
               </>

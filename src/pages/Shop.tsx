@@ -289,7 +289,7 @@ export default function Shop() {
     addGachaResult, addCharacter, addExp,
     addSpiritStones, addReputation, addHintTokens,
     tutorialStep, setTutorialStep,
-    equippedGift, dailyActions, tryDailyAction,
+    equippedGift, usedGifts, markGiftUsed,
   } = playerStore;
 
   /* ── 随身信物（礼物卡）：装备吃被动 + 热点里动用一锤。autoLink 类（如江夏理货卡）不作用于委托 ── */
@@ -297,7 +297,7 @@ export default function Shop() {
     const g = getGiftCardById(equippedGift);
     return g && g.effect.kind !== 'autoLink' ? g : undefined;
   }, [equippedGift]);
-  const giftActiveAvailable = dailyActions['gift_active'] !== new Date().toISOString().slice(0, 10);
+  const giftActiveAvailable = !!giftInfo && !usedGifts.includes(giftInfo.id);
 
   /* ── 本地 UI 状态 ── */
   const [activeTab, setActiveTab] = useState<ActiveTab>('map');
@@ -518,8 +518,11 @@ export default function Shop() {
     const { spot, spotIndex, locId } = currentEvent;
 
     const isGift = !!card && card.kind === 'gift';
-    // 动用信物每日一次：占用名额失败则忽略
-    if (isGift && !tryDailyAction('gift_active')) return;
+    // 动用信物整局仅一次：用过就忽略；本次即永久消耗
+    if (isGift) {
+      if (!giftInfo || usedGifts.includes(giftInfo.id)) return;
+      markGiftUsed(giftInfo.id);
+    }
 
     // 统一的卡类型（信物用其主类型参与一切命中/连携判定）
     const cardType: ServiceTag | null = card
@@ -630,7 +633,7 @@ export default function Shop() {
   }, [currentEvent, loc, commission, objectivesDone, sideJobs, fatigue, rep, lastCardType,
     consumeHandCard, applyDelta, markSpotDone, completeObjective, completeSideJob, noteCommissionFocus,
     addNormalTickets, addSpiritStones, addExp, addLog, refreshRoutes, setGameOver, setLastCardType,
-    giftInfo, tryDailyAction]);
+    giftInfo, usedGifts, markGiftUsed]);
 
   /* ────── 冒险解法（危险热点）：不出牌，付出更多资源换高信任 ────── */
   const handleRisk = useCallback(() => {
@@ -1447,7 +1450,7 @@ export default function Shop() {
                 )}
               </div>
 
-              {/* 随身信物：动用一锤（每日一次，引导步骤不打扰） */}
+              {/* 随身信物：动用一锤（整局仅一次，引导步骤不打扰） */}
               {giftInfo && giftActiveAvailable && !tutorialActive && (
                 <button
                   onClick={() => handleResolve({ kind: 'gift', serviceType: giftInfo.effect.type, activeBonus: giftInfo.effect.activeBonus, name: giftInfo.name })}
@@ -1456,7 +1459,7 @@ export default function Shop() {
                   <img src={assetUrl(giftInfo.asset)} alt={giftInfo.name} className="h-11 w-11 shrink-0 rounded-lg object-cover ring-1 ring-amber-300/60" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-black text-amber-200">动用随身信物 · {giftInfo.name}</p>
-                    <p className="text-[10px] text-amber-100/80">必定「完美」，额外信任 +{giftInfo.effect.activeBonus} · 每日一次</p>
+                    <p className="text-[10px] text-amber-100/80">必定「完美」，额外信任 +{giftInfo.effect.activeBonus} · 仅此一次</p>
                   </div>
                   <span className="shrink-0 rounded bg-amber-400 px-1.5 py-0.5 text-[9px] font-black text-amber-950">SSR</span>
                 </button>

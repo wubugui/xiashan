@@ -15,7 +15,8 @@ import { passedOverReactions } from '@/engine/passedOver';
 import { evaluateAll } from '@/engine/conditionEngine';
 import RomanceScene from '@/components/RomanceScene';
 import StoryViewer from '@/components/StoryViewer';
-import GiftCard from '@/components/GiftCard';
+import GiftCard, { type GiftCardData } from '@/components/GiftCard';
+import GiftReveal from '@/components/GiftReveal';
 import { cn } from '@/lib/utils';
 import { playSound } from '@/lib/sound';
 import { assetUrl } from '@/lib/assets';
@@ -83,6 +84,7 @@ export default function CharacterDetail() {
   const addPhoneMessage = usePlayerStore((s) => s.addPhoneMessage);
   const equippedGift = usePlayerStore((s) => s.equippedGift);
   const setEquippedGift = usePlayerStore((s) => s.setEquippedGift);
+  const usedGifts = usePlayerStore((s) => s.usedGifts);
 
   const [activeTab, setActiveTab] = useState<TabType>('info');
   const [interactionResponse, setInteractionResponse] = useState<string | null>(null);
@@ -92,6 +94,8 @@ export default function CharacterDetail() {
   const [openCg, setOpenCg] = useState<CollectibleViewer | null>(null);
   // 收藏里点开的礼物卡（SSR 大图 + 随身携带）
   const [openGift, setOpenGift] = useState<Collectible | null>(null);
+  // 加深关系解锁信物时的 SSR 级揭示
+  const [revealGift, setRevealGift] = useState<{ name: string; data: GiftCardData } | null>(null);
   // 收藏里点开的操作面板（设为她头像/主视觉/我的头像）
   const [sheetItem, setSheetItem] = useState<Collectible | null>(null);
   // 「设为我的头像」高博弈二次确认
@@ -153,6 +157,21 @@ export default function CharacterDetail() {
     advanceRelationshipStage(character.id);
     setInteractionResponse(nextStage.text);
     setTimeout(() => setInteractionResponse(null), 6000);
+    // 推进到解锁信物的阶段(1/3/5) → 像抽到 SSR 一样把这件信物揭示给玩家
+    maybeRevealGift(character, nextStage.stage);
+  };
+
+  /** 若该阶段刚好解锁一件专属信物，弹出 SSR 级揭示 */
+  const maybeRevealGift = (char: typeof character, newStage: number) => {
+    if (!char) return;
+    const gift = getCollectibles(char).find(
+      (c) => c.kind === 'gift' && c.effect && c.tier && c.tierName &&
+        (c.unlock.some((u) => u.type === 'relationship_stage' && u.minStage === newStage)),
+    );
+    if (gift && gift.effect && gift.tier && gift.tierName) {
+      playSound('gacha-ssr');
+      setRevealGift({ name: char.name, data: { name: gift.name, asset: gift.asset, tier: gift.tier, tierName: gift.tierName, effect: gift.effect, summary: gift.summary, intimacy: gift.intimacy } });
+    }
   };
 
   const handleUpgrade = () => {
@@ -182,7 +201,10 @@ export default function CharacterDetail() {
     if (beat.isGate && !chosen?.gateConfirm) return;
     const r = beat.reward;
     if (r?.affinity) addAffinity(id, r.affinity);
-    if (r?.advanceStage) advanceRelationshipStage(id);
+    if (r?.advanceStage) {
+      advanceRelationshipStage(id);
+      if (character) maybeRevealGift(character, (relationshipStages[id] ?? 0) + 1);
+    }
     if (r?.unlockFlag) setFlag(r.unlockFlag);
     if (r?.wechat) {
       addPhoneMessage({ id: `romance_${beat.id}_${Date.now()}`, characterId: id, type: 'wechat', content: r.wechat, timestamp: Date.now(), read: false });
@@ -435,6 +457,7 @@ export default function CharacterDetail() {
                         locked={!unlocked}
                         hint={it.hint}
                         equipped={equippedGift === it.id}
+                        used={usedGifts.includes(it.id)}
                         onClick={unlocked ? () => { playSound('btn-confirm'); setOpenGift(it); } : undefined}
                       />
                     );
@@ -749,6 +772,7 @@ export default function CharacterDetail() {
               data={{ name: openGift.name, asset: openGift.asset, tier: openGift.tier, tierName: openGift.tierName, effect: openGift.effect, summary: openGift.summary, intimacy: openGift.intimacy }}
               variant="full"
               equipped={equippedGift === openGift.id}
+              used={usedGifts.includes(openGift.id)}
             />
             {equippedGift === openGift.id ? (
               <button
@@ -770,6 +794,11 @@ export default function CharacterDetail() {
         </div>
       )}
 
+      {/* 加深关系解锁信物：SSR 级揭示 */}
+      {revealGift && (
+        <GiftReveal data={revealGift.data} characterName={revealGift.name} onClose={() => setRevealGift(null)} />
+      )}
+
       {/* 收藏操作面板 */}
       {sheetItem && id && (
         <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/60" onClick={() => setSheetItem(null)}>
@@ -786,11 +815,20 @@ export default function CharacterDetail() {
               </div>
             </div>
             <div className="space-y-2">
+              {(() => {
+                const cg = character ? getCollectibles(character).find((c) => c.kind === 'cg' && c.viewer && evaluateAll(c.unlock, condState)) : undefined;
+                return cg?.viewer ? (
+                  <button
+                    onClick={() => { playSound('btn-confirm'); const v = cg.viewer!; setSheetItem(null); setOpenCg(v); }}
+                    className="w-full rounded-xl bg-slate-800 py-3 text-sm font-bold text-rose-200 active:scale-[0.99]"
+                  >📖 看她的短篇</button>
+                ) : null;
+              })()}
               {sheetItem.kind === 'expr' && (
                 <button
                   onClick={() => { playSound('btn-confirm'); setDisplayAvatar(id, sheetItem.asset); flash(`已设为 ${character.name} 的手机头像`); setSheetItem(null); }}
                   className="w-full rounded-xl bg-slate-800 py-3 text-sm font-bold text-amber-200 active:scale-[0.99]"
-                >设为 {character.name} 的手机头像</button>
+                >设为 {character.name} 的微信头像</button>
               )}
               {(sheetItem.kind === 'expr' || sheetItem.kind === 'portrait') && (
                 <button

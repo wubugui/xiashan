@@ -164,7 +164,8 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
   const addAffinity = usePlayerStore((s) => s.addAffinity);
   const tryDailyAction = usePlayerStore((s) => s.tryDailyAction);
   const equippedGift = usePlayerStore((s) => s.equippedGift);
-  const dailyActions = usePlayerStore((s) => s.dailyActions);
+  const usedGifts = usePlayerStore((s) => s.usedGifts);
+  const markGiftUsed = usePlayerStore((s) => s.markGiftUsed);
 
   const [grid, setGrid] = useState<Tile[][]>(() => buildGrid());
   const [flashing, setFlashing] = useState<Set<string>>(new Set());
@@ -182,6 +183,8 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
   /** 随身信物自动连消：结束时间戳 + 剩余秒数 */
   const [autoEndAt, setAutoEndAt] = useState<number | null>(null);
   const [autoRemain, setAutoRemain] = useState(0);
+  /** 两格交换动画：a/b 两个格子坐标 + 进度 0→1（手动与自动都走这条，看得见交换过程） */
+  const [swapAnim, setSwapAnim] = useState<{ a: [number, number]; b: [number, number]; p: number } | null>(null);
 
   const drag = useRef<{ r: number; c: number; x: number; y: number } | null>(null);
   const [dragVisual, setDragVisual] = useState<{ r: number; c: number; dx: number; dy: number } | null>(null);
@@ -297,20 +300,28 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
 
       const next = grid.map((row) => [...row]);
       [next[ar][ac], next[br][bc]] = [next[br][bc], next[ar][ac]];
-
       const matches = findMatches(next);
-      if (matches.size === 0) {
-        setGrid(next);
-        try { navigator.vibrate?.(10); } catch { /* ignore */ }
-        window.setTimeout(() => {
-          setGrid(grid);
+
+      // 先把「两格交换」的滑动动画演出来（手动/自动一致），动画完再落子
+      const SWAP_MS = 170;
+      let startT = 0;
+      const step = (t: number) => {
+        if (!startT) startT = t;
+        const p = Math.min(1, (t - startT) / SWAP_MS);
+        setSwapAnim({ a: [ar, ac], b: [br, bc], p });
+        if (p < 1) { requestAnimationFrame(step); return; }
+        setSwapAnim(null);
+        if (matches.size === 0) {
+          // 没法消除：滑过去又滑回来——grid 不变
+          try { navigator.vibrate?.(10); } catch { /* ignore */ }
           setBusy(false);
-        }, 180);
-        return;
-      }
-      playSound('swap');
-      setGrid(next);
-      window.setTimeout(() => cascade(next, 1), 80);
+          return;
+        }
+        playSound('swap');
+        setGrid(next);
+        window.setTimeout(() => cascade(next, 1), 60);
+      };
+      requestAnimationFrame(step);
     },
     [busy, grid, cascade],
   );
@@ -320,16 +331,17 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
     const g = getGiftCardById(equippedGift);
     return g && g.effect.kind === 'autoLink' ? g : null;
   }, [equippedGift]);
-  const autoAvailable = dailyActions['gift_active'] !== new Date().toISOString().slice(0, 10);
+  const autoAvailable = !!autoGift && !usedGifts.includes(autoGift.id);
 
   const startAuto = useCallback(() => {
     if (!autoGift || autoEndAt !== null) return;
-    if (!tryDailyAction('gift_active')) return;
+    if (usedGifts.includes(autoGift.id)) return;
+    markGiftUsed(autoGift.id); // 整局仅一次，永久消耗
     playSound('stage-up');
     // 安抚/恢复型搭档延长自动连消时长
     const bonusMs = (passive?.durationBonus ?? 0) * 1000;
     setAutoEndAt(Date.now() + (autoGift.effect.durationSec ?? 20) * 1000 + bonusMs);
-  }, [autoGift, autoEndAt, tryDailyAction, passive]);
+  }, [autoGift, autoEndAt, usedGifts, markGiftUsed, passive]);
 
   // 倒计时 + 到点停止
   useEffect(() => {
@@ -505,7 +517,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
                 <span className="shrink-0 rounded bg-amber-400 px-1.5 py-0.5 text-[9px] font-black text-amber-950">SSR</span>
               </button>
             ) : (
-              <p className="text-center text-[10px] text-amber-300/60">随身信物「{autoGift.name}」今日已动用</p>
+              <p className="text-center text-[10px] text-amber-300/60">随身信物「{autoGift.name}」已动用（整局仅一次）</p>
             )}
           </div>
         )}
@@ -552,6 +564,14 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
                 const dy = isDragging ? dragVisual!.dy : 0;
                 const style = TILE_STYLES[tile.kind] ?? TILE_STYLES.gem;
 
+                // 交换动画：两格按进度朝对方滑动
+                let sx = 0, sy = 0, isSwapping = false;
+                if (swapAnim) {
+                  const { a, b, p } = swapAnim;
+                  if (r === a[0] && c === a[1]) { sx = (b[1] - a[1]) * CELL * p; sy = (b[0] - a[0]) * CELL * p; isSwapping = true; }
+                  else if (r === b[0] && c === b[1]) { sx = (a[1] - b[1]) * CELL * p; sy = (a[0] - b[0]) * CELL * p; isSwapping = true; }
+                }
+
                 const isDragTarget =
                   dragVisual !== null &&
                   !isDragging &&
@@ -574,11 +594,13 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
                       top: r * CELL + 2,
                       width: CELL - 4,
                       height: CELL - 4,
-                      zIndex: isDragging ? 50 : 1,
+                      zIndex: isDragging ? 50 : isSwapping ? 40 : 1,
                       transform: isDragging
                         ? `translate(${dx}px,${dy}px) scale(1.12)`
-                        : 'translate(0,0) scale(1)',
-                      transition: isDragging ? 'none' : 'transform 0.13s ease',
+                        : isSwapping
+                          ? `translate(${sx}px,${sy}px) scale(1.04)`
+                          : 'translate(0,0) scale(1)',
+                      transition: 'none',
                       cursor: busy ? 'default' : 'grab',
                       touchAction: 'none',
                     }}

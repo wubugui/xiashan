@@ -1,5 +1,5 @@
 import { ChevronLeft, MessageCircle, MessageSquare, Phone as PhoneIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { getCharacterById } from '@/data/characters';
@@ -47,6 +47,10 @@ export default function ContactScreen({ characterId, initialTab = 'wechat', onBa
   const callAnswers = tier >= 3;
 
   const [tab, setTab] = useState<Tab>(initialTab);
+
+  // 打开联系人即清掉她的全部未读（微信+短信），红点不再因没切到短信 tab 而残留
+  const markContactRead = usePlayerStore((s) => s.markContactRead);
+  useEffect(() => { markContactRead(characterId); }, [characterId, markContactRead]);
 
   // 兜底：角色查不到（如旧存档残留已删除角色）也不能黑屏——给个能返回的提示
   if (!character) {

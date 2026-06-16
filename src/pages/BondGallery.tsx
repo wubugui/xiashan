@@ -214,7 +214,10 @@ export default function BondGallery() {
             return (
               <div key={char.id} className="rounded-xl border border-white/10 bg-slate-900/60 p-3">
                 <div className="flex items-center gap-3">
-                  <button onClick={() => navigate(`/character/${char.id}`)} className="shrink-0">
+                  <button
+                    onClick={() => owned ? navigate(`/character/${char.id}`) : toast('还没遇见她——去补给频道抽卡，遇见后才能进她的主页。')}
+                    className="shrink-0"
+                  >
                     <img
                       src={assetUrl(char.avatarUrl)}
                       alt={char.name}

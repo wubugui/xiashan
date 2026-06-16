@@ -64,8 +64,8 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
   /* ── stores ── */
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
   const equippedGift = usePlayerStore((s) => s.equippedGift);
-  const dailyActions = usePlayerStore((s) => s.dailyActions);
-  const tryDailyAction = usePlayerStore((s) => s.tryDailyAction);
+  const usedGifts = usePlayerStore((s) => s.usedGifts);
+  const markGiftUsed = usePlayerStore((s) => s.markGiftUsed);
   const hand = useShopStore((s) => s.hand);
   const applyDelta = useShopStore((s) => s.applyDelta);
   const consumeHandCard = useShopStore((s) => s.consumeHandCard);
@@ -114,7 +114,7 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
     const g = getGiftCardById(equippedGift);
     return g && g.effect.kind !== 'autoLink' ? g : undefined;
   }, [equippedGift]);
-  const giftActiveAvailable = dailyActions['gift_active'] !== new Date().toISOString().slice(0, 10);
+  const giftActiveAvailable = !!giftInfo && !usedGifts.includes(giftInfo.id);
   /** 当前挑战类型是否吃信物被动 → 展示用 */
   const giftPassive = giftInfo && node?.type === 'challenge' && isMatch(giftInfo.effect.type, node.need)
     ? giftInfo.effect.passiveTrust : 0;
@@ -187,8 +187,11 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
       if (resolving.current) return;
 
       const isGiftPlay = !!card && card.kind === 'gift';
-      // 动用信物每日一次：占用名额失败则忽略本次点击
-      if (isGiftPlay && !tryDailyAction('gift_active')) return;
+      // 动用信物整局仅一次：用过就忽略；本次点击即永久消耗
+      if (isGiftPlay) {
+        if (!giftInfo || usedGifts.includes(giftInfo.id)) return;
+        markGiftUsed(giftInfo.id);
+      }
       resolving.current = true;
 
       let tier: Tier;
@@ -232,7 +235,7 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
       setReaction({ lines: outcome.lines, next: outcome.next });
       setLineIndex(0);
     },
-    [node, trust, applyDelta, consumeHandCard, addLog, commission.name, giftInfo, tryDailyAction],
+    [node, trust, applyDelta, consumeHandCard, addLog, commission.name, giftInfo, usedGifts, markGiftUsed],
   );
 
   /* ── 当前说话人 ── */
@@ -359,7 +362,7 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
               )}
             </div>
 
-            {/* 随身信物：动用一锤（每日一次，引导步骤不打扰） */}
+            {/* 随身信物：动用一锤（整局仅一次，引导步骤不打扰） */}
             {giftInfo && giftActiveAvailable && !tutorialLock && (
               <button
                 onClick={() => playChoice({ kind: 'gift', serviceType: giftInfo.effect.type, activeBonus: giftInfo.effect.activeBonus })}
@@ -368,7 +371,7 @@ export default function CommissionTheater({ commission, scene, initialTrust, tru
                 <img src={assetUrl(giftInfo.asset)} alt={giftInfo.name} className="h-11 w-11 shrink-0 rounded-lg object-cover ring-1 ring-amber-300/60" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-black text-amber-200">动用随身信物 · {giftInfo.name}</p>
-                  <p className="text-[10px] text-amber-100/80">必定「完美」，额外信任 +{giftInfo.effect.activeBonus} · 每日一次</p>
+                  <p className="text-[10px] text-amber-100/80">必定「完美」，额外信任 +{giftInfo.effect.activeBonus} · 仅此一次</p>
                 </div>
                 <span className="shrink-0 rounded bg-amber-400 px-1.5 py-0.5 text-[9px] font-black text-amber-950">SSR</span>
               </button>

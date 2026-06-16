@@ -74,6 +74,8 @@ interface PlayerState {
   relationshipStages: Record<string, number>;
   /** 随身信物：当前装备的礼物卡 id（gift_xxx），吃被动 + 委托里可动用，全局仅一枚 */
   equippedGift: string | null;
+  /** 已动用过的信物 id（gift_xxx）：信物「动用」整局仅一次，用过即永久消耗 */
+  usedGifts: string[];
   // 每日限频记录：key（如 interact:touch:linxia / stage:linxia）→ 'YYYY-MM-DD'
   dailyActions: Record<string, string>;
   /** 累计获得的同角色卡数（首张=1）：关系阶段的「钥匙」门槛 */
@@ -142,6 +144,8 @@ interface PlayerState {
   advanceRelationshipStage: (characterId: string) => void;
   /** 装备/卸下随身信物（传 null 卸下） */
   setEquippedGift: (giftId: string | null) => void;
+  /** 动用信物（整局一次，永久消耗） */
+  markGiftUsed: (giftId: string) => void;
   /** 心动系统：推进一个恋爱节点（进度 +1） */
   advanceRomance: (characterId: string) => void;
   /** 确认心意（排他锁定对象） */
@@ -165,6 +169,8 @@ interface PlayerState {
   setTotalGachaCount: (count: number) => void;
   addPhoneMessage: (message: PhoneMessage) => void;
   markMessageRead: (id: string) => void;
+  /** 打开联系人：把该角色的全部消息标记已读（红点彻底清除） */
+  markContactRead: (characterId: string) => void;
   addCallLog: (entry: PhoneCallLog) => void;
   addTriggeredEvent: (eventId: string) => void;
   resetGame: () => void;
@@ -188,6 +194,7 @@ const initialState = {
   affinityMap: {} as Record<string, number>,
   relationshipStages: {} as Record<string, number>,
   equippedGift: null as string | null,
+  usedGifts: [] as string[],
   dailyActions: {} as Record<string, string>,
   dupeCount: {} as Record<string, number>,
   bondShards: 0,
@@ -293,6 +300,10 @@ export const usePlayerStore = create<PlayerState>()(
       }),
       setEquippedGift: (giftId) => set({ equippedGift: giftId }),
 
+      markGiftUsed: (giftId) => set(s => ({
+        usedGifts: s.usedGifts.includes(giftId) ? s.usedGifts : [...s.usedGifts, giftId],
+      })),
+
       advanceRelationshipStage: (characterId) => set(s => ({
         relationshipStages: {
           ...s.relationshipStages,
@@ -347,14 +358,30 @@ export const usePlayerStore = create<PlayerState>()(
           [message.type]: s.unreadCounts[message.type] + (message.read ? 0 : 1),
         },
       })),
-      markMessageRead: (id) => set(s => ({
-        phoneMessages: s.phoneMessages.map(m => m.id === id ? { ...m, read: true } : m),
-        unreadCounts: {
-          ...s.unreadCounts,
-          wechat: s.phoneMessages.filter(m => m.type === 'wechat' && !m.read && m.id !== id).length,
-          sms: s.phoneMessages.filter(m => m.type === 'sms' && !m.read && m.id !== id).length,
-        },
-      })),
+      markMessageRead: (id) => set(s => {
+        const phoneMessages = s.phoneMessages.map(m => m.id === id ? { ...m, read: true } : m);
+        return {
+          phoneMessages,
+          unreadCounts: {
+            wechat: phoneMessages.filter(m => m.type === 'wechat' && !m.read).length,
+            sms: phoneMessages.filter(m => m.type === 'sms' && !m.read).length,
+            call: 0,
+          },
+        };
+      }),
+      // 打开某个联系人即视为读完她的全部消息（微信+短信+一切）——红点彻底清掉，
+      // 不再因为没点进「短信」tab 而残留未读。
+      markContactRead: (characterId) => set(s => {
+        const phoneMessages = s.phoneMessages.map(m => m.characterId === characterId ? { ...m, read: true } : m);
+        return {
+          phoneMessages,
+          unreadCounts: {
+            wechat: phoneMessages.filter(m => m.type === 'wechat' && !m.read).length,
+            sms: phoneMessages.filter(m => m.type === 'sms' && !m.read).length,
+            call: 0,
+          },
+        };
+      }),
       addCallLog: (entry) => set(s => ({ phoneCallLog: [...s.phoneCallLog, entry] })),
       addTriggeredEvent: (eventId) => set(s => ({
         triggeredEventIds: s.triggeredEventIds.includes(eventId) ? s.triggeredEventIds : [...s.triggeredEventIds, eventId],
@@ -363,7 +390,7 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'xiashan-player-store',
-      version: 14,
+      version: 15,
       storage: createJSONStorage(() => safeStorage),
       // 旧版本存档可能缺字段、字段为 null 或类型不符（项目从 AVG 改版而来），
       // 合并时丢弃所有与默认值类型不符的项，避免启动即崩、全页空白。
@@ -388,6 +415,11 @@ export const usePlayerStore = create<PlayerState>()(
           personTickets?: number;
           commissionTickets?: number;
         };
+        if (version < 15) {
+          // 信物「整局一次」消耗记录：老存档默认空
+          const s15 = state as typeof state & { usedGifts?: string[] };
+          s15.usedGifts = s15.usedGifts ?? [];
+        }
         if (version < 14) {
           // 随身信物（礼物卡）新增字段：老存档默认未装备
           const s14 = state as typeof state & { equippedGift?: string | null };

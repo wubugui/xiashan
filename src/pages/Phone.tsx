@@ -13,6 +13,9 @@ import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
 import { getPhoneEventsByCharacter } from '@/data/phoneEvents';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { commsTier } from '@/engine/phoneAccess';
+import callLinesData from '@/content/callLines.json';
+
+const CALL_LINES = callLinesData as unknown as Record<string, string[]>;
 
 type ContactTab = 'wechat' | 'sms' | 'call';
 
@@ -23,8 +26,11 @@ type PhoneScreen =
   | { type: 'browser' }
   | { type: 'browser_page'; url: string };
 
-/** 通话台词取角色的来电事件（写好的真台词），无则用一句兜底问候——不再是占位「……嗯。我知道了」 */
+/** 通话台词。电话要到「深夜长谈」(tier≥3) 才接——接通即关系很近，所以用每人专属的肉麻情话；
+ *  无配置时再退回来电事件 / 一句兜底问候。 */
 function callLinesFor(characterId: string): string[] {
+  const intimate = CALL_LINES[characterId];
+  if (intimate && intimate.length) return intimate;
   const ev = getPhoneEventsByCharacter(characterId).find((e) => e.type === 'call');
   const lines = ev?.messages?.map((m) => m.content).filter(Boolean) ?? [];
   return lines.length > 0 ? lines : ['喂？……是我。', '没什么事，就是突然想听听你的声音。'];

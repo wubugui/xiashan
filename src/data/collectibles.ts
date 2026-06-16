@@ -153,14 +153,16 @@ export function getCollectibles(character: Character): Collectible[] {
     });
   }
 
-  // 立绘:初见(拥有即解) / 绽放(信物2张) / 专属场景(Lv.10)
-  if (character.portraitUrl) {
+  // 立绘:专属场景(Lv.10)。注意：初见/绽放立绘常与「平静/微笑」表情同图，
+  // 会在收藏里重复出现——凡是和已有表情同一张图的立绘一律不再单列，避免头像重复两次。
+  const exprAssets = new Set(out.filter((c) => c.kind === 'expr').map((c) => c.asset));
+  if (character.portraitUrl && !exprAssets.has(character.portraitUrl)) {
     out.push({ id: 'portrait_default', kind: 'portrait', name: '初见立绘', asset: character.portraitUrl, unlock: [], hint: '抽到她即可' });
   }
-  if (character.gachaPortraitUrl) {
+  if (character.gachaPortraitUrl && !exprAssets.has(character.gachaPortraitUrl)) {
     out.push({ id: 'portrait_gacha', kind: 'portrait', name: '绽放立绘', asset: character.gachaPortraitUrl, unlock: [{ type: 'dupes_at_least', characterId: id, minCount: 2 }], hint: '集到她的第 2 张卡' });
   }
-  if (character.gachaBackgroundUrl) {
+  if (character.gachaBackgroundUrl && !exprAssets.has(character.gachaBackgroundUrl)) {
     out.push({ id: 'portrait_scene', kind: 'portrait', name: '专属场景', asset: character.gachaBackgroundUrl, unlock: [{ type: 'character_level', characterId: id, minLevel: 10 }], hint: '培养到 Lv.10' });
   }
 
