@@ -62,6 +62,10 @@ export interface Collectible {
   intimacy?: string;
   /** 解锁后点开可回看的图文详情 */
   viewer?: CollectibleViewer;
+  /** 合并进本头像的短篇（CG 与某表情同图时，不再单列重复图，直接挂到该头像上） */
+  cgViewer?: CollectibleViewer;
+  cgUnlock?: Condition[];
+  cgName?: string;
 }
 
 interface GiftConfig {
@@ -166,18 +170,30 @@ export function getCollectibles(character: Character): Collectible[] {
     out.push({ id: 'portrait_scene', kind: 'portrait', name: '专属场景', asset: character.gachaBackgroundUrl, unlock: [{ type: 'character_level', characterId: id, minLevel: 10 }], hint: '培养到 Lv.10' });
   }
 
-  // CG 短篇:她的剧情影像(来自 videos.json,按 id 前缀 `{角色id}_` 归属;解锁条件沿用各自的)
+  // CG 短篇:她的剧情影像(来自 videos.json,按 id 前缀 `{角色id}_` 归属)。
+  // 短篇缩略图常与某个表情头像同图——直接合并进那个头像(挂 cgViewer)，不再单列重复图；
+  // 找不到同图头像的才单独成一格。
   for (const v of videos) {
     if (!v.story || !v.id.startsWith(`${id}_`)) continue;
     const subtitle = v.title.includes('·') ? v.title.split('·').slice(1).join('·').trim() : v.title;
+    const cgViewer: CollectibleViewer = { title: v.title, image: v.story.image, paragraphs: v.story.paragraphs };
+    const cgUnlock = v.unlockConditions ?? [];
+    // 找一个同图、且还没挂过短篇的头像（表情/立绘）合并进去
+    const host = out.find((c) => (c.kind === 'expr' || c.kind === 'portrait') && c.asset === v.story!.image && !c.cgViewer);
+    if (host) {
+      host.cgViewer = cgViewer;
+      host.cgUnlock = cgUnlock;
+      host.cgName = subtitle;
+      continue;
+    }
     out.push({
       id: `cg_${v.id}`,
       kind: 'cg',
       name: subtitle,
       asset: v.story.image ?? character.portraitUrl ?? '',
-      unlock: v.unlockConditions ?? [],
+      unlock: cgUnlock,
       hint: cgHint(v.unlockConditions),
-      viewer: { title: v.title, image: v.story.image, paragraphs: v.story.paragraphs },
+      viewer: cgViewer,
     });
   }
 

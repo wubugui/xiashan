@@ -497,6 +497,9 @@ export default function CharacterDetail() {
                             {isCg && (
                               <span className="absolute right-1 top-1 rounded bg-rose-500/85 px-1.5 py-0.5 text-[9px] font-bold text-white">短篇</span>
                             )}
+                            {!isGift && !isCg && it.cgViewer && evaluateAll(it.cgUnlock ?? [], condState) && (
+                              <span className="absolute right-1 top-1 rounded bg-rose-500/85 px-1.5 py-0.5 text-[9px] font-bold text-white">短篇</span>
+                            )}
                             {active ? (
                               <span className="absolute left-1 top-1 rounded bg-amber-400/90 px-1.5 py-0.5 text-[9px] font-bold text-amber-950">{activeLabel}</span>
                             ) : (
@@ -815,15 +818,12 @@ export default function CharacterDetail() {
               </div>
             </div>
             <div className="space-y-2">
-              {(() => {
-                const cg = character ? getCollectibles(character).find((c) => c.kind === 'cg' && c.viewer && evaluateAll(c.unlock, condState)) : undefined;
-                return cg?.viewer ? (
-                  <button
-                    onClick={() => { playSound('btn-confirm'); const v = cg.viewer!; setSheetItem(null); setOpenCg(v); }}
-                    className="w-full rounded-xl bg-slate-800 py-3 text-sm font-bold text-rose-200 active:scale-[0.99]"
-                  >📖 看她的短篇</button>
-                ) : null;
-              })()}
+              {sheetItem.cgViewer && evaluateAll(sheetItem.cgUnlock ?? [], condState) && (
+                <button
+                  onClick={() => { playSound('btn-confirm'); const v = sheetItem.cgViewer!; setSheetItem(null); setOpenCg(v); }}
+                  className="w-full rounded-xl bg-slate-800 py-3 text-sm font-bold text-rose-200 active:scale-[0.99]"
+                >📖 看短篇：{sheetItem.cgName}</button>
+              )}
               {sheetItem.kind === 'expr' && (
                 <button
                   onClick={() => { playSound('btn-confirm'); setDisplayAvatar(id, sheetItem.asset); flash(`已设为 ${character.name} 的手机头像`); setSheetItem(null); }}
