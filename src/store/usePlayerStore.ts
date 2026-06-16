@@ -76,8 +76,11 @@ interface PlayerState {
   equippedGift: string | null;
   /** 已动用过的信物 id（gift_xxx）：信物「动用」整局仅一次，用过即永久消耗 */
   usedGifts: string[];
-  // 每日限频记录：key（如 interact:touch:linxia / stage:linxia）→ 'YYYY-MM-DD'
+  // 每日限频记录：key（如 interact:touch:linxia / stage:linxia）→ 当时的游戏天号
+  // 注意：「每日」= 游戏内一天（打烊推进），不是真实日历日；打烊→新一天会清空本表。
   dailyActions: Record<string, string>;
+  /** 游戏内天数（打烊休息推进，从第 1 天起）：每日限频按它重置，而非真实日期 */
+  gameDay: number;
   /** 累计获得的同角色卡数（首张=1）：关系阶段的「钥匙」门槛 */
   dupeCount: Record<string, number>;
   /** 缘分碎片（引荐系统通货，溢出卡折算所得） */
@@ -163,6 +166,8 @@ interface PlayerState {
   /** 记下玩家已看过她当前的签名（点进她的联系人即视为看过） */
   markSignatureSeen: (characterId: string, signature: string) => void;
   tryDailyAction: (key: string) => boolean;
+  /** 打烊→新的一天：游戏天 +1，并清空当日限频记录（推进关系/聊天好感/互动等全部重置） */
+  advanceGameDay: () => void;
   addExp: (characterId: string, amount: number) => void;
   addGachaResult: (characterId: string, rarity: string) => void;
   setPityCounter: (count: number) => void;
@@ -196,6 +201,7 @@ const initialState = {
   equippedGift: null as string | null,
   usedGifts: [] as string[],
   dailyActions: {} as Record<string, string>,
+  gameDay: 1,
   dupeCount: {} as Record<string, number>,
   bondShards: 0,
   romanceProgress: {} as Record<string, number>,
@@ -330,11 +336,13 @@ export const usePlayerStore = create<PlayerState>()(
       markContact: (characterId) => set(s => ({ lastContact: { ...s.lastContact, [characterId]: new Date().toISOString().slice(0, 10) } })),
       markSignatureSeen: (characterId, signature) => set(s => (s.signatureSeen[characterId] === signature ? s : ({ signatureSeen: { ...s.signatureSeen, [characterId]: signature } }))),
       tryDailyAction: (key) => {
-        const today = new Date().toISOString().slice(0, 10);
-        if (get().dailyActions[key] === today) return false;
-        set(s => ({ dailyActions: { ...s.dailyActions, [key]: today } }));
+        // 「每日」= 游戏内一天（打烊推进），不是真实日历日——打烊到第二天即重置
+        const day = String(get().gameDay);
+        if (get().dailyActions[key] === day) return false;
+        set(s => ({ dailyActions: { ...s.dailyActions, [key]: day } }));
         return true;
       },
+      advanceGameDay: () => set(s => ({ gameDay: s.gameDay + 1, dailyActions: {}, freeHints: { date: '', used: 0 } })),
       // 累加经验并自动连升级（exp 满 level*100 即升一级，溢出转下一级），
       // 让所有经验来源（打热点/交付/重复卡/养成页）共用同一升级口径，调用方无需判断。
       addExp: (characterId, amount) => set(s => ({
@@ -390,7 +398,7 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'xiashan-player-store',
-      version: 15,
+      version: 16,
       storage: createJSONStorage(() => safeStorage),
       // 旧版本存档可能缺字段、字段为 null 或类型不符（项目从 AVG 改版而来），
       // 合并时丢弃所有与默认值类型不符的项，避免启动即崩、全页空白。
@@ -415,6 +423,12 @@ export const usePlayerStore = create<PlayerState>()(
           personTickets?: number;
           commissionTickets?: number;
         };
+        if (version < 16) {
+          // 游戏天计数 + 每日限频改按游戏天：老存档从第 1 天起、清掉按真实日期记的旧限频
+          const s16 = state as typeof state & { gameDay?: number; dailyActions?: Record<string, string> };
+          s16.gameDay = s16.gameDay ?? 1;
+          s16.dailyActions = {};
+        }
         if (version < 15) {
           // 信物「整局一次」消耗记录：老存档默认空
           const s15 = state as typeof state & { usedGifts?: string[] };

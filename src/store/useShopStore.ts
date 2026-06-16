@@ -438,7 +438,8 @@ export const useShopStore = create<ShopState>()(
       setGameOver: (over) => set({ gameOver: over }),
 
       // 与 startDay 同口径：委托板/顺手单每天必须重掷，否则次日板上无单可接
-      resetDay: () => get().startDay(),
+      // 打烊→新的一天：推进游戏天 + 清空每日限频（推进关系/聊天好感/互动等重置），再起新局
+      resetDay: () => { usePlayerStore.getState().advanceGameDay(); get().startDay(); },
     }),
     {
       name: 'xiashan-shop-store',
@@ -453,6 +454,14 @@ export const useShopStore = create<ShopState>()(
         const snapshot = { ...(persisted as Partial<ShopState>) };
         if (snapshot.commission) {
           snapshot.commission = commissions.find((c) => c.id === snapshot.commission?.id) ?? null;
+        }
+        const latestLocation = (loc: GameLocation | null | undefined) =>
+          loc ? (allLocations.find((l) => l.id === loc.id) ?? loc) : null;
+        snapshot.loc = latestLocation(snapshot.loc);
+        if (snapshot.routes) {
+          snapshot.routes = snapshot.routes
+            .map(latestLocation)
+            .filter((loc): loc is GameLocation => !!loc);
         }
         return { ...current, ...snapshot };
       },
