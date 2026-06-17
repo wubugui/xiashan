@@ -7,18 +7,6 @@
       "src": "/video/intro.mp4"
     },
     {
-      "id": "lily",
-      "title": "Lily",
-      "description": "角色短片",
-      "src": "/video/lily.mp4",
-      "unlockConditions": [
-        {
-          "type": "chapter_complete",
-          "chapterId": 1
-        }
-      ]
-    },
-    {
       "id": "linxia_s1",
       "title": "江夏 · 加班的夜晚",
       "description": "她终于等到了那次面试，也等到了你。",

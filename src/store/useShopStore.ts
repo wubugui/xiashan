@@ -144,7 +144,8 @@ function weightedShuffle(ids: string[]): string[] {
 }
 
 /** 掷今日委托板：未完成的委托优先按稀有度加权补满 3 张，余位用已完成的回访单填充。
- *  冷淡期角色（被放弃过委托）的单不上板——她暂时不想见你。 */
+ *  冷淡期角色（被放弃过委托）的单不上板——她暂时不想见你。
+ *  兜底：若冷淡期把所有人都筛没了，放宽冷淡限制，保证委托板永远有单可接——否则一直放弃会把板刷空、游戏锁死。 */
 function rollBoard(forced: string[] = [], excludeId?: string): string[] {
   const player = usePlayerStore.getState();
   const isDone = (id: string) => player.flags.includes(`commission_${id}_done`);
@@ -154,17 +155,19 @@ function rollBoard(forced: string[] = [], excludeId?: string): string[] {
   const excluded = new Set(forced);
   // 进行中的委托不再上板（否则看着像「没刷新」，还会重复接）
   if (excludeId) excluded.add(excludeId);
-  const pool = commissions.filter(c => !excluded.has(c.id) && !isCold(c));
-  const fresh = pool.filter(c => !isDone(c.id)).map(c => c.id);
-  const revisit = pool.filter(c => isDone(c.id)).map(c => c.id);
-  for (const id of weightedShuffle(fresh)) {
-    if (board.length >= 3) break;
-    board.push(id);
-  }
-  for (const id of weightedShuffle(revisit)) {
-    if (board.length >= 3) break;
-    board.push(id);
-  }
+
+  // 用给定委托池补满空位：未完成的按稀有度加权优先，余位用已完成的回访单填充
+  const fill = (pool: typeof commissions) => {
+    const fresh = pool.filter(c => !isDone(c.id)).map(c => c.id);
+    const revisit = pool.filter(c => isDone(c.id)).map(c => c.id);
+    for (const id of weightedShuffle(fresh)) { if (board.length >= 3) return; board.push(id); }
+    for (const id of weightedShuffle(revisit)) { if (board.length >= 3) return; board.push(id); }
+  };
+
+  // 正常池：排除进行中/forced + 冷淡期角色
+  fill(commissions.filter(c => !excluded.has(c.id) && !isCold(c)));
+  // 兜底：正常池被冷淡期清空时，忽略冷淡再补一次——总有人需要你，永远不锁死
+  if (board.length === 0) fill(commissions.filter(c => !excluded.has(c.id)));
   return board;
 }
 
