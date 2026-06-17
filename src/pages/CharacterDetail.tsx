@@ -18,6 +18,7 @@ import StoryViewer from '@/components/StoryViewer';
 import GiftCard, { type GiftCardData } from '@/components/GiftCard';
 import GiftReveal from '@/components/GiftReveal';
 import GiftDialogue from '@/components/GiftDialogue';
+import DateInviteBar from '@/components/DateInviteBar';
 import type { GiftGive } from '@/data/collectibles';
 import { cn } from '@/lib/utils';
 import { playSound } from '@/lib/sound';
@@ -355,6 +356,13 @@ export default function CharacterDetail() {
           </div>
         )}
       </div>
+
+      {/* 约她出去：解锁约会场景（与手机联系人页共用同一入口逻辑），常驻角色主页便于发现 */}
+      {owned && (
+        <div className="relative z-10 mt-4 px-5">
+          <DateInviteBar characterId={id} className="rounded-xl border border-rose-400/20 bg-rose-500/5 px-3 py-2" />
+        </div>
+      )}
 
       {/* 标签栏 */}
       <div className="relative z-10 mt-5 flex border-b border-white/10 px-5">

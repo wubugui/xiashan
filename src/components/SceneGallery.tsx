@@ -39,7 +39,7 @@ export default function SceneGallery() {
   return (
     <div className="mx-auto max-w-3xl space-y-5">
       <p className="text-center text-[11px] leading-relaxed text-slate-400">
-        去手机「月下来信」里<span className="text-rose-300">约她出去</span>，按顺序解锁约会回忆——解锁后可看大图、读故事、设为她的主页背景。
+        在<span className="text-rose-300">角色主页</span>或手机「月下来信」里点<span className="text-rose-300">约她出去</span>，按顺序解锁约会回忆——解锁后可看大图、读故事、设为她的主页背景。
       </p>
       {rows.map(({ char, scenes }) => {
         const got = scenes.filter((s) => unlockedSet.has(s.id)).length;
