@@ -47,11 +47,13 @@ export interface BrowserNewsInput {
   affinityMap: Record<string, number>;
   ownedCharacterIds: string[];
   flags: string[];
+  /** 当前游戏天（gameDay）：同一游戏天内新闻不跳变 */
+  gameDay: number;
 }
 
-/** 当日固定的伪随机（同一天内新闻不跳变） */
-function daySeed(): number {
-  const d = new Date().toISOString().slice(0, 10);
+/** 当日固定的伪随机（同一游戏天内新闻不跳变） */
+function daySeed(gameDay: number): number {
+  const d = String(gameDay);
   let h = 0;
   for (let i = 0; i < d.length; i++) h = (h * 31 + d.charCodeAt(i)) >>> 0;
   return h;
@@ -67,7 +69,7 @@ function knowsCharacter(charId: string, input: BrowserNewsInput): boolean {
 }
 
 export function generateBrowserNews(input: BrowserNewsInput): BrowserNewsItem[] {
-  const seed = daySeed();
+  const seed = daySeed(input.gameDay);
   const items: BrowserNewsItem[] = [];
 
   // 1. 委托新闻：板上的单 + 已接的单（已接的排最前）

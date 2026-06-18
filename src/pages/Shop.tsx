@@ -283,7 +283,7 @@ export default function Shop() {
 
   const {
     ownedCharacters, affinityMap, supplyPityCounter, ssrPersonCount, setSsrPersonCount,
-    normalTickets, flags, rateUpUntil, coldUntil,
+    normalTickets, flags, rateUpUntil, coldUntil, gameDay,
     spendNormalTickets, setSupplyPityCounter,
     addNormalTickets, addAffinity, setCharacterRateUp,
     addGachaResult, addCharacter, addExp,
@@ -427,7 +427,7 @@ export default function Shop() {
       if (!spendNormalTickets(1)) return toast('普通券不足。');
       drawCooldownUntilRef.current = Date.now() + 700;
       const ownedIds = ownedCharacters.map(o => o.characterId);
-      const { result, newPity, newSsrCount } = pullSupply(ownedIds, affinityMap, supplyPityCounter, ssrPersonCount, { rateUpUntil, coldUntil });
+      const { result, newPity, newSsrCount } = pullSupply(ownedIds, affinityMap, supplyPityCounter, ssrPersonCount, { rateUpUntil, coldUntil }, gameDay);
       setSupplyPityCounter(newPity);
       setSsrPersonCount(newSsrCount);
       if (result.kind === 'person') {
@@ -484,7 +484,7 @@ export default function Shop() {
         }
       }
     }
-  }, [drawBusy, gameOver, tutorialActive, tutStep, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, ssrPersonCount, setSsrPersonCount, rateUpUntil, coldUntil, setSupplyPityCounter, addCharacter, addGachaResult, addExp, addAffinity, addHandCard, addHintTokens, addSpiritStones, addLog]);
+  }, [drawBusy, gameOver, tutorialActive, tutStep, spendNormalTickets, ownedCharacters, affinityMap, supplyPityCounter, ssrPersonCount, setSsrPersonCount, rateUpUntil, coldUntil, gameDay, setSupplyPityCounter, addCharacter, addGachaResult, addExp, addAffinity, addHandCard, addHintTokens, addSpiritStones, addLog]);
 
   const closeRevealItem = useCallback(() => {
     drawCooldownUntilRef.current = Date.now() + 700;
@@ -1376,7 +1376,7 @@ export default function Shop() {
             </button>
           )}
           {(() => {
-            const today = new Date().toISOString().slice(0, 10);
+            const today = String(gameDay);
             const nextRelief = coffeeRelief(coffees.date === today ? coffees.n : 0);
             return (
               <button

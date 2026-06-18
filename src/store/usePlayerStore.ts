@@ -34,12 +34,7 @@ interface GachaHistoryEntry {
 
 const DEFAULT_TUTORIAL_STEP = import.meta.env.DEV ? -1 : 0;
 
-/** N 个自然日后的日期（'YYYY-MM-DD'），用于缘分 UP / 冷淡的限时计时 */
-function dateAfterDays(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
+// 缘分 UP / 冷淡 / 被冷落计时一律按游戏天（gameDay）算，不碰真实时间——见 setCharacterRateUp/Cold、markContact。
 
 interface PlayerState {
   // Tutorial
@@ -103,14 +98,14 @@ interface PlayerState {
   playerAvatarUrl: string | null;
   /** 玩家头像取自哪个老婆（驱动她的甜蜜/反感、别人吃醋）：charId，null = 默认 */
   playerAvatarSource: string | null;
-  /** 最近一次主动联系她的自然日（charId → 'YYYY-MM-DD'）：被冷落判定用 */
-  lastContact: Record<string, string>;
+  /** 最近一次主动联系她的游戏天（charId → gameDay）：被冷落判定用 */
+  lastContact: Record<string, number>;
   /** 玩家最近看过的她的签名（charId → 签名原文）：判定"她的状态有没有新变化"用 */
   signatureSeen: Record<string, string>;
-  /** 缘分 UP 截止日（completedCommission → 限时权重 ×4）：characterId → 'YYYY-MM-DD' 含当日 */
-  rateUpUntil: Record<string, string>;
-  /** 冷淡截止日（放弃委托 → 限时权重 ×0.25 + 委托不上板）：characterId → 'YYYY-MM-DD' 含当日 */
-  coldUntil: Record<string, string>;
+  /** 缘分 UP 截止游戏天（completedCommission → 限时权重 ×4）：characterId → 到期 gameDay（当前天 < 该值时有效） */
+  rateUpUntil: Record<string, number>;
+  /** 冷淡截止游戏天（放弃委托 → 限时权重 ×0.25 + 委托不上板）：characterId → 到期 gameDay（当前天 < 该值时有效） */
+  coldUntil: Record<string, number>;
 
   // Gacha
   totalGachaCount: number;
@@ -221,10 +216,10 @@ const initialState = {
   displayAvatar: {} as Record<string, string>,
   playerAvatarUrl: null as string | null,
   playerAvatarSource: null as string | null,
-  lastContact: {} as Record<string, string>,
+  lastContact: {} as Record<string, number>,
   signatureSeen: {} as Record<string, string>,
-  rateUpUntil: {} as Record<string, string>,
-  coldUntil: {} as Record<string, string>,
+  rateUpUntil: {} as Record<string, number>,
+  coldUntil: {} as Record<string, number>,
   totalGachaCount: 0,
   pityCounter: 0,
   gachaHistory: [] as GachaHistoryEntry[],
@@ -248,7 +243,7 @@ export const usePlayerStore = create<PlayerState>()(
       addHintTokens: (n) => set(s => ({ hintTokens: s.hintTokens + n })),
       setMinigameCompanion: (id) => set({ minigameCompanion: id }),
       consumeMinigameHint: (maxFree = 3) => {
-        const today = new Date().toISOString().slice(0, 10);
+        const today = String(get().gameDay);
         const s0 = get();
         const used = s0.freeHints.date === today ? s0.freeHints.used : 0;
         if (used < maxFree) {
@@ -279,8 +274,8 @@ export const usePlayerStore = create<PlayerState>()(
           : [...s.ownedCharacters, { characterId, level: 1, exp: 0 }],
         // 重复卡不再是空气：累计计数，作为关系阶段的钥匙门槛
         dupeCount: { ...s.dupeCount, [characterId]: (s.dupeCount[characterId] ?? 0) + 1 },
-        // 刚抽到：记为今天联系过，避免一抽到就被判定"冷落"
-        lastContact: s.lastContact[characterId] ? s.lastContact : { ...s.lastContact, [characterId]: new Date().toISOString().slice(0, 10) },
+        // 刚抽到：记为今天（游戏天）联系过，避免一抽到就被判定"冷落"
+        lastContact: s.lastContact[characterId] ? s.lastContact : { ...s.lastContact, [characterId]: s.gameDay },
       })),
       addAffinity: (characterId, amount) => set(s => ({
         affinityMap: {
@@ -307,12 +302,12 @@ export const usePlayerStore = create<PlayerState>()(
       setCharacterRateUp: (characterId, days) => set(s => {
         const coldUntil = { ...s.coldUntil };
         delete coldUntil[characterId];
-        return { rateUpUntil: { ...s.rateUpUntil, [characterId]: dateAfterDays(days) }, coldUntil };
+        return { rateUpUntil: { ...s.rateUpUntil, [characterId]: s.gameDay + days }, coldUntil };
       }),
       setCharacterCold: (characterId, days) => set(s => {
         const rateUpUntil = { ...s.rateUpUntil };
         delete rateUpUntil[characterId];
-        return { coldUntil: { ...s.coldUntil, [characterId]: dateAfterDays(days) }, rateUpUntil };
+        return { coldUntil: { ...s.coldUntil, [characterId]: s.gameDay + days }, rateUpUntil };
       }),
       setEquippedGift: (giftId) => set({ equippedGift: giftId }),
 
@@ -353,7 +348,7 @@ export const usePlayerStore = create<PlayerState>()(
         displayAvatar: { ...s.displayAvatar, [characterId]: asset },
       })),
       setPlayerAvatar: (asset, sourceCharId) => set({ playerAvatarUrl: asset, playerAvatarSource: sourceCharId }),
-      markContact: (characterId) => set(s => ({ lastContact: { ...s.lastContact, [characterId]: new Date().toISOString().slice(0, 10) } })),
+      markContact: (characterId) => set(s => ({ lastContact: { ...s.lastContact, [characterId]: s.gameDay } })),
       markSignatureSeen: (characterId, signature) => set(s => (s.signatureSeen[characterId] === signature ? s : ({ signatureSeen: { ...s.signatureSeen, [characterId]: signature } }))),
       tryDailyAction: (key) => {
         // 「每日」= 游戏内一天（打烊推进），不是真实日历日——打烊到第二天即重置
@@ -362,7 +357,8 @@ export const usePlayerStore = create<PlayerState>()(
         set(s => ({ dailyActions: { ...s.dailyActions, [key]: day } }));
         return true;
       },
-      advanceGameDay: () => set(s => ({ gameDay: s.gameDay + 1, dailyActions: {}, freeHints: { date: '', used: 0 } })),
+      // 打烊推进游戏天：清掉按游戏天记的每日限频；freeHints 也按游戏天键，换天自动失效，无需在此重置
+      advanceGameDay: () => set(s => ({ gameDay: s.gameDay + 1, dailyActions: {} })),
       // 累加经验并自动连升级（exp 满 level*100 即升一级，溢出转下一级），
       // 让所有经验来源（打热点/交付/重复卡/养成页）共用同一升级口径，调用方无需判断。
       addExp: (characterId, amount) => set(s => ({
@@ -418,7 +414,7 @@ export const usePlayerStore = create<PlayerState>()(
     }),
     {
       name: 'xiashan-player-store',
-      version: 17,
+      version: 18,
       storage: createJSONStorage(() => safeStorage),
       // 旧版本存档可能缺字段、字段为 null 或类型不符（项目从 AVG 改版而来），
       // 合并时丢弃所有与默认值类型不符的项，避免启动即崩、全页空白。
@@ -443,6 +439,14 @@ export const usePlayerStore = create<PlayerState>()(
           personTickets?: number;
           commissionTickets?: number;
         };
+        if (version < 18) {
+          // 缘分UP/冷淡/被冷落计时改为按游戏天(gameDay)记，旧值是真实日期字符串、口径不兼容——直接清空重来
+          const s18 = state as typeof state & { coldUntil?: unknown; rateUpUntil?: unknown; lastContact?: unknown; freeHints?: unknown };
+          s18.coldUntil = {};
+          s18.rateUpUntil = {};
+          s18.lastContact = {};
+          s18.freeHints = { date: '', used: 0 };
+        }
         if (version < 17) {
           // 约会场景收藏 + 自定义主页背景：老存档默认空
           const s17 = state as typeof state & { unlockedScenes?: string[]; characterBg?: Record<string, string> };
@@ -476,12 +480,12 @@ export const usePlayerStore = create<PlayerState>()(
           s12.signatureSeen = s12.signatureSeen ?? {};
         }
         if (version < 11) {
-          // 被冷落计时新增字段：已拥有的角色都从今天起算，避免老存档一开就被判定冷落
-          const s11 = state as typeof state & { lastContact?: Record<string, string>; ownedCharacters?: { characterId: string }[] };
-          const today = new Date().toISOString().slice(0, 10);
-          const lc: Record<string, string> = { ...(s11.lastContact ?? {}) };
+          // 被冷落计时改按游戏天：已拥有的角色都从当前游戏天起算，避免老存档一开就被判定冷落
+          const s11 = state as typeof state & { lastContact?: Record<string, number>; ownedCharacters?: { characterId: string }[]; gameDay?: number };
+          const day = s11.gameDay ?? 1;
+          const lc: Record<string, number> = { ...(s11.lastContact ?? {}) };
           for (const c of s11.ownedCharacters ?? []) {
-            if (c?.characterId && !lc[c.characterId]) lc[c.characterId] = today;
+            if (c?.characterId && !lc[c.characterId]) lc[c.characterId] = day;
           }
           s11.lastContact = lc;
         }

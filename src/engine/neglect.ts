@@ -8,7 +8,8 @@ import { reactionsOf } from '@/engine/waifeStateAccess';
 export interface NeglectInput {
   ownedCharacterIds: string[];
   affinityMap: Record<string, number>;
-  lastContact: Record<string, string>;
+  /** charId → 最近主动联系的游戏天 */
+  lastContact: Record<string, number>;
 }
 
 export interface NeglectReaction {
@@ -25,15 +26,13 @@ export const NEGLECT_MIN_AFFINITY = 15;
 /** 每次冷落唤回的好感衰减（温和） */
 const NEGLECT_DECAY = -2;
 
-function daysSince(fromISO: string | undefined, today: string): number {
-  if (!fromISO) return 0;
-  const a = Date.parse(`${fromISO}T00:00:00Z`);
-  const b = Date.parse(`${today}T00:00:00Z`);
-  if (Number.isNaN(a) || Number.isNaN(b)) return 0;
-  return Math.max(0, Math.round((b - a) / 86400000));
+/** 距上次联系过了几个游戏天（from/today 都是 gameDay；脏值/缺失按 0 处理） */
+function daysSince(from: number | undefined, today: number): number {
+  if (typeof from !== 'number' || !Number.isFinite(from) || !Number.isFinite(today)) return 0;
+  return Math.max(0, today - from);
 }
 
-export function checkNeglect(input: NeglectInput, today: string, rng: () => number = Math.random): NeglectReaction[] {
+export function checkNeglect(input: NeglectInput, today: number, rng: () => number = Math.random): NeglectReaction[] {
   const out: NeglectReaction[] = [];
   for (const id of input.ownedCharacterIds) {
     const aff = input.affinityMap[id] ?? 0;

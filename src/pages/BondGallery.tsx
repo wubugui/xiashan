@@ -65,7 +65,7 @@ export default function BondGallery() {
   const [revealResult, setRevealResult] = useState<{ characterId: string; name: string; rarity: Rarity; title: string; isNew: boolean } | null>(null);
   const [toastMsg, setToastMsg] = useState('');
 
-  const today = new Date().toISOString().slice(0, 10);
+  const gameDay = usePlayerStore((s) => s.gameDay);
   const ownedIds = useMemo(() => ownedCharacters.map(o => o.characterId), [ownedCharacters]);
 
   /** 主要角色（委托人）优先展示，组内按稀有度排序 */
@@ -204,8 +204,8 @@ export default function BondGallery() {
             const stages = getRelationshipStages(char.id);
             const stageName = getStageInfo(char.id, stage)?.name ?? (owned ? '初识' : '未相遇');
             const maxed = stage >= stages.length;
-            const isRateUp = (rateUpUntil[char.id] ?? '') >= today;
-            const isCold = (coldUntil[char.id] ?? '') >= today;
+            const isRateUp = (rateUpUntil[char.id] ?? 0) > gameDay;
+            const isCold = (coldUntil[char.id] ?? 0) > gameDay;
             const cost = CARD_COST[char.rarity as Rarity];
             const surplus = surplusCards(dupes);
             const canRefer = eligibleReferrers.some(id => id !== char.id);

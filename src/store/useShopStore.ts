@@ -149,8 +149,8 @@ function weightedShuffle(ids: string[]): string[] {
 function rollBoard(forced: string[] = [], excludeId?: string): string[] {
   const player = usePlayerStore.getState();
   const isDone = (id: string) => player.flags.includes(`commission_${id}_done`);
-  const today = new Date().toISOString().slice(0, 10);
-  const isCold = (c: { target: string }) => (player.coldUntil[c.target] ?? '') >= today;
+  // 冷淡按游戏天：coldUntil 存到期 gameDay，当前天 < 该值时仍冷淡
+  const isCold = (c: { target: string }) => (player.coldUntil[c.target] ?? 0) > player.gameDay;
   const board: string[] = [...forced.filter(f => !isDone(f))];
   const excluded = new Set(forced);
   // 进行中的委托不再上板（否则看着像「没刷新」，还会重复接）
@@ -213,7 +213,7 @@ export const useShopStore = create<ShopState>()(
           ? (s0.sideJobs.length ? s0.sideJobs : [{ id: TUTORIAL_SIDE_JOB, done: false }])
           : rollSideJobs();
         // 跨天保留：手牌（持有资产）+ 进行中委托（锁单制：进度不清零，干不完明天继续）
-        // 咖啡杯数挂真实自然日，休息不重置（防「打烊刷咖啡」）
+        // 咖啡杯数按游戏天计（coffees.date 存 gameDay）：保留对象即可，换天后 buyCoffee 自动按新游戏天重置
         set({
           ...INITIAL, routes, board, sideJobs, done: {},
           hand: s0.hand, log: [], gameOver: false,
@@ -390,7 +390,8 @@ export const useShopStore = create<ShopState>()(
 
       buyCoffee: () => {
         const s = get();
-        const today = new Date().toISOString().slice(0, 10);
+        // 咖啡杯数按游戏天计：打烊到第二天即重置（与全局「每日=游戏天」一致）
+        const today = String(usePlayerStore.getState().gameDay);
         const n = s.coffees.date === today ? s.coffees.n : 0;
         const relief = coffeeRelief(n);
         if (relief === 0 || s.money < COFFEE_COST) return 0;

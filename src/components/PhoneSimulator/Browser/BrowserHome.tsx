@@ -24,6 +24,7 @@ export default function BrowserHome({ onOpenPage, onBack }: BrowserHomeProps) {
   const affinityMap = usePlayerStore(s => s.affinityMap);
   const ownedCharacters = usePlayerStore(s => s.ownedCharacters);
   const flags = usePlayerStore(s => s.flags);
+  const gameDay = usePlayerStore(s => s.gameDay);
   const board = useShopStore(s => s.board);
   const commission = useShopStore(s => s.commission);
   const routes = useShopStore(s => s.routes);
@@ -36,8 +37,9 @@ export default function BrowserHome({ onOpenPage, onBack }: BrowserHomeProps) {
       affinityMap,
       ownedCharacterIds: ownedCharacters.map(c => c.characterId),
       flags,
+      gameDay,
     }),
-    [board, commission, routes, affinityMap, ownedCharacters, flags],
+    [board, commission, routes, affinityMap, ownedCharacters, flags, gameDay],
   );
 
   return (

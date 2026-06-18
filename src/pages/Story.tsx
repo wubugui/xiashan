@@ -180,7 +180,7 @@ export default function Story() {
         if (trigger) {
           const ownedIds = ownedCharacters.map((c) => c.characterId);
           const ps = usePlayerStore.getState();
-          const pullResult = pullSingle(ownedIds, ps.affinityMap, ps.pityCounter, ps.totalGachaCount, { rateUpUntil: ps.rateUpUntil, coldUntil: ps.coldUntil });
+          const pullResult = pullSingle(ownedIds, ps.affinityMap, ps.pityCounter, ps.totalGachaCount, { rateUpUntil: ps.rateUpUntil, coldUntil: ps.coldUntil }, ps.gameDay);
           const gachaResult = pullResult.result;
           addCharacter(gachaResult.character.id);
           usePlayerStore.getState().addGachaResult(gachaResult.character.id, gachaResult.character.rarity);

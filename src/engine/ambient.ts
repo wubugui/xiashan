@@ -9,7 +9,8 @@ import { reactionsOf } from '@/engine/waifeStateAccess';
 export interface AmbientInput {
   ownedCharacterIds: string[];
   affinityMap: Record<string, number>;
-  lastContact: Record<string, string>;
+  /** charId → 最近主动联系的游戏天 */
+  lastContact: Record<string, number>;
 }
 
 export interface AmbientReaction {
@@ -22,16 +23,14 @@ export const AMBIENT_MIN_AFFINITY = 30;
 /** 触发概率（每天结算一次）：偶尔，不打扰 */
 const AMBIENT_CHANCE = 0.5;
 
-function daysSince(fromISO: string | undefined, today: string): number {
-  if (!fromISO) return 0;
-  const a = Date.parse(`${fromISO}T00:00:00Z`);
-  const b = Date.parse(`${today}T00:00:00Z`);
-  if (Number.isNaN(a) || Number.isNaN(b)) return 0;
-  return Math.max(0, Math.round((b - a) / 86400000));
+/** 距上次联系过了几个游戏天（from/today 都是 gameDay；脏值/缺失按 0 处理） */
+function daysSince(from: number | undefined, today: number): number {
+  if (typeof from !== 'number' || !Number.isFinite(from) || !Number.isFinite(today)) return 0;
+  return Math.max(0, today - from);
 }
 
 /** 掷一次：可能返回一条某个近况老婆的主动消息，否则 null */
-export function rollAmbient(input: AmbientInput, today: string, rng: () => number = Math.random): AmbientReaction | null {
+export function rollAmbient(input: AmbientInput, today: number, rng: () => number = Math.random): AmbientReaction | null {
   // 资格：好感够 + 最近有联系（没被冷落——冷落由 neglect 单独处理，不重叠）
   const eligible = input.ownedCharacterIds.filter((id) => {
     if ((input.affinityMap[id] ?? 0) < AMBIENT_MIN_AFFINITY) return false;

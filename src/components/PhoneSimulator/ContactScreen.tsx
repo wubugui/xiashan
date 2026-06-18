@@ -31,6 +31,7 @@ export default function ContactScreen({ characterId, initialTab = 'wechat', onBa
   const displayAvatar = usePlayerStore((s) => s.displayAvatar);
   const xinyiTarget = usePlayerStore((s) => s.xinyiTarget);
   const playerAvatarSource = usePlayerStore((s) => s.playerAvatarSource);
+  const gameDay = usePlayerStore((s) => s.gameDay);
   const character = getCharacterById(characterId);
   // 手机头像：玩家在收藏里「设为头像」过就用她选的表情，否则用默认
   const avatarSrc = displayAvatar[characterId] || character?.avatarUrl;
@@ -42,7 +43,7 @@ export default function ContactScreen({ characterId, initialTab = 'wechat', onBa
     ? null
     : playerAvatarSource === characterId ? 'chosen'
       : (affinity >= 30 ? 'jealous' : null);
-  const signature = character ? signatureFor(character, { isLover: xinyiTarget === characterId, avatarMood, affinity, daySeed: new Date().toISOString().slice(0, 10) }) : '';
+  const signature = character ? signatureFor(character, { isLover: xinyiTarget === characterId, avatarMood, affinity, daySeed: String(gameDay) }) : '';
   /** 短信会不会有回音（tier≥2）/ 电话会不会接（tier≥3） */
   const smsReplies = tier >= 2;
   const callAnswers = tier >= 3;

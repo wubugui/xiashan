@@ -9,7 +9,6 @@ import { characters } from '@/data/characters';
 import { REWARDS } from '@/data/rewards';
 import { cn } from '@/lib/utils';
 import { assetUrl } from '@/lib/assets';
-import { safeStorage } from '@/lib/safeStorage';
 import ResetSaveButton from '@/components/ResetSaveButton';
 import PageBackdrop from '@/components/PageBackdrop';
 import { SCENE_BACKDROPS } from '@/lib/pageBackdrops';
@@ -100,6 +99,9 @@ export default function Home() {
   const normalTickets = usePlayerStore((s) => s.normalTickets);
   const ownedCharacters = usePlayerStore((s) => s.ownedCharacters);
   const addSpiritStones = usePlayerStore((s) => s.addSpiritStones);
+  const gameDay = usePlayerStore((s) => s.gameDay);
+  const dailyActions = usePlayerStore((s) => s.dailyActions);
+  const tryDailyAction = usePlayerStore((s) => s.tryDailyAction);
   const phoneMessages = usePlayerStore((s) => s.phoneMessages);
   // 红点直接由"已拥有角色里真正未读的消息"派生，避免未读计数器漂移导致「看完消息还有红点」
   const totalUnread = (() => {
@@ -117,16 +119,14 @@ export default function Home() {
 
   useEffect(() => {
     if (tutorialPending) return; // 引导期不弹每日奖励，避免与强制引导冲突
-    const lastClaimDate = safeStorage.getItem('xiashan_daily_claim');
-    const today = new Date().toDateString();
-    if (lastClaimDate !== today) {
+    // 每日登录奖励按游戏天发放：本游戏天还没领过就弹（打烊到第二天即可再领）
+    if (dailyActions['daily_login'] !== String(gameDay)) {
       setShowDailyReward(true);
     }
-  }, [tutorialPending]);
+  }, [tutorialPending, gameDay, dailyActions]);
 
   const claimDailyReward = () => {
-    addSpiritStones(REWARDS.daily_login);
-    safeStorage.setItem('xiashan_daily_claim', new Date().toDateString());
+    if (tryDailyAction('daily_login')) addSpiritStones(REWARDS.daily_login);
     setShowDailyReward(false);
   };
 

@@ -28,7 +28,9 @@ export default function PhoneHomeScreen({ onOpenContact, onOpenBrowser }: PhoneH
   const playerAvatarSource = usePlayerStore((s) => s.playerAvatarSource);
   const signatureSeen = usePlayerStore((s) => s.signatureSeen);
   const markSignatureSeen = usePlayerStore((s) => s.markSignatureSeen);
-  const today = new Date().toISOString().slice(0, 10);
+  const gameDay = usePlayerStore((s) => s.gameDay);
+  // 签名按游戏天轮换：daySeed 用游戏天
+  const today = String(gameDay);
   // 特别签名的点的染色：心事/恋人=粉，被选中=琥珀，吃醋=冷蓝
   const dotColor: Record<SignatureKind, string> = {
     feeling: 'bg-rose-400', lover: 'bg-rose-400', chosen: 'bg-amber-400', jealous: 'bg-sky-400',
@@ -41,7 +43,8 @@ export default function PhoneHomeScreen({ onOpenContact, onOpenBrowser }: PhoneH
     if (neglectRan.current) return;
     neglectRan.current = true;
     const store = usePlayerStore.getState();
-    const today = new Date().toISOString().slice(0, 10);
+    // 被冷落/环境感按游戏天判定（与每日限频 tryDailyAction 同口径）
+    const today = store.gameDay;
     const reactions = checkNeglect(
       {
         ownedCharacterIds: store.ownedCharacters.map((c) => c.characterId),
