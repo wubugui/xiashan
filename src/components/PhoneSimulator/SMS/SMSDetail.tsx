@@ -92,7 +92,7 @@ export default function SMSDetail({ characterId, onBack, hideHeader = false, wil
     }
 
     // 她回应：按「意图×好感层」取，可能已读不回
-    const reply = replyTo(characterId, 'sms', intent, affinityMap[characterId] ?? 0, xinyiTarget === characterId, new Date().getHours());
+    const reply = replyTo(characterId, 'sms', intent, affinityMap[characterId] ?? 0, xinyiTarget === characterId, usePlayerStore.getState().gameDay);
     if (reply === null) return; // 已读不回（关系不到 / 在睡）
     setTimeout(() => {
       const replyId = `char_sms_${Date.now()}`;

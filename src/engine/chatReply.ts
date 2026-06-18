@@ -44,13 +44,19 @@ export function pickReply(
   return pickFrom(pool, rng);
 }
 
-/** 此刻她是否在睡（配置了 sleepHours，且当前小时落在 [起,止) 内） */
-function isAsleep(charId: string, hour: number | undefined): boolean {
-  if (hour == null) return false;
+/** 这个游戏天她是否在睡：不碰真实时间——按 (角色, gameDay) 确定性轮换，
+ *  在睡概率 = 睡眠时长/24（sleepHours 窗口越长越容易在睡），每个游戏天不同、可复现。 */
+function isAsleep(charId: string, gameDay: number | undefined): boolean {
+  if (gameDay == null) return false;
   const sh = waifeConfig(charId)?.phone.sleepHours;
   if (!sh) return false;
   const [a, b] = sh;
-  return a <= b ? hour >= a && hour < b : hour >= a || hour < b; // 支持跨午夜
+  const windowLen = (((b - a) % 24) + 24) % 24; // 睡眠时长（小时，支持跨午夜）
+  if (windowLen === 0) return false;
+  let h = 0;
+  const seed = `${charId}#${gameDay}`;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return h % 24 < windowLen;
 }
 
 /**
@@ -59,10 +65,10 @@ function isAsleep(charId: string, hour: number | undefined): boolean {
  */
 export function replyTo(
   charId: string, channel: ChatChannel, intent: ChatIntent, affinity: number, isLover: boolean,
-  hour?: number, rng: () => number = Math.random,
+  gameDay?: number, rng: () => number = Math.random,
 ): string | null {
-  // 她在睡：迷糊敷衍或干脆没醒（不分意图）
-  if (isAsleep(charId, hour)) {
+  // 她在睡：迷糊敷衍或干脆没醒（不分意图）——按游戏天轮换，不看真实时钟
+  if (isAsleep(charId, gameDay)) {
     const pool = waifeConfig(charId)?.asleep?.[channel];
     return pool && pool.length ? pickFrom(pool, rng) : null;
   }

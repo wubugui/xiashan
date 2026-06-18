@@ -91,7 +91,7 @@ export default function ChatDetail({ characterId, onBack, hideHeader = false }: 
     }
 
     // 她回应：按「意图×好感层」取，可能已读不回
-    const reply = replyTo(characterId, 'wechat', intent, affinityMap[characterId] ?? 0, xinyiTarget === characterId, new Date().getHours());
+    const reply = replyTo(characterId, 'wechat', intent, affinityMap[characterId] ?? 0, xinyiTarget === characterId, usePlayerStore.getState().gameDay);
     if (reply === null) return; // 已读不回——她没回应（关系/语境不到 / 在睡）
     setIsTyping(true);
     const delay = 900 + Math.random() * 1500;
