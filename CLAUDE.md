@@ -99,6 +99,21 @@ className="pb-chrome"
 
 ---
 
+## ⏰ 时间一律按「游戏天」(gameDay)，禁用真实时间
+
+**所有"日期/每日/N 天"逻辑必须按游戏天（`usePlayerStore` 的 `gameDay`，打烊推进）计，绝不读真实时间。**
+
+- 禁止用 `new Date()` / `Date.now()` / `toISOString()` / `toDateString()` / `Date.parse()` 来做任何**日期/每日/冷却天数**判断。
+- 「今天」「第二天」「N 天后」「每日重置」一律换算成 `gameDay`：
+  - 每日限频 → `tryDailyAction(key)`（已按 gameDay）
+  - 截止/冷却 → 存「到期 gameDay 号」(number)，判定 `当前 gameDay < 到期值`（见 `coldUntil` / `rateUpUntil` / `setCharacterCold` / `setCharacterRateUp`）
+  - 「最近联系/距今几天」→ `lastContact` 存 gameDay，相减得天数（见 `neglect.ts` / `ambient.ts`）
+  - 每日免费额度/登录奖励/新闻轮换/签名 daySeed/咖啡杯数 → 全部用 `String(gameDay)` 作键
+  - 引擎纯函数需要"今天"时，由调用方把 `gameDay` 当参数传入（如 `pullSupply(..., today)`、`generateBrowserNews({..., gameDay})`），引擎内不得自取真实时间
+- **唯一允许保留真实时间**的非日期用途：消息/记录的排序时间戳与唯一 id（`Date.now()`）、手机状态栏时钟显示、毫秒级 UI 冷却与动画/自动连消计时。这些不是"日期"，不受本规则约束。
+
+---
+
 ## 每日限频操作
 
 用 `tryDailyAction(key)` 防止同一天重复触发。key 统一格式：
