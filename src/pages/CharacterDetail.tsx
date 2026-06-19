@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, TrendingUp, Heart } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
@@ -774,9 +774,11 @@ export default function CharacterDetail() {
       )}
 
       {/* 收藏里回看的 CG 短篇 */}
-      {openCg && (
-        <StoryViewer title={openCg.title} image={openCg.image} paragraphs={openCg.paragraphs} onClose={() => setOpenCg(null)} />
-      )}
+      <AnimatePresence>
+        {openCg && (
+          <StoryViewer title={openCg.title} image={openCg.image} paragraphs={openCg.paragraphs} onClose={() => setOpenCg(null)} />
+        )}
+      </AnimatePresence>
 
       {/* 礼物卡大图 + 随身携带 */}
       {openGift && openGift.effect && openGift.tier && openGift.tierName && (
@@ -813,28 +815,32 @@ export default function CharacterDetail() {
       )}
 
       {/* 加深关系解锁信物：SSR 级揭示 → 收下后她的送礼对白 */}
-      {revealGift && (
-        <GiftReveal
-          data={revealGift.data}
-          characterName={revealGift.name}
-          onClose={() => {
-            const g = revealGift.give;
-            const cid = revealGift.charId;
-            const img = revealGift.data.asset;
-            setRevealGift(null);
-            if (g && g.lines.length) setGiftDialogue({ characterId: cid, expression: g.expression, lines: g.lines, bgImage: img });
-          }}
-        />
-      )}
-      {giftDialogue && (
-        <GiftDialogue
-          characterId={giftDialogue.characterId}
-          expression={giftDialogue.expression}
-          lines={giftDialogue.lines}
-          bgImage={giftDialogue.bgImage}
-          onClose={() => setGiftDialogue(null)}
-        />
-      )}
+      <AnimatePresence>
+        {revealGift && (
+          <GiftReveal
+            data={revealGift.data}
+            characterName={revealGift.name}
+            onClose={() => {
+              const g = revealGift.give;
+              const cid = revealGift.charId;
+              const img = revealGift.data.asset;
+              setRevealGift(null);
+              if (g && g.lines.length) setGiftDialogue({ characterId: cid, expression: g.expression, lines: g.lines, bgImage: img });
+            }}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {giftDialogue && (
+          <GiftDialogue
+            characterId={giftDialogue.characterId}
+            expression={giftDialogue.expression}
+            lines={giftDialogue.lines}
+            bgImage={giftDialogue.bgImage}
+            onClose={() => setGiftDialogue(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* 收藏操作面板 */}
       {sheetItem && id && (

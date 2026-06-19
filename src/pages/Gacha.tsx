@@ -328,6 +328,8 @@ export default function Gacha() {
                     { label: '便利卡', rate: `${GACHA_CONFIG.supplyPool.cardWeights.tool}%`, color: 'text-cyan-400' },
                     { label: '情报卡', rate: `${GACHA_CONFIG.supplyPool.cardWeights.info}%`, color: 'text-emerald-400' },
                     { label: '提示券', rate: `${GACHA_CONFIG.supplyPool.cardWeights.hint}%`, color: 'text-yellow-300' },
+                    { label: '月光小袋', rate: `${GACHA_CONFIG.supplyPool.cardWeights.stoneSmall}%`, color: 'text-sky-300' },
+                    { label: '月光大袋', rate: `${GACHA_CONFIG.supplyPool.cardWeights.stoneLarge}%`, color: 'text-indigo-300' },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center justify-between">
                       <span className={`text-sm font-bold ${item.color}`}>{item.label}</span>

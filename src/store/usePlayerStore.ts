@@ -371,12 +371,14 @@ export const usePlayerStore = create<PlayerState>()(
         }),
       })),
       addGachaResult: (characterId, rarity) => set(s => ({
-        gachaHistory: [...s.gachaHistory, { characterId, rarity, timestamp: Date.now() }],
+        // 只留最近 300 条，避免长期游玩抽卡历史无限膨胀撑爆存档
+        gachaHistory: [...s.gachaHistory, { characterId, rarity, timestamp: Date.now() }].slice(-300),
       })),
       setPityCounter: (count) => set({ pityCounter: count }),
       setTotalGachaCount: (count) => set({ totalGachaCount: count }),
       addPhoneMessage: (message) => set(s => ({
-        phoneMessages: [...s.phoneMessages, message],
+        // 只留最近 500 条消息，避免长期游玩消息无限堆积（未读由 markRead 全量重算，截断不影响红点）
+        phoneMessages: [...s.phoneMessages, message].slice(-500),
         unreadCounts: {
           ...s.unreadCounts,
           [message.type]: s.unreadCounts[message.type] + (message.read ? 0 : 1),
@@ -406,7 +408,7 @@ export const usePlayerStore = create<PlayerState>()(
           },
         };
       }),
-      addCallLog: (entry) => set(s => ({ phoneCallLog: [...s.phoneCallLog, entry] })),
+      addCallLog: (entry) => set(s => ({ phoneCallLog: [...s.phoneCallLog, entry].slice(-300) })),
       addTriggeredEvent: (eventId) => set(s => ({
         triggeredEventIds: s.triggeredEventIds.includes(eventId) ? s.triggeredEventIds : [...s.triggeredEventIds, eventId],
       })),
@@ -427,6 +429,8 @@ export const usePlayerStore = create<PlayerState>()(
           const def = cur[k];
           if (Array.isArray(def) && !Array.isArray(v)) continue;
           if (def !== null && typeof def === 'object' && !Array.isArray(def) && (typeof v !== 'object' || v === null || Array.isArray(v))) continue;
+          // 默认值为 null 的字段实为 string|null（xinyiTarget/equippedGift/playerAvatar* 等），只接受字符串，拒绝脏对象/数组
+          if (def === null && typeof v !== 'string') continue;
           if (typeof def === 'number' && typeof v !== 'number') continue;
           if (typeof def === 'string' && typeof v !== 'string') continue;
           out[k] = v;

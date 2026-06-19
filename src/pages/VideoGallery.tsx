@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, ChevronLeft, Film, Lock, Play } from 'lucide-react';
 import { videos, type VideoEntry } from '@/data/videos';
@@ -129,21 +129,23 @@ export default function VideoGallery() {
       </div>
 
       {/* 播放器 / 图文记述 */}
-      {playingVideo && (playingVideo.story ? (
-        <StoryViewer
-          key={playingVideo.id}
-          title={playingVideo.title}
-          image={playingVideo.story.image}
-          paragraphs={playingVideo.story.paragraphs}
-          onClose={() => setPlayingId(null)}
-        />
-      ) : playingVideo.src ? (
-        <VideoPlayer
-          key={playingVideo.id}
-          src={assetUrl(playingVideo.src)!}
-          onEnd={() => setPlayingId(null)}
-        />
-      ) : null)}
+      <AnimatePresence>
+        {playingVideo && (playingVideo.story ? (
+          <StoryViewer
+            key={playingVideo.id}
+            title={playingVideo.title}
+            image={playingVideo.story.image}
+            paragraphs={playingVideo.story.paragraphs}
+            onClose={() => setPlayingId(null)}
+          />
+        ) : playingVideo.src ? (
+          <VideoPlayer
+            key={playingVideo.id}
+            src={assetUrl(playingVideo.src)!}
+            onEnd={() => setPlayingId(null)}
+          />
+        ) : null)}
+      </AnimatePresence>
     </div>
   );
 }

@@ -151,6 +151,13 @@ function findHint(g: Tile[][]): [number, number, number, number] | null {
   return null;
 }
 
+/** 生成一副「保证有解」的棋盘：万一随机出死局就重洗（最多 20 次兜底，几乎必中） */
+function buildPlayableGrid(): Tile[][] {
+  let g = buildGrid();
+  for (let i = 0; i < 20 && !findHint(g); i++) g = buildGrid();
+  return g;
+}
+
 /* ───── 组件 ───── */
 
 export default function LinkGame({ onExit }: { onExit: () => void }) {
@@ -168,7 +175,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
   const usedGifts = usePlayerStore((s) => s.usedGifts);
   const markGiftUsed = usePlayerStore((s) => s.markGiftUsed);
 
-  const [grid, setGrid] = useState<Tile[][]>(() => buildGrid());
+  const [grid, setGrid] = useState<Tile[][]>(() => buildPlayableGrid());
   const [flashing, setFlashing] = useState<Set<string>>(new Set());
   const [score, setScore] = useState(0);
   const [seconds, setSeconds] = useState(0);
@@ -242,7 +249,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
     playSound('reshuffle');
     setReshuffled(true);
     window.setTimeout(() => setReshuffled(false), 1600);
-    setGrid(buildGrid());
+    setGrid(buildPlayableGrid());
   }, []);
 
   /** 连锁消除 */
@@ -366,7 +373,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
   useEffect(() => {
     if (autoEndAt === null || busy || Date.now() >= autoEndAt) return;
     const hint = findHint(grid);
-    if (!hint) { setGrid(buildGrid()); return; } // 死局 → 重洗
+    if (!hint) { setGrid(buildPlayableGrid()); return; } // 死局 → 重洗
     // 流程/路线型搭档让出手更快
     const delay = passive?.speedUp ? 110 : 200;
     const t = window.setTimeout(() => attemptSwap(hint[0], hint[1], hint[2], hint[3]), delay);
@@ -429,7 +436,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
   };
 
   const newGame = () => {
-    setGrid(buildGrid());
+    setGrid(buildPlayableGrid());
     setFlashing(new Set());
     setScore(0);
     setSeconds(0);
