@@ -271,3 +271,19 @@ export function hitsRequirement(
   if (req.locTag && !locTags.includes(req.locTag)) return false;
   return true;
 }
+
+/* ─────────────── 手牌按身份聚合（展示用） ───────────────
+ * 同种消耗卡（同 id）合并为一组，记 count 与代表实例 rep；保序、不改原数组。
+ * 纯展示工具：消费仍用 rep 的 uid 走 consumeHandCard，一次只去掉一张。
+ * 用泛型避免 engine 反向依赖 store 的 HandCard 类型。
+ */
+export interface CardGroup<T> { rep: T; count: number; }
+export function groupHand<T extends { id: string }>(cards: T[]): CardGroup<T>[] {
+  const byId = new Map<string, CardGroup<T>>();
+  for (const c of cards) {
+    const g = byId.get(c.id);
+    if (g) g.count += 1;
+    else byId.set(c.id, { rep: c, count: 1 });
+  }
+  return [...byId.values()];
+}

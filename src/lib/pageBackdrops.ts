@@ -35,6 +35,21 @@ export const SCENE_BACKDROPS = {
     mobileImage: '/bg/mobile/apartment-stairs-portrait.jpg',
     position: 'center',
   },
+  park: {
+    image: '/bg/scene/city-park.jpg',
+    mobileImage: '/bg/mobile/city-park-portrait.jpg',
+    position: 'center',
+  },
+  hospital: {
+    image: '/bg/scene/night-hospital.jpg',
+    mobileImage: '/bg/mobile/night-hospital-portrait.jpg',
+    position: 'center',
+  },
+  rooftop: {
+    image: '/bg/scene/office-rooftop.jpg',
+    mobileImage: '/bg/mobile/office-rooftop-portrait.jpg',
+    position: 'center',
+  },
 } as const satisfies Record<string, BackdropAsset>;
 
 type SceneKey = keyof typeof SCENE_BACKDROPS;
@@ -45,9 +60,9 @@ const LOCATION_SCENE: Record<string, SceneKey> = {
   store: 'store',
   apartment: 'apartment',
   studio: 'studio',
-  park: 'street',
-  hospital: 'office',
-  rooftop: 'office',
+  park: 'park',
+  hospital: 'hospital',
+  rooftop: 'rooftop',
 };
 
 const CHARACTER_SCENE: Record<string, SceneKey> = {

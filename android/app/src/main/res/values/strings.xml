@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">二十五时便利屋</string>
+    <string name="title_activity_main">二十五时便利屋</string>
+    <string name="package_name">com.ershiwushi.bianliwu</string>
+    <string name="custom_url_scheme">com.ershiwushi.bianliwu</string>
+</resources>

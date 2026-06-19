@@ -91,4 +91,17 @@ if (typeof document !== 'undefined') {
   document.addEventListener('pointerdown', unlock, { passive: true });
   document.addEventListener('touchend', unlock, { passive: true });
   document.addEventListener('keydown', unlock);
+
+  // 应用切到后台 / 锁屏 / 切 tab 时暂停 BGM，回到前台再恢复。
+  // visibilitychange 在 Web、iOS Safari、以及 Capacitor 的 Android/iOS WebView
+  // 切后台时都会触发（document.hidden=true），属跨平台通用方案。
+  const BG_REASON = 'app-hidden';
+  const syncByVisibility = () => {
+    if (document.hidden) pauseBackgroundMusic(BG_REASON);
+    else resumeBackgroundMusic(BG_REASON);
+  };
+  document.addEventListener('visibilitychange', syncByVisibility);
+  // 兜底：部分 WebView 退出/冻结只发 pagehide，不发 visibilitychange
+  window.addEventListener('pagehide', () => pauseBackgroundMusic(BG_REASON));
+  window.addEventListener('pageshow', () => resumeBackgroundMusic(BG_REASON));
 }

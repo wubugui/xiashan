@@ -11,12 +11,15 @@ interface Props {
 
 export default function ResetSaveButton({ className, compact = false }: Props) {
   const [open, setOpen] = useState(false);
+  // 'warn' = 第一道（说明后果）；'final' = 第二道（最终二次确认），两道独立点击防误触
+  const [step, setStep] = useState<'warn' | 'final'>('warn');
+  const close = () => { setOpen(false); setStep('warn'); };
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => { setStep('warn'); setOpen(true); }}
         className={cn(
           'inline-flex items-center justify-center gap-1.5 rounded-full border border-rose-400/30',
           'bg-rose-500/10 text-rose-200 shadow-lg shadow-rose-950/20 backdrop-blur-md',
@@ -36,7 +39,7 @@ export default function ResetSaveButton({ className, compact = false }: Props) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 px-5 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
+            onClick={close}
           >
             <motion.div
               initial={{ scale: 0.92, y: 16, opacity: 0 }}
@@ -48,33 +51,37 @@ export default function ResetSaveButton({ className, compact = false }: Props) {
             >
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={close}
                 className="absolute right-3 top-3 rounded-full p-1 text-slate-500 hover:bg-white/10 hover:text-white"
               >
                 <X size={16} />
               </button>
 
               <div className="mb-4 pr-6">
-                <h2 className="text-base font-black text-white">清空本地测试存档？</h2>
+                <h2 className="text-base font-black text-white">
+                  {step === 'warn' ? '把便利屋的灯关掉，重新开张？' : '真的要从第一天重新来过？'}
+                </h2>
                 <p className="mt-2 text-xs leading-relaxed text-slate-400">
-                  会删除角色、票券、委托进度、手机消息和每日签到记录。此操作只影响当前浏览器。
+                  {step === 'warn'
+                    ? '这会清空你和她们之间的全部记忆——结识的人、攒下的灵石与票券、做过的委托、手机里的消息，都会随这盏灯一起熄灭，无法找回。下一次推门进来，一切从第一天重新开始。'
+                    : '决定了就没有回头路：当前的进度会立刻全部清空、无法恢复。确定要送走现在这家便利屋、重新开张吗？'}
                 </p>
               </div>
 
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setOpen(false)}
+                  onClick={() => (step === 'final' ? setStep('warn') : close())}
                   className="flex-1 rounded-xl border border-white/10 bg-slate-800 py-2.5 text-sm font-bold text-slate-200"
                 >
-                  取消
+                  {step === 'warn' ? '再想想' : '返回'}
                 </button>
                 <button
                   type="button"
-                  onClick={clearLocalSaveAndReload}
+                  onClick={() => (step === 'warn' ? setStep('final') : clearLocalSaveAndReload())}
                   className="flex-1 rounded-xl bg-rose-600 py-2.5 text-sm font-black text-white shadow-lg shadow-rose-950/30"
                 >
-                  确认清空
+                  {step === 'warn' ? '我想好了' : '熄灯，重新开始'}
                 </button>
               </div>
             </motion.div>

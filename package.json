@@ -15,9 +15,14 @@
     "content:build-editor": "vite build --config tools/story-editor.vite.config.ts",
     "content:tools": "node tools/content-manager.mjs serve",
     "content:story": "node tools/content-manager.mjs serve",
-    "npc:bake": "node tools/npc-bake-studio.mjs"
+    "npc:bake": "node tools/npc-bake-studio.mjs",
+    "apk": "bash tools/build-apk.sh",
+    "apk:bump": "bash tools/build-apk.sh --bump",
+    "cap:sync": "cap sync android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/core": "^8.4.0",
     "canvas-confetti": "^1.9.3",
     "clsx": "^2.1.1",
     "framer-motion": "^11.15.0",
@@ -31,6 +36,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.4.0",
     "@dagrejs/dagre": "^3.0.0",
     "@eslint/js": "^9.25.0",
     "@types/howler": "^2.2.11",

@@ -680,7 +680,7 @@
         "安抚",
         "观察"
       ],
-      "bg": "url('/bg/scene/street-storefront.jpg') center / cover no-repeat",
+      "bg": "url('/bg/scene/city-park.jpg') center / cover no-repeat",
       "spots": [
         {
           "name": "流浪猫聚点",
@@ -807,7 +807,7 @@
         "流程",
         "补给"
       ],
-      "bg": "url('/bg/scene/office-lobby.jpg') center / cover no-repeat",
+      "bg": "url('/bg/scene/night-hospital.jpg') center / cover no-repeat",
       "spots": [
         {
           "name": "自助挂号机",
@@ -936,7 +936,7 @@
         "表达",
         "恢复"
       ],
-      "bg": "url('/bg/city_night.svg') center / cover no-repeat",
+      "bg": "url('/bg/scene/office-rooftop.jpg') center / cover no-repeat",
       "spots": [
         {
           "name": "天台护栏",

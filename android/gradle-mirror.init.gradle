@@ -1,0 +1,29 @@
+// 国内网络镜像：把 google() / mavenCentral() / gradlePluginPortal() 全部重定向到
+// 阿里云镜像，绕开被代理阻断的 dl.google.com。由 tools/build-apk.sh 通过
+// --init-script 引入；不改动 Capacitor 生成的 build.gradle，cap sync 后依然生效。
+def mirrors = [
+    'https://maven.aliyun.com/repository/google',
+    'https://maven.aliyun.com/repository/central',
+    'https://maven.aliyun.com/repository/gradle-plugin',
+    'https://maven.aliyun.com/repository/public',
+]
+
+allprojects {
+    buildscript {
+        repositories {
+            mirrors.each { m -> maven { url m } }
+        }
+    }
+    repositories {
+        mirrors.each { m -> maven { url m } }
+    }
+}
+
+settingsEvaluated { settings ->
+    settings.pluginManagement {
+        repositories {
+            mirrors.each { m -> maven { url m } }
+            gradlePluginPortal()
+        }
+    }
+}

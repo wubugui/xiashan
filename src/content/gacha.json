@@ -3,8 +3,8 @@
   "tenCost": 900,
   "rates": {
     "SSR": 0.03,
-    "SR": 0.32,
-    "R": 0.65,
+    "SR": 0.12,
+    "R": 0.85,
     "N": 0
   },
   "pity": {
@@ -15,6 +15,10 @@
     "cost": 1,
     "characterRate": 0.06,
     "characterPity": 15,
+    "ssrSoftPityStart": 14,
+    "ssrHardPity": 28,
+    "ssrSoftPityStep": 0.08,
+    "rateUpRatio": 0.55,
     "cardWeights": {
       "skill": 40,
       "tool": 20,

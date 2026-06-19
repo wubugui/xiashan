@@ -94,6 +94,14 @@ export interface GachaConfig {
     cost: number;
     characterRate: number;
     characterPity: number;
+    /** SSR 软保底：第几次「人物出货」起 SSR 概率线性爬升 */
+    ssrSoftPityStart: number;
+    /** SSR 大保底：第几次「人物出货」必出 SSR */
+    ssrHardPity: number;
+    /** 软保底每超 1 次的 SSR 概率增量 */
+    ssrSoftPityStep: number;
+    /** 命中某稀有度且该稀有度有当期 UP 角色时，直接定向给 UP 的概率 */
+    rateUpRatio: number;
     cardWeights: { skill: number; tool: number; info: number; hint: number; stoneSmall: number; stoneLarge: number };
     stoneAmounts: { small: number; large: number };
   };

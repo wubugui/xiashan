@@ -40,3 +40,12 @@ deploy/
 promo-clips/
 xiashan-deploy.zip
 xiashan-promo-draft.mp4
+
+# 安卓签名密钥与凭据（绝不入库 —— 丢失/泄露都会导致无法更新游戏）
+keystore.properties
+*.keystore
+*.jks
+android/keystore/
+
+# 一键打包导出的 APK 产物
+dist-apk/
