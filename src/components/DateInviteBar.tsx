@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart } from 'lucide-react';
 import { getCharacterById } from '@/data/characters';
@@ -38,24 +39,27 @@ export default function DateInviteBar({ characterId, className }: { characterId:
         </button>
       )}
 
-      {/* 约会解锁场景揭示 */}
-      <AnimatePresence>
-        {d.dateReveal && (
-          <DateReveal scene={d.dateReveal} characterName={character.name} onClose={d.clearReveal} />
-        )}
-      </AnimatePresence>
-
-      {/* 约会限频 / 门槛提示 */}
-      <AnimatePresence>
-        {d.dateToast && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="pointer-events-none fixed left-1/2 top-1/3 z-[120] w-[80%] max-w-xs -translate-x-1/2 rounded-xl bg-slate-800/95 px-4 py-2.5 text-center text-xs text-rose-100 shadow-xl"
-          >
-            {d.dateToast}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* 约会解锁揭示 + 提示：portal 到 body，脱离手机外壳的 transform 包含块，否则全屏浮层会被手机框裁切 */}
+      {createPortal(
+        <>
+          <AnimatePresence>
+            {d.dateReveal && (
+              <DateReveal scene={d.dateReveal} characterName={character.name} onClose={d.clearReveal} />
+            )}
+          </AnimatePresence>
+          <AnimatePresence>
+            {d.dateToast && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="pointer-events-none fixed left-1/2 top-1/3 z-[120] w-[80%] max-w-xs -translate-x-1/2 rounded-xl bg-slate-800/95 px-4 py-2.5 text-center text-xs text-rose-100 shadow-xl"
+              >
+                {d.dateToast}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </>,
+        document.body,
+      )}
     </div>
   );
 }

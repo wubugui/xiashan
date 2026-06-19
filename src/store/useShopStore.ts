@@ -469,6 +469,13 @@ export const useShopStore = create<ShopState>()(
         }
         return { ...current, ...snapshot };
       },
+      // 持久化手牌带着旧 uid 恢复，而 _uid 每次加载从 1 重置——若不重新播种，新发牌会与旧牌撞号，
+      // consumeHandCard 的 filter 会一次删掉所有同 uid 的卡（凭空丢牌）。这里把 _uid 顶到现有最大 uid+1。
+      onRehydrateStorage: () => (state) => {
+        if (state?.hand?.length) {
+          _uid = Math.max(_uid, ...state.hand.map((c) => c.uid)) + 1;
+        }
+      },
     }
   )
 );
@@ -485,6 +492,11 @@ function isValidShopSnapshot(p: unknown): boolean {
   if (s.board !== undefined && (!Array.isArray(s.board) || !s.board.every(b => typeof b === 'string'))) return false;
   if (s.objectivesDone !== undefined && !Array.isArray(s.objectivesDone)) return false;
   if (s.sideJobs !== undefined && !Array.isArray(s.sideJobs)) return false;
+  // coffees 必须是 { date:string, n:number }——损坏成 null/非对象会让 Shop 读 coffees.date 直接白屏
+  if (s.coffees !== undefined) {
+    const c = s.coffees as { date?: unknown; n?: unknown } | null;
+    if (!c || typeof c !== 'object' || typeof c.date !== 'string' || typeof c.n !== 'number') return false;
+  }
   if (s.commission !== undefined && s.commission !== null) {
     const c = s.commission as Record<string, unknown>;
     if (typeof c.need !== 'number' || typeof c.id !== 'string') return false;

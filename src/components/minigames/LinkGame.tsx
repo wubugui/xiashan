@@ -189,6 +189,9 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
 
   const drag = useRef<{ r: number; c: number; x: number; y: number } | null>(null);
   const [dragVisual, setDragVisual] = useState<{ r: number; c: number; dx: number; dy: number } | null>(null);
+  // 卸载守卫：退出页面后连锁链(setTimeout 递归)不能再加月光 / 对已卸载组件 setState
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
 
   /* ── 陪玩搭档 ── */
   const companionOwned = ownedCharacters.find((o) => o.characterId === minigameCompanion);
@@ -245,6 +248,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
   /** 连锁消除 */
   const cascade = useCallback(
     (g: Tile[][], depth: number) => {
+      if (!mountedRef.current) return; // 已退出：停止连锁，不再加月光/不再 setState
       const matches = findMatches(g);
       if (matches.size === 0) {
         setBusy(false);
@@ -283,6 +287,7 @@ export default function LinkGame({ onExit }: { onExit: () => void }) {
       if (matches.size >= 6 || depth >= 2) sayRandom();
 
       window.setTimeout(() => {
+        if (!mountedRef.current) return; // 已退出：不落子、不排下一轮连锁
         const next = collapse(g, matches);
         setFlashing(new Set());
         setGrid(next);
