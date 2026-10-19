@@ -18,7 +18,8 @@
     "npc:bake": "node tools/npc-bake-studio.mjs",
     "apk": "bash tools/build-apk.sh",
     "apk:bump": "bash tools/build-apk.sh --bump",
-    "cap:sync": "cap sync android"
+    "cap:sync": "cap sync android",
+    "test:city-case": "node --experimental-strip-types --test tools/tests/city-case.test.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
