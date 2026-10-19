@@ -5,7 +5,7 @@
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Eye, FileText, LockKeyhole, MessageCircle, Phone, ShieldCheck, Sparkles, Ticket, Volume2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Eye, FileText, LockKeyhole, Phone, ShieldCheck, Sparkles, Ticket, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageBackdrop from '@/components/PageBackdrop';
 import { assetUrl } from '@/lib/assets';
@@ -22,7 +22,6 @@ import {
   chosenTheory,
   clueFlag,
   foundClues,
-  outcomeFlag,
   theoryFlag,
   type CityClueId,
   type CityOutcomeId,
@@ -30,7 +29,7 @@ import {
 } from '@/engine/cityCase';
 
 const clueIcons = { receipt: FileText, camera: Eye, voicemail: Volume2 } as const;
-const clueColor = { receipt: 'amber', camera: 'sky', voicemail: 'rose' } as const;
+const clueClasses = { receipt: 'text-amber-300', camera: 'text-sky-300', voicemail: 'text-rose-300' } as const;
 
 function HeroPortrait({ src, name, position = '' }: { src: string; name: string; position?: string }) {
   return (
@@ -77,30 +76,9 @@ export default function CityCase() {
   };
 
   const finish = (id: CityOutcomeId) => {
-    const store = usePlayerStore.getState();
-    const ownIds = store.ownedCharacters.map(c => c.characterId);
-    if (store.flags.includes(CASE_DONE_FLAG) || !availableOutcomes(store.flags, ownIds).includes(id)) return;
-    // 先锁结算，防止快速双击 / UI 重渲染重复领取奖励。
-    store.setFlag(CASE_DONE_FLAG);
-    store.setFlag(outcomeFlag(id));
-    const outcome = CITY_OUTCOMES[id];
-    store.addNormalTickets(outcome.normalTickets);
-    store.addSpiritStones(outcome.spiritStones);
-    const now = Date.now();
-    for (const [index, change] of outcome.changes.entries()) {
-      store.addAffinity(change.characterId, change.affinity);
-      // 没抽到角色时也记好感与世界状态；抽到才打开她的私信频道。
-      if (ownIds.includes(change.characterId)) {
-        store.addPhoneMessage({
-          id: `city_midnight_parcel_${id}_${change.characterId}_${index}`,
-          characterId: change.characterId,
-          type: 'wechat',
-          content: change.message,
-          timestamp: now + index,
-          read: false,
-        });
-      }
-    }
+    // Zustand 单次原子写入，避免两次点击重复发奖或中途留下半完成存档。
+    const completed = usePlayerStore.getState().completeCityCase(id);
+    if (!completed) return;
     setPendingOutcome(null);
     setSelectedClue(null);
   };
@@ -184,7 +162,7 @@ export default function CityCase() {
                     className={`rounded-2xl border p-4 text-left transition active:scale-[0.99] ${selectedClue === c.id ? 'border-amber-300 bg-amber-400/15' : found ? 'border-emerald-400/30 bg-slate-800/85' : 'border-white/15 bg-slate-900/80 hover:border-amber-300/60'}`}
                   >
                     <div className="flex items-center justify-between">
-                      <Icon size={21} className={`text-${clueColor[c.id]}-300`} />
+                      <Icon size={21} className={clueClasses[c.id]} />
                       {found && <Check size={16} className="text-emerald-300" />}
                     </div>
                     <p className="mt-3 text-[11px] text-slate-400">{c.eyebrow}</p>
