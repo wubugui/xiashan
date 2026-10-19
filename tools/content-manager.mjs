@@ -27,9 +27,27 @@ function writeJson(file, data) {
   fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
 }
 
+/**
+ * 角色运行时真源已迁到 waifes/*.json。内容校验和编辑器的读取侧
+ * 必须使用相同的角色 ID 列表，而不是只看空的 legacy characters.json。
+ * legacy 字段仍可编辑；同 ID 时独立配置覆盖它。
+ */
+function loadActiveCharacters() {
+  const legacy = readJson(files.characters).characters || [];
+  const waifeDir = path.join(contentDir, 'waifes');
+  if (!fs.existsSync(waifeDir)) return legacy;
+  const byId = new Map(legacy.map(c => [c.id, c]));
+  for (const name of fs.readdirSync(waifeDir).filter(f => f.endsWith('.json')).sort()) {
+    const config = readJson(path.join(waifeDir, name));
+    if (!config.id || !config.identity) continue;
+    byId.set(config.id, { ...config.identity, id: config.id });
+  }
+  return [...byId.values()];
+}
+
 function loadContent() {
   return {
-    characters: readJson(files.characters).characters,
+    characters: loadActiveCharacters(),
     story: readJson(files.story),
     phoneEvents: readJson(files.phone).phoneEvents,
     gacha: readJson(files.gacha),
