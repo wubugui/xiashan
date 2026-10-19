@@ -15,6 +15,7 @@ import Phone from '@/pages/Phone';
 import VideoGallery from '@/pages/VideoGallery';
 import Minigame from '@/pages/Minigame';
 import Shop from '@/pages/Shop';
+import CityCase from '@/pages/CityCase';
 import BondGallery from '@/pages/BondGallery';
 import BackgroundMusicControl from '@/components/BackgroundMusicControl';
 import { getVideoById } from '@/data/videos';
@@ -41,6 +42,7 @@ function AppContent() {
         <Route path="/videos" element={<VideoGallery />} />
         <Route path="/minigame" element={<Minigame />} />
         <Route path="/shop" element={<Shop />} />
+        <Route path="/city-case/midnight-parcel" element={<CityCase />} />
       </Routes>
     </div>
   );
