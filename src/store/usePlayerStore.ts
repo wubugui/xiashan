@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeStorage } from '@/lib/safeStorage';
 import { getCharacterById } from '@/data/characters';
 import { surplusCards, SHARD_VALUE, MAX_STAGE, type Rarity } from '@/engine/bondEngine';
+import { CASE_DONE_FLAG, CITY_OUTCOMES, availableOutcomes, outcomeFlag, type CityOutcomeId } from '@/engine/cityCase';
 
 interface OwnedCharacter {
   characterId: string;
@@ -136,6 +137,8 @@ interface PlayerState {
   setFlag: (flag: string) => void;
   addCharacter: (characterId: string) => void;
   addAffinity: (characterId: string, amount: number) => void;
+  /** 原子结算跨角色事件：一次性写入剧情标志、好感、货币和可见手机消息。 */
+  completeCityCase: (outcomeId: CityOutcomeId) => boolean;
   addBondShards: (amount: number) => void;
   /** 把所有角色超出满阶所需（5 张）的溢出信物折算成缘分碎片，返回折得数量 */
   convertSurplusToShards: () => number;
@@ -283,6 +286,44 @@ export const usePlayerStore = create<PlayerState>()(
           [characterId]: Math.max(0, (s.affinityMap[characterId] ?? 0) + amount),
         },
       })),
+      completeCityCase: (outcomeId) => {
+        let completed = false;
+        set(s => {
+          if (s.flags.includes(CASE_DONE_FLAG)) return s;
+          const ownedIds = s.ownedCharacters.map(c => c.characterId);
+          if (!availableOutcomes(s.flags, ownedIds).includes(outcomeId)) return s;
+          const outcome = CITY_OUTCOMES[outcomeId];
+          const affinityMap = { ...s.affinityMap };
+          const timestamp = Date.now();
+          const messages: PhoneMessage[] = [];
+          for (const [index, change] of outcome.changes.entries()) {
+            affinityMap[change.characterId] = Math.max(
+              0,
+              (affinityMap[change.characterId] ?? 0) + change.affinity,
+            );
+            if (ownedIds.includes(change.characterId)) {
+              messages.push({
+                id: `city_midnight_parcel_${outcomeId}_${change.characterId}`,
+                characterId: change.characterId,
+                type: 'wechat',
+                content: change.message,
+                timestamp: timestamp + index,
+                read: false,
+              });
+            }
+          }
+          completed = true;
+          return {
+            flags: [...s.flags, outcomeFlag(outcomeId), CASE_DONE_FLAG],
+            affinityMap,
+            normalTickets: s.normalTickets + outcome.normalTickets,
+            spiritStones: s.spiritStones + outcome.spiritStones,
+            phoneMessages: [...s.phoneMessages, ...messages].slice(-500),
+            unreadCounts: { ...s.unreadCounts, wechat: s.unreadCounts.wechat + messages.length },
+          };
+        });
+        return completed;
+      },
       addBondShards: (amount) => set(s => ({ bondShards: Math.max(0, s.bondShards + amount) })),
       convertSurplusToShards: () => {
         const s0 = get();
