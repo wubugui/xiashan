@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Store, Sparkles, Users, Smartphone, Film, Gamepad2, Heart, X } from 'lucide-react';
+import { Store, Sparkles, Users, Smartphone, Film, Gamepad2, Heart, Newspaper, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { characters } from '@/data/characters';
@@ -144,6 +144,22 @@ export default function Home() {
   };
 
   const quickActions: HomeAction[] = [
+    {
+      id: 'city-case',
+      label: '午夜来访',
+      hint: '新玩法体验 · 凌晨一点的纸箱',
+      icon: Newspaper,
+      color: 'from-rose-600 to-amber-700',
+      full: true,
+      art: {
+        scene: '/bg/scene/store-night.jpg',
+        sceneOpacity: 'opacity-40',
+        face: '/characters/face/yunzhiyi/avatar.png',
+        faceOpacity: 'opacity-[0.72]',
+        faceClassName: 'h-[20.5rem] w-[20.5rem] -right-[7rem] -top-[7rem]',
+      },
+      onClick: () => navigate('/city-case/midnight-parcel'),
+    },
     {
       id: 'gacha',
       label: '星愿邂逅',
